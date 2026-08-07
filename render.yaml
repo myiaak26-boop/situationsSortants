@@ -11,7 +11,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:./dev.db
+        sync: false
       - key: DEX_ADMIN_PASSWORD
         sync: false
       - key: DEX_USER_DEFAULT_PASSWORD
