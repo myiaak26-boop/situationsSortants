@@ -10,6 +10,7 @@ build/
 # Base de données locale
 *.db
 *.db-*
+*.db.*
 backend/backups/
 
 # Logs
