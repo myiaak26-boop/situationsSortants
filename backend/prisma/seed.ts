@@ -1,6 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 import { pathToFileURL } from 'node:url'
+import 'dotenv/config'
 import { seedDatabase } from '../src/lib/seed.js'
 
 const adapter = new PrismaPg({

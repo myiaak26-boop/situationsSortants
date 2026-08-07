@@ -15,7 +15,7 @@
     "test:audit": "npm run test:audit --workspace=frontend",
     "test:e2e": "npm run test:e2e --workspace=frontend",
     "start": "npm run start --workspace=backend",
-    "db:init": "npm run db:push --workspace=backend && npm run db:seed --workspace=backend",
+    "db:init": "npm run db:apply --workspace=backend && npm run db:seed --workspace=backend",
     "preview:prod": "npm run build && npm run db:init && npm run start"
   },
   "workspaces": [
