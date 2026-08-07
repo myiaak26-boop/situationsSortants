@@ -1,0 +1,1 @@
+import Database from 'better-sqlite3'; const db = new Database('./dev.db'); const dupes = db.prepare('SELECT numero, COUNT(*) as count FROM Courrier WHERE deletedAt IS NULL GROUP BY numero HAVING COUNT(*) > 1').all(); console.log('Duplicates:', dupes);

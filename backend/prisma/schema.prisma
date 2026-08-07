@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  roleId       String
+  avatar       String?
+  passwordHash String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  role              Role               @relation(fields: [roleId], references: [id])
+  courriers         Courrier[]
+  courriersSupprimes Courrier[]         @relation("SuppriméPar")
+  actions           AuditLog[]
+  historiqueActions HistoriqueAction[]
+  retraits          Retrait[]
+  importLogs         ImportLog[]
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+}
+
+model Signataire {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  nom       String
+  actif     Boolean  @default(true)
+  ordre     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courriers Courrier[]
+}
+
+model Courrier {
+  id                  String    @id @default(cuid())
+  numero              String    @unique
+  dateEnvoi           DateTime
+  destinataire        String
+  objet               String
+  signataire          String
+  signataireId        String?
+  numeroEntrant       String?
+  dateArriveeEntrant  DateTime?
+  nombrePages         Int?
+  expediteur          String?
+  dateObservation     DateTime?
+  situationId         String
+  observation         String?
+  modeTransmissionId  String?
+  modeEnvoi           String?
+  nbrRappels          Int       @default(0)
+  createdById         String
+  deletedAt           DateTime?
+  deletedById         String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  createdBy         User              @relation(fields: [createdById], references: [id])
+  deletedBy         User?             @relation("SuppriméPar", fields: [deletedById], references: [id])
+  situation         Situation         @relation(fields: [situationId], references: [id])
+  modeTransmission  ModeTransmission? @relation(fields: [modeTransmissionId], references: [id])
+  signataireRef     Signataire?       @relation(fields: [signataireId], references: [id])
+  historiqueActions HistoriqueAction[]
+  retrait           Retrait?
+
+  @@index([dateEnvoi])
+  @@index([signataire])
+  @@index([situationId])
+  @@index([modeTransmissionId])
+  @@index([signataireId])
+  @@index([deletedAt])
+}
+
+model Situation {
+  id        String   @id @default(cuid())
+  nom       String   @unique
+  ordre     Int      @default(0)
+  couleur   String   @default("gray")
+  icone     String?
+  estInitial Boolean @default(false)
+  estFinal  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  transitionsSortantes Transition[] @relation("FromSituation")
+  transitionsEntrantes Transition[] @relation("ToSituation")
+  courriers            Courrier[]
+  historiquesFrom      HistoriqueAction[] @relation("HistoriqueFromSituation")
+  historiquesTo        HistoriqueAction[] @relation("HistoriqueToSituation")
+}
+
+model Transition {
+  id                String   @id @default(cuid())
+  modeTransmissionId String?
+  fromSituationId   String
+  toSituationId     String
+  nom               String
+  description       String?
+  type              String   @default("MANUAL")
+  alerte            Boolean  @default(false)
+  demandeRetrait    Boolean  @default(false)
+  estRappel         Boolean  @default(false)
+  ordre             Int      @default(0)
+  createdAt         DateTime @default(now())
+
+  fromSituation    Situation        @relation("FromSituation", fields: [fromSituationId], references: [id])
+  toSituation      Situation        @relation("ToSituation", fields: [toSituationId], references: [id])
+  modeTransmission ModeTransmission? @relation(fields: [modeTransmissionId], references: [id])
+
+  @@unique([modeTransmissionId, fromSituationId, toSituationId])
+}
+
+model ModeTransmission {
+  id          String   @id @default(cuid())
+  nom         String   @unique
+  description String?
+  couleur     String   @default("#6B7280")
+  icone       String?
+  cle         String?
+  ordre       Int      @default(0)
+  actif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  courriers   Courrier[]
+  transitions Transition[]
+}
+
+model HistoriqueAction {
+  id              String   @id @default(cuid())
+  courrierId      String
+  transitionId    String?
+  fromSituationId String?
+  toSituationId   String?
+  action          String
+  commentaire     String?
+  userId          String
+  createdAt       DateTime @default(now())
+
+  courrier           Courrier   @relation(fields: [courrierId], references: [id], onDelete: Cascade)
+  user               User       @relation(fields: [userId], references: [id])
+  fromSituation      Situation? @relation("HistoriqueFromSituation", fields: [fromSituationId], references: [id])
+  toSituation        Situation? @relation("HistoriqueToSituation", fields: [toSituationId], references: [id])
+
+  @@index([courrierId])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model Retrait {
+  id            String   @id @default(cuid())
+  courrierId    String   @unique
+  nomRetraitant String
+  telephone     String?
+  observation   String?
+  retireParId   String
+  dateRetrait   DateTime @default(now())
+
+  courrier  Courrier @relation(fields: [courrierId], references: [id])
+  retirePar User     @relation(fields: [retireParId], references: [id])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  action         String
+  entity         String
+  entityId       String
+  details        String?
+  ancienneValeur String?
+  nouvelleValeur String?
+  ip             String?
+  userId         String
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([userId])
+}
+
+model Parametre {
+  id     String @id @default(cuid())
+  cle    String @unique
+  valeur String
+}
+
+model SituationLog {
+  id            String   @id @default(cuid())
+  type          String
+  situationType String   @default("Générale")
+  periode       String
+  filtres       String
+  params        String   @default("")
+  nbCourriers   Int
+  taille        Int      @default(0)
+  userNom       String
+  userId        String
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model ImportLog {
+  id         String   @id @default(cuid())
+  fileName   String
+  userId     String
+  userName   String
+  nbLignes   Int
+  nbImportes Int
+  nbIgnores  Int
+  nbMaj      Int
+  nbErreurs  Int
+  dureeMs    Int
+  resultat   String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+}

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: dex-app
+    runtime: node
+    rootDir: .
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run db:init && npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEX_ADMIN_PASSWORD
+        sync: false
+      - key: DEX_USER_DEFAULT_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PUBLIC_DIR
+        value: /opt/render/project/src/frontend/dist

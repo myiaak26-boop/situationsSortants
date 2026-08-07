@@ -1,0 +1,25 @@
+{
+  "name": "dex",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Suivi des courriers sortants - Secrétariat Central",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "start \"frontend\" cmd /c npm run dev --workspace=frontend && start \"backend\" cmd /c npm run dev --workspace=backend",
+    "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
+    "lint": "npm run lint --workspace=frontend && npm run lint --workspace=backend",
+    "typecheck": "npm run typecheck --workspace=frontend && npm run typecheck --workspace=backend",
+    "test": "npm run test --workspace=frontend",
+    "test:audit": "npm run test:audit --workspace=frontend",
+    "test:e2e": "npm run test:e2e --workspace=frontend",
+    "start": "npm run start --workspace=backend",
+    "db:init": "npm run db:push --workspace=backend && npm run db:seed --workspace=backend",
+    "preview:prod": "npm run build && npm run db:init && npm run start"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}

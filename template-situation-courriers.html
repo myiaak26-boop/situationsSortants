@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Situation des Courriers Sortants</title>
+<style>
+  /* ===========================================================
+     VARIABLES — a injecter par le backend (Jinja/Handlebars/etc.)
+     Adapter la syntaxe {{...}} et {{#each}} au moteur de template
+     reellement utilise par l'app.
+     =========================================================== */
+  :root{ --marge: 18mm; --bleu: #0b2e59; }
+
+  @page { size: A4; margin: var(--marge); }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: #1a1a1a;
+    font-size: 10.5pt;
+    line-height: 1.4;
+  }
+
+  /* -----------------------------------------------------------
+     FIX 1 — Collision en-tete / titre de section (bug repere sur
+     4 pages : "...0048 1 Synthese executive" colle sans espace).
+     Le header a une bordure -> nouveau bloc de formatage -> la
+     marge basse du header et la marge haute du titre ne peuvent
+     plus se collapser l'une dans l'autre.
+     ----------------------------------------------------------- */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8pt;
+    color: #666;
+    padding-bottom: 4mm;
+    margin-bottom: 8mm;
+    border-bottom: 0.5pt solid #ccc;
+  }
+  .page-header .doc-ref { font-weight: 600; }
+
+  .section-title {
+    font-size: 14pt;
+    font-weight: 700;
+    margin: 0 0 6mm 0;
+    padding-top: 2mm;
+    color: var(--bleu);
+    break-after: avoid;
+  }
+  .section-number {
+    display: inline-block;
+    width: 7mm; height: 7mm; line-height: 7mm;
+    text-align: center;
+    background: var(--bleu);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 10pt;
+    margin-right: 3mm;
+  }
+
+  .footer {
+    position: fixed;
+    bottom: -12mm;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 7.5pt;
+    color: #888;
+  }
+  .footer .page-number::after { content: counter(page); }
+
+  .page-break { break-before: page; }
+
+  /* ===========================================================
+     PAGE DE GARDE
+     =========================================================== */
+  .cover {
+    text-align: center;
+    padding-top: 30mm;
+  }
+  .cover .republique { font-size: 10pt; font-weight: 600; }
+  .cover .devise { font-size: 8pt; color: #666; margin-bottom: 12mm; }
+  .cover .primature { font-size: 16pt; font-weight: 700; color: var(--bleu); margin-top: 20mm; }
+  .cover .service { font-size: 11pt; margin-bottom: 20mm; }
+  .cover .titre-doc { font-size: 20pt; font-weight: 700; margin-bottom: 6mm; }
+  .cover table.meta {
+    margin: 20mm auto 0;
+    font-size: 10pt;
+    border-collapse: collapse;
+  }
+  .cover table.meta td { padding: 2mm 6mm; text-align: left; }
+  .cover table.meta td.label { color: #666; font-weight: 600; }
+
+  /* ===========================================================
+     SECTION 1 — SYNTHESE EXECUTIVE
+     FIX 3 — Hierarchie visuelle : le TOTAL est un agregat, il
+     doit dominer visuellement. Les sous-categories (dont
+     certaines se recoupent : ex. un courrier "Retire" peut aussi
+     avoir eu un "Appel effectue" avant) sont en second plan pour
+     ne pas laisser croire qu'elles s'additionnent au TOTAL.
+     ----------------------------------------------------------- */
+  .kpi-row { display: flex; gap: 4mm; margin: 6mm 0; }
+  .kpi-total {
+    flex: 1.3;
+    background: var(--bleu);
+    color: #fff;
+    border-radius: 2mm;
+    padding: 5mm;
+    text-align: center;
+  }
+  .kpi-total .value { font-size: 26pt; font-weight: 700; }
+  .kpi-total .label { font-size: 8pt; opacity: 0.85; }
+  .kpi-secondary { flex: 1.7; display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; }
+  .kpi-card { background: #f4f6f9; border-radius: 2mm; padding: 3mm; text-align: center; }
+  .kpi-card .value { font-size: 14pt; font-weight: 700; color: var(--bleu); }
+  .kpi-card .label { font-size: 7pt; color: #555; }
+  .kpi-note {
+    font-size: 7.5pt; color: #888; font-style: italic; margin-top: -3mm;
+  }
+
+  /* ===========================================================
+     SECTION 2 — INDICATEURS TEMPORELS
+     =========================================================== */
+  .indic-row { display: flex; gap: 4mm; margin: 6mm 0; }
+  .indic-card {
+    flex: 1;
+    border: 0.5pt solid #ddd;
+    border-radius: 2mm;
+    padding: 4mm;
+    text-align: center;
+  }
+  .indic-card .value { font-size: 18pt; font-weight: 700; color: var(--bleu); }
+  .indic-card .label { font-size: 8pt; color: #555; margin-top: 1mm; }
+
+  /* ===========================================================
+     SECTION 3 — GRAPHIQUES ET ANALYSE
+     Les graphiques doivent etre generes en SVG par le backend
+     (pas en image bitmap) : ca evite toute deformation a
+     l'impression et reste lisible en N&B (cf. FIX 5 plus bas).
+     ----------------------------------------------------------- */
+  .chart-block { margin: 8mm 0; break-inside: avoid; }
+  .chart-title { font-size: 10.5pt; font-weight: 700; margin-bottom: 3mm; }
+  .bar-chart .bar-row { display: flex; align-items: center; margin-bottom: 2mm; }
+  .bar-chart .bar-label { width: 20mm; font-size: 8.5pt; }
+  .bar-chart .bar-track { flex: 1; background: #eee; border-radius: 1mm; height: 5mm; position: relative; }
+  .bar-chart .bar-fill { background: var(--bleu); height: 100%; border-radius: 1mm; }
+  .bar-chart .bar-value { width: 10mm; text-align: right; font-size: 8.5pt; font-weight: 600; padding-left: 2mm; }
+
+  /* Legende texte a cote du camembert = lisible sans couleur (FIX 5) */
+  .pie-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 4mm; font-size: 8.5pt; margin-top: 3mm; }
+  .pie-legend .swatch {
+    display: inline-block; width: 3mm; height: 3mm; margin-right: 1.5mm;
+    border: 0.5pt solid #333; /* bordure visible meme si l'impression N&B aplati la couleur */
+  }
+
+  /* ===========================================================
+     SECTION 4 — TABLEAU DETAILLE
+     FIX 2 — Statut de suivi et Mode de transmission separes en
+     deux colonnes / deux champs de donnees independants.
+     Avant : une seule colonne "Situation" contenait a la fois des
+     etats de suivi (Retire, Injoignable, Appel effectue...) et un
+     mode de transmission (E-mail envoye), ce qui les rendait
+     mutuellement exclusifs a tort.
+     FIX 5 — Impression A4 : 8 colonnes au lieu de 9 (fusion
+     Arrivee/Reponse dans une seule colonne "Dates cles" avec
+     retour a la ligne), largeurs en % qui somment a 100,
+     word-break sur Objet/Destinataire pour eviter le debordement.
+     ----------------------------------------------------------- */
+  table.detail {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.8pt;
+    table-layout: fixed; /* force le respect des largeurs de colonnes */
+  }
+  table.detail th, table.detail td {
+    border: 0.5pt solid #ccc;
+    padding: 1.5mm 2mm;
+    vertical-align: top;
+    text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  table.detail th { background: var(--bleu); color: #fff; font-weight: 600; font-size: 7.5pt; }
+  thead { display: table-header-group; } /* repete les en-tetes sur chaque page */
+  table.detail tr { break-inside: avoid; } /* une ligne n'est jamais coupee entre 2 pages */
+
+  .col-num    { width: 6%; }
+  .col-date   { width: 7%; }
+  .col-sign   { width: 7%; }
+  .col-dest   { width: 19%; }
+  .col-objet  { width: 26%; }
+  .col-statut { width: 12%; }
+  .col-mode   { width: 12%; }
+  .col-dates  { width: 11%; }
+
+  .badge {
+    display: inline-block;
+    padding: 0.5mm 2mm;
+    border-radius: 3mm;
+    font-size: 7.3pt;
+    font-weight: 600;
+    border: 0.5pt solid currentColor; /* visible en N&B, pas seulement via la couleur de fond */
+  }
+  .badge-retire      { background:#e6f4ea; color:#1e7e34; }
+  .badge-injoignable { background:#fdecea; color:#b3261e; }
+  .badge-appel       { background:#fff4e5; color:#a35a00; }
+  .badge-joint       { background:#e8f0fe; color:#1a56db; }
+  .badge-livre       { background:#e6f4ea; color:#1e7e34; }
+
+  .mode-tag { font-size: 7.3pt; color: #444; }
+  .dates-cell { font-size: 7pt; color: #555; line-height: 1.6; }
+  .dates-cell .lbl { color: #999; }
+
+  /* ===========================================================
+     SECTION 5 — CONCLUSION ET SIGNATURE
+     FIX 4 — Signature nominative : reutilise {{auteur}}, la meme
+     variable que la page de garde, au lieu d'un texte generique
+     "LE CHEF DE DIVISION" code en dur.
+     FIX terminologie — une seule cle de donnee "nb_relances" avec
+     un unique libelle affiche partout ("Relances effectuees"),
+     pour eliminer l'ambiguite Rappel/Appel releve dans l'audit.
+     ----------------------------------------------------------- */
+  ul.conclusion-list { margin: 4mm 0; padding-left: 6mm; font-size: 9.5pt; }
+  ul.conclusion-list li { margin-bottom: 1.5mm; }
+
+  .signature-block { margin-top: 16mm; text-align: right; }
+  .signature-block .fonction { font-weight: 700; text-transform: uppercase; font-size: 9.5pt; }
+  .signature-block .nom { margin-top: 10mm; font-weight: 600; font-size: 10.5pt; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PAGE DE GARDE
+     ============================================================ -->
+<div class="cover">
+  <div class="republique">République de Guinée</div>
+  <div class="devise">Travail - Justice - Solidarité</div>
+  <div class="primature">PRIMATURE</div>
+  <div class="service">{{nom_service}}</div>
+  <div class="titre-doc">Situation des Courriers Sortants</div>
+  <table class="meta">
+    <tr><td class="label">Période</td><td>{{periode_libelle}}</td></tr>
+    <tr><td class="label">Date d'élaboration</td><td>{{date_elaboration}}</td></tr>
+    <tr><td class="label">Par</td><td>{{auteur}}</td></tr>
+    <tr><td class="label">N°</td><td>{{numero_rapport}}</td></tr>
+  </table>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================================
+     SECTION 1 — SYNTHESE EXECUTIVE
+     ============================================================ -->
+<div class="page-header">
+  <span class="doc-ref">N° {{numero_rapport}}</span>
+  <span>{{date_elaboration}}</span>
+</div>
+
+<h1 class="section-title"><span class="section-number">1</span>Synthèse exécutive</h1>
+
+<p>
+  La présente situation fait état de {{total_courriers}} courriers sortants sur la période considérée,
+  dont {{nb_simples}} courriers simples et {{nb_reponses}} courriers réponses.
+  {{nb_retires}} courriers ont été retirés, soit un taux de {{taux_retrait}} %.
+</p>
+
+<div class="kpi-row">
+  <div class="kpi-total">
+    <div class="value">{{total_courriers}}</div>
+    <div class="label">TOTAL COURRIERS</div>
+  </div>
+  <div class="kpi-secondary">
+    <div class="kpi-card"><div class="value">{{nb_simples}}</div><div class="label">SIMPLES</div></div>
+    <div class="kpi-card"><div class="value">{{nb_reponses}}</div><div class="label">RÉPONSES</div></div>
+    <div class="kpi-card"><div class="value">{{nb_retires}}</div><div class="label">RETIRÉS</div></div>
+    <div class="kpi-card"><div class="value">{{nb_injoignables}}</div><div class="label">INJOIGNABLES</div></div>
+  </div>
+</div>
+<p class="kpi-note">
+  Note : SIMPLES + RÉPONSES = TOTAL. RETIRÉS et INJOIGNABLES sont des statuts de suivi
+  qui ne s'additionnent pas au total (un courrier compte une seule fois dans TOTAL,
+  quel que soit son statut de suivi).
+</p>
+
+<div class="kpi-row">
+  <div class="kpi-card"><div class="value">{{nb_relances}}</div><div class="label">RELANCES EFFECTUÉES</div></div>
+</div>
+
+<div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================================
+     SECTION 2 — INDICATEURS TEMPORELS
+     ============================================================ -->
+<div class="page-header">
+  <span class="doc-ref">N° {{numero_rapport}}</span>
+  <span>{{date_elaboration}}</span>
+</div>
+
+<h1 class="section-title"><span class="section-number">2</span>Indicateurs temporels</h1>
+
+<div class="indic-row">
+  <div class="indic-card"><div class="value">{{delai_moyen_reponse}} j</div><div class="label">Temps moyen de réponse</div></div>
+  <div class="indic-card"><div class="value">{{delai_moyen_retrait}} j</div><div class="label">Temps moyen avant retrait</div></div>
+</div>
+<div class="indic-row">
+  <div class="indic-card"><div class="value">{{delai_min}} j</div><div class="label">Délai de traitement min.</div></div>
+  <div class="indic-card"><div class="value">{{delai_max}} j</div><div class="label">Délai de traitement max.</div></div>
+</div>
+
+<div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================================
+     SECTION 3 — GRAPHIQUES ET ANALYSE
+     ============================================================ -->
+<div class="page-header">
+  <span class="doc-ref">N° {{numero_rapport}}</span>
+  <span>{{date_elaboration}}</span>
+</div>
+
+<h1 class="section-title"><span class="section-number">3</span>Graphiques et analyse</h1>
+
+<div class="chart-block">
+  <div class="chart-title">1. Répartition par signataire</div>
+  <div class="bar-chart">
+    <!-- {{#each repartition_signataire}} -->
+    <div class="bar-row">
+      <div class="bar-label">{{code}}</div>
+      <div class="bar-track"><div class="bar-fill" style="width: {{pourcentage_largeur}}%;"></div></div>
+      <div class="bar-value">{{valeur}}</div>
+    </div>
+    <!-- {{/each}} -->
+  </div>
+</div>
+
+<div class="chart-block">
+  <div class="chart-title">2. Répartition par statut de suivi</div>
+  <!--
+    IMPORTANT : ce graphique ne doit lister QUE des statuts de
+    suivi (Retire, Appel effectue, Destinataire joint, Injoignable,
+    Livre). "E-mail envoye" ne doit plus y figurer : c'est un mode
+    de transmission, affiche dans le graphique suivant. Un courrier
+    peut donc apparaitre dans les deux graphiques a la fois
+    (ex: Retire ET Envoi par e-mail), ce n'est pas une incoherence.
+  -->
+  <div class="pie-legend">
+    <!-- {{#each repartition_statut_suivi}} -->
+    <div><span class="swatch" style="background:{{couleur}};"></span>{{libelle}} — {{valeur}} ({{pourcentage}} %)</div>
+    <!-- {{/each}} -->
+  </div>
+</div>
+
+<div class="chart-block">
+  <div class="chart-title">3. Répartition par mode de transmission</div>
+  <div class="pie-legend">
+    <!-- {{#each repartition_mode}} -->
+    <div><span class="swatch" style="background:{{couleur}};"></span>{{libelle}} — {{valeur}} ({{pourcentage}} %)</div>
+    <!-- {{/each}} -->
+  </div>
+</div>
+
+<div class="chart-block">
+  <div class="chart-title">4. Répartition des délais de traitement</div>
+  <div class="bar-chart">
+    <!-- {{#each repartition_delais}} -->
+    <div class="bar-row">
+      <div class="bar-label">{{tranche}}</div>
+      <div class="bar-track"><div class="bar-fill" style="width: {{pourcentage_largeur}}%;"></div></div>
+      <div class="bar-value">{{valeur}}</div>
+    </div>
+    <!-- {{/each}} -->
+  </div>
+</div>
+
+<div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================================
+     SECTION 4 — TABLEAU DETAILLE
+     ============================================================ -->
+<div class="page-header">
+  <span class="doc-ref">N° {{numero_rapport}}</span>
+  <span>{{date_elaboration}}</span>
+</div>
+
+<h1 class="section-title"><span class="section-number">4</span>Tableau détaillé des courriers</h1>
+<p style="font-size:9pt; color:#666; margin-top:-3mm;">{{total_courriers}} courriers — triés par date de signature croissante</p>
+
+<table class="detail">
+  <thead>
+    <tr>
+      <th class="col-num">N°</th>
+      <th class="col-date">Date sign.</th>
+      <th class="col-sign">Signataire</th>
+      <th class="col-dest">Destinataire</th>
+      <th class="col-objet">Objet</th>
+      <th class="col-statut">Statut de suivi</th>
+      <th class="col-mode">Mode transm.</th>
+      <th class="col-dates">Dates clés</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- {{#each courriers}} -->
+    <tr>
+      <td>{{numero}}</td>
+      <td>{{date_signature}}</td>
+      <td>{{signataire}}</td>
+      <td>{{destinataire}}</td>
+      <td>{{objet}}</td>
+      <td>
+        <!-- champ statut_suivi, independant du mode. Valeurs :
+             retire | injoignable | appel_effectue | destinataire_joint | livre -->
+        <span class="badge badge-{{statut_suivi_classe}}">{{statut_suivi_libelle}}</span>
+      </td>
+      <td><span class="mode-tag">{{mode_transmission_libelle}}</span></td>
+      <td class="dates-cell">
+        <span class="lbl">Arr.</span> {{date_arrivee}}<br>
+        <span class="lbl">Ret.</span> {{date_retrait}}
+      </td>
+    </tr>
+    <!-- {{/each}} -->
+  </tbody>
+</table>
+
+<div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
+
+<div class="page-break"></div>
+
+<!-- ============================================================
+     SECTION 5 — CONCLUSION
+     ============================================================ -->
+<div class="page-header">
+  <span class="doc-ref">N° {{numero_rapport}}</span>
+  <span>{{date_elaboration}}</span>
+</div>
+
+<h1 class="section-title"><span class="section-number">5</span>Conclusion</h1>
+
+<p>
+  Au cours de la période analysée, {{total_courriers}} courriers sortants ont été enregistrés,
+  dont {{nb_simples}} courriers simples et {{nb_reponses}} courriers réponses.
+</p>
+
+<p><strong>Répartition par statut de suivi :</strong></p>
+<ul class="conclusion-list">
+  <!-- {{#each repartition_statut_suivi}} -->
+  <li>{{libelle}} : {{valeur}} ({{pourcentage}} %)</li>
+  <!-- {{/each}} -->
+</ul>
+
+<p><strong>Répartition par mode de transmission :</strong></p>
+<ul class="conclusion-list">
+  <!-- {{#each repartition_mode}} -->
+  <li>{{libelle}} : {{valeur}} ({{pourcentage}} %)</li>
+  <!-- {{/each}} -->
+</ul>
+
+<ul class="conclusion-list">
+  <li>{{nb_retires}} courriers retirés sur la période, soit {{taux_retrait}} % de l'ensemble.</li>
+  <li>{{nb_injoignables}} courriers enregistrés au statut « Injoignable ».</li>
+  <li>{{nb_relances}} relances effectuées sur la période.</li>
+  <li>Temps moyen de retrait : {{delai_moyen_retrait}} jours.</li>
+  <li>Délai moyen de réponse : {{delai_moyen_reponse}} jours.</li>
+</ul>
+
+<p style="font-size:8.5pt; color:#777;">
+  Les indicateurs présentés reflètent la situation observée à la date d'élaboration du rapport.
+</p>
+
+<div class="signature-block">
+  <div class="fonction">{{signataire_fonction}}</div>
+  <!-- meme variable {{auteur}} que la page de garde : plus de decalage entre les deux -->
+  <div class="nom">{{auteur}}</div>
+</div>
+
+<div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
+
+</body>
+</html>

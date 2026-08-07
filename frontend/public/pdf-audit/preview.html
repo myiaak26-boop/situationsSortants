@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Aperçu PDF — DEX</title>
+  <style>
+    body { margin: 0; padding: 24px; background: #e2e8f0; font-family: Arial, sans-serif; }
+    canvas { display: block; margin: 0 auto 24px; box-shadow: 0 2px 12px rgba(0,0,0,.25); background: #fff; }
+  </style>
+</head>
+<body>
+  <script type="module">
+    const pdfUrl = new URLSearchParams(location.search).get('pdf') || '/pdf-audit/tmp/current.pdf'
+    const pdfjsUrl = new URLSearchParams(location.search).get('js') || 'https://unpkg.com/pdfjs-dist@6.2.108/build/pdf.min.mjs'
+    const workerUrl = new URLSearchParams(location.search).get('worker') || 'https://unpkg.com/pdfjs-dist@6.2.108/build/pdf.worker.min.mjs'
+    const pdfjs = await import(pdfjsUrl)
+    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
+    const data = new Uint8Array(await (await fetch(pdfUrl)).arrayBuffer())
+    const doc = await pdfjs.getDocument({ data }).promise
+    for (let i = 1; i <= doc.numPages; i++) {
+      const page = await doc.getPage(i)
+      const vp = page.getViewport({ scale: 1.4 })
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.ceil(vp.width)
+      canvas.height = Math.ceil(vp.height)
+      canvas.style.width = `${Math.round(vp.width / 2)}px`
+      const ctx = canvas.getContext('2d')
+      await page.render({ canvasContext: ctx, viewport: vp, canvas }).promise
+      document.body.appendChild(canvas)
+    }
+  </script>
+</body>
+</html>

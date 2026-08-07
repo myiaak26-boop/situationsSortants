@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); async function main() { const c = await prisma.courrier.findMany({ where: { signataire: { contains: 'Test CRUD' } } }); console.log(c.map(x => ({ id: x.id, numero: x.numero, signataire: x.signataire, signataireId: x.signataireId }))); } main().finally(() => prisma.$disconnect());

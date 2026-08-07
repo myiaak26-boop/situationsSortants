@@ -1,0 +1,36 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+
+# Base de données locale
+*.db
+*.db-*
+backend/backups/
+
+# Logs
+*.log
+vite.log
+
+# Tests / Playwright
+playwright-report/
+test-results/
+test/
+
+# Environnement
+.env
+.env.*
+!.env.example
+
+# OS / éditeur
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# OpenCode
+.opencode/

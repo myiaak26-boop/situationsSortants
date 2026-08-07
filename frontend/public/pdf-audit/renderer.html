@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Audit PDF — DEX</title>
+  <style>
+    body { margin: 0; padding: 0; background: #fff; }
+    #audit-root { position: absolute; left: -99999px; top: 0; width: 1px; height: 1px; }
+    #audit-root canvas { position: absolute; left: 0; top: 0; }
+  </style>
+</head>
+<body>
+  <div id="audit-root"></div>
+  <script type="module">
+    import { auditPdf } from './renderer.mjs'
+    window.__auditPdf = auditPdf
+    window.__auditReady = true
+  </script>
+</body>
+</html>
