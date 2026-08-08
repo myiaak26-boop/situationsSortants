@@ -490,7 +490,7 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
         },
       }),
     )
-    const created = await prisma.$transaction(tx)
+    const created = await prisma.$transaction(tx, { timeout: 120_000, maxWait: 30_000 })
     importes += created.length
     await prisma.historiqueAction.createMany({
       data: created.map((c) => ({
@@ -531,7 +531,7 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
         },
       }),
     )
-    await prisma.$transaction(tx)
+    await prisma.$transaction(tx, { timeout: 120_000, maxWait: 30_000 })
     maj += batch.length
     processedCount += batch.length
     onProgress?.(processedCount, importes, ignores, maj, erreurs)

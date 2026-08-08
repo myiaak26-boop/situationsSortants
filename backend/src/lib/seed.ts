@@ -223,7 +223,7 @@ export async function seedDatabase(db: PrismaClient) {
     { cle: 'delai.vert.jours', valeur: '3' },
     { cle: 'delai.orange.jours', valeur: '7' },
     { cle: 'import.maxSizeMo', valeur: '20' },
-    { cle: 'import.batchSize', valeur: '250' },
+    { cle: 'import.batchSize', valeur: '100' },
     { cle: 'situation.institutionNom', valeur: 'Secrétariat Central et Documentation' },
     { cle: 'situation.titre', valeur: 'Situation des Courriers Sortants' },
     { cle: 'situation.logo', valeur: '' },
