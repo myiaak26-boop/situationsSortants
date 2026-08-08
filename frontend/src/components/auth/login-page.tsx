@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { login } from '@/lib/session'
 import { Button } from '@/components/ui/button'
-import { Loader2, Lock, Mail, LogIn, FileText, ShieldCheck } from 'lucide-react'
+import { Loader2, Lock, Mail, LogIn, FileText } from 'lucide-react'
 
 export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState('')
@@ -54,7 +54,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@dex.local"
+                  placeholder="votre@adresse.com"
                   required
                   autoFocus
                   data-testid="login-email"
@@ -100,13 +100,6 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
               Se connecter
             </Button>
-
-            <div className="flex items-center justify-center gap-1.5 pt-1">
-              <ShieldCheck className="h-3 w-3 text-muted-foreground/40" />
-              <p className="text-3xs text-muted-foreground/50">
-                Démo : admin@dex.local / admin123
-              </p>
-            </div>
           </form>
         </div>
 

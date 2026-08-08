@@ -203,7 +203,7 @@ export async function seedDatabase(db: PrismaClient) {
   // ── Signataires officiels
   const signataires = [
     { code: 'PM', nom: 'Premier Ministre', ordre: 0 },
-    { code: 'MDC', nom: 'Ministre Délégué Chargé', ordre: 1 },
+    { code: 'MDC', nom: 'Ministre Directeur de Cabinet', ordre: 1 },
     { code: 'DCA', nom: 'Directeur de Cabinet Adjoint', ordre: 2 },
     { code: 'CCAB', nom: 'Chef de Cabinet', ordre: 3 },
   ]
