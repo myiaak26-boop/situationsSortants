@@ -351,6 +351,10 @@ export function drawTableHeader(c: Ctx, cols: TableCol[]) {
   doc.y = y + headerH + 4
 }
 
+// Colonnes à centrer horizontalement (valeurs courtes) ; les textes longs
+// (destinataire, objet, …) restent alignés à gauche mais centrés verticalement.
+const CENTER_IDS = new Set(['numero', 'dateEnvoi', 'signataire', 'numeroEntrant', 'dateArriveeEntrant', 'dateRetrait', 'telephone', 'delaiReponse', 'delaiTraitement', 'observation'])
+
 export function drawTable(c: Ctx, cols: TableCol[], rows: TableRowData[], opts: { rowH?: number; totalLabel?: string; totalValue?: string }) {
   const { doc } = c
   cols = scaleColumns(c, cols)
@@ -409,13 +413,19 @@ export function drawTable(c: Ctx, cols: TableCol[], rows: TableRowData[], opts: 
     for (const col of cols) {
       const v = row.cells[col.id] ?? ''
       if (col.badge && row.badgeColors[col.id]) {
-        drawBadgeCell(c, v, row.badgeColors[col.id], x + 4, y0 + 4, col.w - 8, rh - 8)
+        const full = cellTextWidth(c, v, 6.5)
+        const w = Math.min(Math.max(col.w - 8, 16), Math.max(full + 9, 16))
+        drawBadgeCell(c, v, row.badgeColors[col.id], x + (col.w - w) / 2, y0 + 4, col.w - 8, rh - 8)
         x += col.w
         continue
       }
       if (col.bold) doc.font(c.B).fontSize(6.5).fillColor(COLORS.ink)
       else doc.font(c.F).fontSize(6.5).fillColor(COLORS.slate)
-      doc.text(v, x + 4, y0 + 5, { width: col.w - 8, lineBreak: true })
+      const avail = Math.max(col.w - 8, 10)
+      const centered = CENTER_IDS.has(col.id)
+      const textH = doc.heightOfString(v, { width: avail, align: centered ? 'center' : 'left' })
+      const ty = y0 + Math.max(2, (rh - textH) / 2)
+      doc.text(v, x + (centered ? (col.w - avail) / 2 : 4), ty, { width: avail, align: centered ? 'center' : 'left', lineBreak: true })
       x += col.w
     }
     doc.y = y0 + rh

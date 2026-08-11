@@ -241,7 +241,6 @@ function dayLabel(iso: string): string {
 }
 
 export interface ExecStatsOptions {
-  seuilRappelJours?: number
   plageJoursResume?: 'jour' | 'semaine' | 'mois'
   spanJours?: number
 }
@@ -256,10 +255,10 @@ export async function computeExecStats(
   where: Prisma.CourrierWhereInput,
   options: ExecStatsOptions = {},
 ): Promise<SituationExecStats> {
-  const { seuilRappelJours = 7 } = options
   const courriers = await prisma.courrier.findMany({
     where,
     select: {
+      id: true,
       dateEnvoi: true,
       destinataire: true,
       numeroEntrant: true,
@@ -267,12 +266,51 @@ export async function computeExecStats(
       modeEnvoi: true,
       nbrRappels: true,
       signataire: true,
+      situationId: true,
+      modeTransmissionId: true,
       modeTransmission: { select: { nom: true, cle: true } },
       situation: { select: { nom: true } },
       retrait: { select: { dateRetrait: true } },
     },
     orderBy: { dateEnvoi: 'asc' },
   })
+
+  // « À rappeler » = courrier où l'action Rappeler est disponible dans le
+  // workflow configuré (transition estRappel depuis sa situation, avec son
+  // mode de transmission), et dont le dernier événement de suivi n'est pas
+  // daté du jour (pas de relance le jour même d'une action).
+  const rappelTransitions = await prisma.transition.findMany({
+    where: { estRappel: true },
+    select: { fromSituationId: true, modeTransmissionId: true },
+  })
+  const rappelParSituation = new Map<string, Set<string | null>>()
+  for (const t of rappelTransitions) {
+    let modes = rappelParSituation.get(t.fromSituationId)
+    if (!modes) {
+      modes = new Set()
+      rappelParSituation.set(t.fromSituationId, modes)
+    }
+    modes.add(t.modeTransmissionId)
+  }
+  const aujDebut = startOfDay(new Date())
+  const derniersEvenements = await prisma.historiqueAction.findMany({
+    where: { courrierId: { in: courriers.map((c) => c.id) } },
+    select: { courrierId: true, createdAt: true },
+    orderBy: { createdAt: 'desc' },
+  })
+  const dernierEvenement = new Map<string, Date>()
+  for (const h of derniersEvenements) {
+    if (!dernierEvenement.has(h.courrierId)) dernierEvenement.set(h.courrierId, h.createdAt)
+  }
+  const peutRappeler = (c: (typeof courriers)[number]): boolean => {
+    const modes = rappelParSituation.get(c.situationId)
+    if (!modes) return false
+    return modes.has(null) || (c.modeTransmissionId !== null && modes.has(c.modeTransmissionId))
+  }
+  const relancePasAujourdhui = (c: (typeof courriers)[number]): boolean => {
+    const dernier = dernierEvenement.get(c.id)
+    return dernier === undefined || dernier < aujDebut
+  }
 
   const stats: SituationExecStats = {
     total: courriers.length,
@@ -360,7 +398,7 @@ export async function computeExecStats(
           stats.retraitsConcernes++
         }
       }
-    } else if (joursArrondis >= seuilRappelJours) {
+    } else if (peutRappeler(c) && relancePasAujourdhui(c)) {
       stats.aRappeler++
     }
 
