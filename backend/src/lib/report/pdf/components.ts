@@ -331,17 +331,24 @@ export function drawTableHeader(c: Ctx, cols: TableCol[]) {
   const { doc } = c
   const y = doc.y
   const currentUsable = doc.page.width - GRID.marginL - GRID.marginR
+  const padX = 4
+  doc.font(c.B).fontSize(6.5)
+  // Hauteur adaptative : le plus grand nombre de lignes requis par un intitulé
+  // (retour à la ligne automatique selon la largeur de colonne) fixe la hauteur
+  // commune de toute la ligne d'en-tête. Le texte est ensuite centré verticalement.
+  const heights = cols.map((col) => doc.heightOfString(col.header, { width: Math.max(col.w - padX * 2, 10), align: 'center' }))
+  const headerH = Math.max(20, ...heights)
   doc.save()
   doc.fillColor(COLORS.ink)
-  doc.rect(GRID.marginL, y, currentUsable, 20).fill()
+  doc.rect(GRID.marginL, y, currentUsable, headerH).fill()
   doc.restore()
-  doc.fillColor(COLORS.white).font(c.B).fontSize(6.5)
+  doc.fillColor(COLORS.white)
   let x = GRID.marginL
-  for (const col of cols) {
-    doc.text(col.header, x + 4, y + 7, { width: col.w - 8, lineBreak: false })
+  cols.forEach((col, i) => {
+    doc.text(col.header, x + padX, y + (headerH - heights[i]) / 2, { width: col.w - padX * 2, align: 'center' })
     x += col.w
-  }
-  doc.y = y + 24
+  })
+  doc.y = y + headerH + 4
 }
 
 export function drawTable(c: Ctx, cols: TableCol[], rows: TableRowData[], opts: { rowH?: number; totalLabel?: string; totalValue?: string }) {
