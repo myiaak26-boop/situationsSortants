@@ -23,6 +23,7 @@
     "backend"
   ],
   "devDependencies": {
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "better-sqlite3": "^13.0.3"
   }
 }

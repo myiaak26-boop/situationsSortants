@@ -127,7 +127,7 @@ function CourriersPage() {
   const [refreshTick, setRefreshTick] = useState(0)
   const [session, setSession] = useState<Session | null>(null)
   const [creationManuelle, setCreationManuelle] = useState<boolean | null>(null)
-  const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set(['numeroEntrant', 'dateRetrait']))
+  const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set(['numeroEntrant']))
   const [showCols, setShowCols] = useState(false)
   const [actionRowId, setActionRowId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<CourrierRow | null>(null)
