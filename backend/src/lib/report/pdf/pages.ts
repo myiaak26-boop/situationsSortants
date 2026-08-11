@@ -1,6 +1,6 @@
 import { COLORS, GRID, tint, usableWidth, chartColorFor } from '../theme.js'
 import { existsSync } from 'node:fs'
-import { KPI_DEFS, TEMPORAL_DEFS, TABLE_COL_DEFS, CHART_TITLES, visibleKpis } from '../types.js'
+import { KPI_DEFS, TEMPORAL_DEFS, TABLE_COL_DEFS, CHART_TITLES, visibleKpis, fmtJours, fmtPct } from '../types.js'
 import type { ReportTypeConfig, TableColId } from '../types.js'
 import type { TableRow, SituationExecStats } from '../../situation-query.js'
 import type { ExecCoverInfo } from './index.js'
@@ -133,7 +133,7 @@ export function drawSummary(c: Ctx, stats: SituationExecStats, config: ReportTyp
     `dont ${fmtNum(stats.courriersSimples)} courrier${pl(stats.courriersSimples)} simple${pl(stats.courriersSimples)} ` +
     `et ${fmtNum(stats.courriersReponses)} courrier${pl(stats.courriersReponses)} réponse${pl(stats.courriersReponses)} ` +
     `(${fmtNum(stats.reponsesEntrant)} réponse${pl(stats.reponsesEntrant)} à un courrier entrant). ` +
-    `${stats.tauxRetrait == null ? 'Aucun courrier n’a été retiré sur la période.' : `${fmtNum(stats.retires)} courrier${pl(stats.retires)} retiré${pl(stats.retires)}, soit un taux de ${stats.tauxRetrait} %.`}`
+    `${stats.tauxRetrait == null ? 'Aucun courrier n’a été retiré sur la période.' : `${fmtNum(stats.retires)} courrier${pl(stats.retires)} retiré${pl(stats.retires)}, soit un taux de ${fmtPct(stats.tauxRetrait)}.`}`
   sectionSub(c, intro)
 
   // Fix #3 — hiérarchie visuelle : TOTAL en carte dominante, les autres KPI
@@ -148,7 +148,7 @@ export function drawSummary(c: Ctx, stats: SituationExecStats, config: ReportTyp
   const secondaires = visible.filter((id) => id !== 'total').map(tileOf)
   if (secondaires.length > 0) kpiGrid(c, secondaires)
   if (aTotal) {
-    kpiNote(c, 'Note : SIMPLES + RÉPONSES = TOTAL. RETIRÉS et INJOIGNABLES sont des statuts de suivi qui ne s\'additionnent pas au total (un courrier compte une seule fois dans TOTAL).')
+    kpiNote(c, 'Note : SIMPLES + RÉPONSES = TOTAL ; RETIRÉS, LIVRÉS, NOUVEAUX et INJOIGNABLES sont des statuts de suivi distincts.')
   }
 
   if (config.temporals.length > 0) {
@@ -303,16 +303,20 @@ export function drawDetailedTablePage(c: Ctx, rows: TableRow[], config: ReportTy
   sectionSub(c, `${fmtNum(rows.length)} courriers — triés par date de signature croissante`)
   doc.moveDown(0.25)
 
-  const cols: TableCol[] = config.cols.map((id) => {
-    const def = TABLE_COL_DEFS[id]
-    return {
-      id,
-      header: def.header,
-      w: def.w,
-      bold: id === 'numero',
-      badge: id === 'situation' || id === 'modeTransmission',
-    }
-  })
+  // Colonnes vides sur la sélection : adaptées (masquées) pour ne pas laisser
+  // de zone blanche et donner plus de largeur aux colonnes de texte.
+  const cols: TableCol[] = config.cols
+    .filter((id) => rows.some((r) => tableValue(r, id) !== '—'))
+    .map((id) => {
+      const def = TABLE_COL_DEFS[id]
+      return {
+        id,
+        header: def.header,
+        w: def.w,
+        bold: id === 'numero',
+        badge: id === 'situation' || id === 'modeTransmission',
+      }
+    })
 
   const data: TableRowData[] = rows.map((r) => {
     const cells: Record<string, string> = {}
@@ -337,11 +341,6 @@ export function drawDetailedTablePage(c: Ctx, rows: TableRow[], config: ReportTy
 // ---------------------------------------------------------------------------
 function plu(n: number): string {
   return n > 1 ? 's' : ''
-}
-
-function fmtPct(pc: number): string {
-  const v = Math.round(pc * 10) / 10
-  return (v % 1 === 0 ? String(v) : v.toFixed(1)) + ' %'
 }
 
 function pctOf(value: number, total: number): number {
@@ -378,7 +377,7 @@ export function drawConclusion(c: Ctx, stats: SituationExecStats) {
   }
 
   if (stats.retires > 0) {
-    lignes.push(`${fmtNum(stats.retires)} courrier${plu(stats.retires)} retiré${plu(stats.retires)} sur la période, soit ${stats.tauxRetrait} % de l'ensemble.`)
+    lignes.push(`${fmtNum(stats.retires)} courrier${plu(stats.retires)} retiré${plu(stats.retires)} sur la période, soit ${fmtPct(stats.tauxRetrait ?? 0)} de l'ensemble.`)
   }
   if (stats.injoignables > 0) {
     lignes.push(`${fmtNum(stats.injoignables)} courrier${plu(stats.injoignables)} enregistré${plu(stats.injoignables)} au statut « Injoignable ».`)
@@ -390,10 +389,10 @@ export function drawConclusion(c: Ctx, stats: SituationExecStats) {
     lignes.push(`${fmtNum(stats.rappelsEffectues)} relance${plu(stats.rappelsEffectues)} effectuée${plu(stats.rappelsEffectues)} sur la période.`)
   }
   if (stats.tempsMoyenRetraitJours != null) {
-    lignes.push(`Temps moyen de retrait : ${stats.tempsMoyenRetraitJours} jour${plu(Math.round(stats.tempsMoyenRetraitJours))}.`)
+    lignes.push(`Temps moyen de retrait : ${fmtJours(stats.tempsMoyenRetraitJours)} (${fmtNum(stats.retraitsConcernes)} courrier${plu(stats.retraitsConcernes)} concerné${plu(stats.retraitsConcernes)}).`)
   }
   if (stats.tempsMoyenReponseJours != null) {
-    lignes.push(`Délai moyen de réponse : ${stats.tempsMoyenReponseJours} jour${plu(Math.round(stats.tempsMoyenReponseJours))}.`)
+    lignes.push(`Délai moyen de réponse : ${fmtJours(stats.tempsMoyenReponseJours)} (${fmtNum(stats.reponsesConcernes)} courrier${plu(stats.reponsesConcernes)} concerné${plu(stats.reponsesConcernes)}).`)
   }
 
   lignes.push('Les indicateurs présentés reflètent la situation observée à la date d\'élaboration du rapport.')

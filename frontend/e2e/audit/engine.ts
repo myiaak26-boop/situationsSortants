@@ -44,7 +44,7 @@ for (const c of [...TOKENS, ...Object.values(CHART_COLORS)]) {
 }
 
 const EXPECTED_SIZES = [
-  ...new Set<number>([...Object.values(FONT_SIZES).filter((v): v is number => typeof v === 'number'), 6.8, 7.5, 8.5, 9.5, 10.5, 12, 15, 16]),
+  ...new Set<number>([...Object.values(FONT_SIZES).filter((v): v is number => typeof v === 'number'), 6.8, 7.5, 8.5, 9.5, 10.5, 12, 15, 16, 22]),
 ]
 
 // ---------------------------------------------------------------------------
@@ -274,7 +274,14 @@ export function assessPdf(raw: { pages: AuditPageRaw[] }, scenario: Scenario, ex
   // ---- 8. Colonnes dimensionnées + en-têtes répétés ---------------------------
   const colProbs: string[] = []
   const expected = expectedCols(scenario.reportType)
-  const headerNames = expected.map((c) => c.header)
+  // Les colonnes vides sur la sélection sont masquées dynamiquement : le
+  // référentiel des en-têtes attendus est dérivé de la 1ère page paysage.
+  const renderedHeaders = (p: AuditPageRaw) =>
+    p.text
+      .filter((t) => t.y > 40 && t.y < 140)
+      .map((t) => t.str.trim())
+      .filter((s) => expected.some((c) => c.header === s))
+  const headerNames = landscapePages.length ? [...new Set(renderedHeaders(landscapePages[0]))] : expected.map((c) => c.header)
   const headerPos: Record<string, number> = {}
   if (landscapePages.length) {
     const first = landscapePages[0]
@@ -313,7 +320,7 @@ export function assessPdf(raw: { pages: AuditPageRaw[] }, scenario: Scenario, ex
   }
   push({
     id: 'colonnes', label: 'Colonnes correctement dimensionnées', cat: 'Tableaux', severity: colProbs.length ? 'majeur' : 'info',
-    ok: colProbs.length === 0, detail: colProbs.length ? colProbs.slice(0, 6).join(' ; ') : `${expected.length} colonnes stables sur toutes les pages paysage`,
+    ok: colProbs.length === 0, detail: colProbs.length ? colProbs.slice(0, 6).join(' ; ') : `${headerNames.length} colonne(s) stables sur toutes les pages paysage`,
     cause: colProbs.length ? 'Largeur de colonne insuffisante ou position non uniforme' : 'Colonnes définies par config et répétées',
     impact: 'Données illisibles ou en-têtes incohérents d\'une page à l\'autre', fix: 'Ajuster TABLE_COL_DEFS (w) ou revoir la répétition d\'en-tête',
     priority: 'P1',
@@ -361,8 +368,9 @@ export function assessPdf(raw: { pages: AuditPageRaw[] }, scenario: Scenario, ex
     }
   }
   // Icônes KPI alignées sur la grille verticale (pas de 128 pt = largeur carte + 10)
+  // Seules les pastilles non-ASCII sont des icônes (les valeurs des barres sont des chiffres).
   const glyphXByPage: number[][] = contentPages.map((p) =>
-    p.text.filter((t) => p.layout === 'portrait' && t.size > 8 && t.size < 9 && t.str.length <= 2 && t.y < 300).map((t) => t.x).sort((a, b) => a - b)
+    p.text.filter((t) => p.layout === 'portrait' && t.size > 8 && t.size < 9 && t.str.length <= 2 && /[^\x00-\x7F]/u.test(t.str) && t.y < 300).map((t) => t.x).sort((a, b) => a - b)
   )
   const kpiStep = (pageW - marginL - marginR - GRID.kpiGap * (GRID.kpiCols - 1)) / GRID.kpiCols + GRID.kpiGap
   const kpiCols = Array.from({ length: GRID.kpiCols }, (_, k) => marginL + 8 + 6.5 + k * kpiStep)

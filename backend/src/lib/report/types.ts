@@ -6,6 +6,8 @@ export type KpiId =
   | 'simples'
   | 'reponses'
   | 'retires'
+  | 'livres'
+  | 'nouveaux'
   | 'mail'
   | 'coursier'
   | 'retraitSecretariat'
@@ -51,6 +53,8 @@ export const KPI_DEFS: Record<KpiId, KpiDef> = {
   simples: { id: 'simples', label: 'Courriers simples', glyph: '◇', color: COLORS.blue, value: (s) => fmt(s.courriersSimples) },
   reponses: { id: 'reponses', label: 'Courriers réponses', glyph: '↩', color: COLORS.violet, value: (s) => fmt(s.courriersReponses) },
   retires: { id: 'retires', label: 'Retirés', glyph: '✓', color: COLORS.green, value: (s) => fmt(s.retires) },
+  livres: { id: 'livres', label: 'Livrés', glyph: '✔', color: COLORS.teal, value: (s) => fmt(s.livres) },
+  nouveaux: { id: 'nouveaux', label: 'Nouveaux', glyph: '＋', color: COLORS.blue, value: (s) => fmt(s.nouveaux) },
   mail: { id: 'mail', label: 'Envoyés mail', glyph: '✉', color: COLORS.blue, value: (s) => fmt(s.envoyesMail) },
   coursier: { id: 'coursier', label: 'Envoyés coursier', glyph: '➤', color: COLORS.slate, value: (s) => fmt(s.envoyesCoursier) },
   retraitSecretariat: { id: 'retraitSecretariat', label: 'Retrait secrétariat', glyph: '▣', color: COLORS.teal, value: (s) => fmt(s.enRetraitSecretariat) },
@@ -63,17 +67,37 @@ function fmt(n: number): string {
   return n.toLocaleString('fr-FR')
 }
 
-function fmtJours(n: number): string {
+export function fmtJours(n: number): string {
+  if (n === 0 || n < 1) return "Moins d'un jour"
   const v = Math.round(n * 10) / 10
   const s = Number.isInteger(v) ? String(v) : String(v).replace('.', ',')
   return `${s} jour${v > 1 ? 's' : ''}`
 }
 
+export function fmtPct(pc: number): string {
+  const v = Math.round(pc * 10) / 10
+  return `${Number.isInteger(v) ? String(v) : String(v).replace('.', ',')} %`
+}
+
 export const TEMPORAL_DEFS: Record<TemporalId, { id: TemporalId; label: string; value: (s: SituationExecStats) => string }> = {
-  tpsReponse: { id: 'tpsReponse', label: 'Temps moyen de réponse', value: (s) => (s.tempsMoyenReponseJours == null ? '—' : fmtJours(s.tempsMoyenReponseJours)) },
-  tpsRetrait: { id: 'tpsRetrait', label: 'Temps moyen avant retrait', value: (s) => (s.tempsMoyenRetraitJours == null ? '—' : fmtJours(s.tempsMoyenRetraitJours)) },
-  delaiMin: { id: 'delaiMin', label: 'Délai de traitement min.', value: (s) => (s.delaiMinJours == null ? '—' : fmtJours(s.delaiMinJours)) },
-  delaiMax: { id: 'delaiMax', label: 'Délai de traitement max.', value: (s) => (s.delaiMaxJours == null ? '—' : fmtJours(s.delaiMaxJours)) },
+  tpsReponse: {
+    id: 'tpsReponse',
+    label: 'Temps moyen de réponse',
+    value: (s) =>
+      s.tempsMoyenReponseJours == null
+        ? 'Non applicable (aucun courrier concerné)'
+        : `${fmtJours(s.tempsMoyenReponseJours)} — ${fmt(s.reponsesConcernes)} courrier${s.reponsesConcernes > 1 ? 's' : ''} concerné${s.reponsesConcernes > 1 ? 's' : ''}`,
+  },
+  tpsRetrait: {
+    id: 'tpsRetrait',
+    label: 'Temps moyen avant retrait',
+    value: (s) =>
+      s.tempsMoyenRetraitJours == null
+        ? 'Non applicable (aucun courrier concerné)'
+        : `${fmtJours(s.tempsMoyenRetraitJours)} — ${fmt(s.retraitsConcernes)} courrier${s.retraitsConcernes > 1 ? 's' : ''} concerné${s.retraitsConcernes > 1 ? 's' : ''}`,
+  },
+  delaiMin: { id: 'delaiMin', label: 'Délai de réponse min.', value: (s) => (s.delaiMinJours == null ? 'Non applicable (aucun courrier concerné)' : fmtJours(s.delaiMinJours)) },
+  delaiMax: { id: 'delaiMax', label: 'Délai de réponse max.', value: (s) => (s.delaiMaxJours == null ? 'Non applicable (aucun courrier concerné)' : fmtJours(s.delaiMaxJours)) },
 }
 
 export interface TableColDef {
@@ -122,7 +146,7 @@ export const CHART_TITLES: Record<ChartId, string> = {
   destinataire: 'Répartition par destinataire',
 }
 
-const DEFAULT_KPIS: KpiId[] = ['total', 'simples', 'reponses', 'retires', 'injoignables', 'aRappeler', 'rappels']
+const DEFAULT_KPIS: KpiId[] = ['total', 'simples', 'reponses', 'retires', 'livres', 'nouveaux', 'injoignables', 'aRappeler', 'rappels']
 const DEFAULT_TEMPORALS: TemporalId[] = ['tpsReponse', 'tpsRetrait', 'delaiMin', 'delaiMax']
 const DEFAULT_CHARTS: ChartId[] = ['signataire', 'situation', 'mode', 'evolution', 'delais']
 const DEFAULT_COLS: TableColId[] = ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'situation', 'modeTransmission', 'numeroEntrant', 'dateArriveeEntrant', 'dateRetrait']

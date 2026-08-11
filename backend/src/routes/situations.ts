@@ -240,11 +240,16 @@ export async function situationRoutes(app: FastifyInstance) {
       return reply.send(csv)
     }
 
-    const [parametres, execStats] = await Promise.all([
+    const [parametres, execStats, exclus] = await Promise.all([
       prisma.parametre.findMany({
         where: { cle: { in: ['situation.institutionNom', 'situation.logo', 'situation.titre', 'situation.republique', 'situation.devise', 'situation.signataireNom'] } },
       }),
       computeExecStats(where),
+      prisma.courrier.findMany({
+        where: { ...where, numero: { contains: '_del_' } },
+        select: { numero: true },
+        orderBy: { dateEnvoi: 'asc' },
+      }),
     ])
     const paramMap = new Map(parametres.map((p) => [p.cle, p.valeur]))
     const reportType = typeof (q as Record<string, unknown>).reportType === 'string' && String((q as Record<string, unknown>).reportType)
@@ -290,8 +295,14 @@ export async function situationRoutes(app: FastifyInstance) {
       stats: execStats,
       rows,
       config,
-      compact: type === 'xlsx',
       signataires,
+      auditInterne: {
+        exclus,
+        totalInclus: rows.length,
+        signatairesNonRenseignes: rows.filter((r) => r.signataire === 'Non renseigné').length,
+        destinatairesNonRenseignes: rows.filter((r) => r.destinataire === 'Non renseigné').length,
+        objetsSansLibelle: rows.filter((r) => r.objet === 'Sans objet').length,
+      },
     })
     reply.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     reply.header('Content-Disposition', `attachment; filename="situation-${type === 'exec-xlsx' ? 'executive-' : ''}${numeroSituation}.xlsx"`)
@@ -329,7 +340,7 @@ export async function situationRoutes(app: FastifyInstance) {
 
     if (type === 'simples') extraWhere = { numeroEntrant: null }
     else if (type === 'reponses') extraWhere = { numeroEntrant: { not: null } }
-    else if (type === 'retires') extraWhere = { retrait: { isNot: null } }
+    else if (type === 'retires') extraWhere = { OR: [{ retrait: { isNot: null } }, { situation: { nom: { contains: 'Retiré' } } }] }
     else if (type === 'envoyesMail') extraWhere = { modeEnvoi: 'MAIL' }
     else if (type === 'envoyesCoursier') extraWhere = { modeEnvoi: 'COURSIER' }
     else if (type === 'enRetrait') extraWhere = { modeEnvoi: 'RETRAIT' }

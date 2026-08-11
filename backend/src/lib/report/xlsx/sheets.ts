@@ -137,7 +137,7 @@ export function kpiCardsRow(ws: XLSX.WorkSheet, row: number, items: { label: str
   items.forEach((item, i) => {
     const c0 = i * cardW
     const c1 = i === items.length - 1 ? lastCol : Math.min(c0 + cardW - 1, lastCol)
-    merge(ws, row, c0, row + 1, c1)
+    merge(ws, row, c0, row, c1)
     const valCell = XLSX.utils.encode_cell({ r: row, c: c0 })
     const labCell = XLSX.utils.encode_cell({ r: row + 1, c: c0 })
     const isFormula = item.value.startsWith('=')
@@ -160,6 +160,8 @@ const KPI_NUM: Record<KpiId, (s: SituationExecStats) => number> = {
   simples: (s) => s.courriersSimples,
   reponses: (s) => s.courriersReponses,
   retires: (s) => s.retires,
+  livres: (s) => s.livres,
+  nouveaux: (s) => s.nouveaux,
   mail: (s) => s.envoyesMail,
   coursier: (s) => s.envoyesCoursier,
   retraitSecretariat: (s) => s.enRetraitSecretariat,
@@ -211,8 +213,13 @@ export function buildSynthese(
         return r ? `=COUNTIF(${r},"<>")` : null
       }
       case 'retires': {
-        const r = rangeCol('dateRetrait')
-        return r ? `=COUNTIF(${r},"<>")` : null
+        const rDate = rangeCol('dateRetrait')
+        const rSit = rangeCol('situation')
+        if (!rDate && !rSit) return null
+        if (rDate && rSit) {
+          return `=COUNTIF(${rSit},"*Retiré*")+COUNTIF(${rDate},"<>")-COUNTIFS(${rSit},"*Retiré*",${rDate},"<>")`
+        }
+        return rDate ? `=COUNTIF(${rDate},"<>")` : `=COUNTIF(${rSit},"*Retiré*")`
       }
       case 'injoignables': {
         const r = rangeCol('situation')
@@ -258,7 +265,7 @@ export function buildSynthese(
     row += 1
     sheetTitleBand(ws, row, 15, '4 · Tableau détaillé des courriers', `${opts.rows.length} courriers`)
     row += 2
-    const cols: TableColId[] = config.cols
+    const cols: TableColId[] = config.cols.filter((id) => opts.rows!.some((r) => tableValue(r, id) !== ''))
     cols.forEach((id, ci) => {
       cell(ws, row, ci, TABLE_COL_DEFS[id].header, STYLE.th)
     })
@@ -310,7 +317,8 @@ function tableValue(r: TableRow, colId: TableColId): string {
 // Feuille Situation complète
 // ---------------------------------------------------------------------------
 export function buildComplet(rows: TableRow[], config: ReportTypeConfig): XLSX.WorkSheet {
-  const cols: TableColId[] = config.cols
+  // Colonnes vides sur la sélection : masquées pour éviter les zones blanches.
+  const cols: TableColId[] = config.cols.filter((id) => rows.some((r) => tableValue(r, id) !== ''))
   const ws = baseSheet(cols.map((id) => Math.min(TABLE_COL_DEFS[id].w, 40)))
   cols.forEach((id, ci) => cell(ws, 0, ci, TABLE_COL_DEFS[id].header, STYLE.th))
   rows.forEach((r, ri) => {
@@ -345,7 +353,7 @@ function buildEntriesSheet(title: string, sub: string | null, headers: string[],
   entries.forEach(([label, value], i) => {
     const r = 3 + i
     cell(ws, r, 0, label, { font: { sz: 10, color: { rgb: COLORS.slate } }, fill: { fgColor: { rgb: i % 2 === 1 ? COLORS.panel : COLORS.white } } })
-    cell(ws, r, 1, value, { font: { bold: true, sz: 10, color: { rgb: COLORS.ink } }, fill: { fgColor: { rgb: i % 2 === 1 ? COLORS.panel : COLORS.white } } })
+    ws[XLSX.utils.encode_cell({ r, c: 1 })] = { t: 'n', v: value, s: { numFmt: '#,##0', font: { bold: true, sz: 10, color: { rgb: COLORS.ink } }, fill: { fgColor: { rgb: i % 2 === 1 ? COLORS.panel : COLORS.white } } } }
     const n = Math.max(1, Math.round((value / maxVal) * BAR_CELLS))
     const color = tint(COLORS.teal, 0.85).replace('#', '')
     for (let b = 0; b < BAR_CELLS; b++) {
@@ -405,5 +413,56 @@ export function buildHistorique(historique: NonNullable<AnnexesData['historique'
     const vals = [a.numero, a.action, a.detail, a.user, a.date]
     vals.forEach((v, ci) => cell(ws, ri + 3, ci, v, ri % 2 === 1 ? STYLE.zebra : {}))
   })
+  return finalize(ws)
+}
+
+// ---------------------------------------------------------------------------
+// Feuille Audit interne (diagnostic des anomalies de données)
+// ---------------------------------------------------------------------------
+export interface AuditInterne {
+  exclus: { numero: string }[]
+  totalInclus: number
+  signatairesNonRenseignes: number
+  destinatairesNonRenseignes: number
+  objetsSansLibelle: number
+}
+
+export function buildAuditInterne(data: AuditInterne): XLSX.WorkSheet {
+  const ws = baseSheet([46, 30, 20])
+  sheetTitleBand(ws, 0, 2, 'Audit interne des données', 'Destiné à l’administration — ne figure pas dans le rapport hiérarchique')
+  let row = 2
+  ws[XLSX.utils.encode_cell({ r: row, c: 0 })] = { t: 's', v: 'Courriers exclus du rapport', s: STYLE.h2 }
+  ws['!rows'] = ws['!rows'] || []
+  ws['!rows'][row] = { hpt: 20 }
+  row += 2
+  cell(ws, row, 0, 'Numéro', STYLE.th)
+  row++
+  if (data.exclus.length === 0) {
+    cell(ws, row, 0, 'Aucun courrier exclu')
+    row++
+  } else {
+    for (const e of data.exclus) {
+      cell(ws, row, 0, e.numero, { font: { sz: 10, color: { rgb: COLORS.rose } } })
+      row++
+    }
+  }
+  row += 2
+  ws[XLSX.utils.encode_cell({ r: row, c: 0 })] = { t: 's', v: 'Complétude des données (courriers inclus)', s: STYLE.h2 }
+  ws['!rows'][row] = { hpt: 20 }
+  row += 2
+  cell(ws, row, 0, 'Indicateur', STYLE.th)
+  cell(ws, row, 1, 'Valeur', STYLE.th)
+  row++
+  const lignes: [string, number][] = [
+    ['Courriers inclus dans le rapport', data.totalInclus],
+    ['Signataire « Non renseigné »', data.signatairesNonRenseignes],
+    ['Destinataire « Non renseigné »', data.destinatairesNonRenseignes],
+    ['Objet « Sans objet »', data.objetsSansLibelle],
+  ]
+  for (const [label, value] of lignes) {
+    cell(ws, row, 0, label, { font: { sz: 10, color: { rgb: COLORS.slate } } })
+    ws[XLSX.utils.encode_cell({ r: row, c: 1 })] = { t: 'n', v: value, s: { numFmt: '#,##0', font: { bold: true, sz: 10, color: { rgb: COLORS.ink } } } }
+    row++
+  }
   return finalize(ws)
 }

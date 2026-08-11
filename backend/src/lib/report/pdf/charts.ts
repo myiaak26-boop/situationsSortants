@@ -1,5 +1,6 @@
 import { COLORS, GRID, FONT_SIZES, tint, usableWidth } from '../theme.js'
 import { cellTextWidth, fit, addReportPage } from './components.js'
+import { fmtPct } from '../types.js'
 import type { Ctx } from './components.js'
 
 const { marginL: ML } = GRID
@@ -103,7 +104,7 @@ export function hbarChart(c: Ctx, data: { label: string; value: number }[], opts
   let ly = top
   sorted.forEach((d) => {
     const pc = Math.round((d.value / total) * 1000) / 10
-    const text = `${d.label} — ${d.value} (${pc} %)`
+    const text = `${d.label} — ${d.value} (${fmtPct(pc)})`
     const tw = cellTextWidth(c, text, 7.5) + 10
     if (lx + tw > rightLimit) {
       lx = ML
@@ -127,15 +128,6 @@ export function hbarChart(c: Ctx, data: { label: string; value: number }[], opts
     doc.fillColor(opts.colors.get(d.label) || COLORS.teal)
     doc.rect(accX, baseY, Math.max(w, 1.5), labelH).fill()
     doc.restore()
-    const pc = Math.round((d.value / total) * 1000) / 10
-    if (w > 26) {
-      doc.fillColor(COLORS.white).font(c.B).fontSize(7.5)
-      doc.text(`${d.value} (${pc} %)`, accX + 4, baseY + 3, { width: w - 8, lineBreak: false })
-    } else {
-      const bx = Math.min(accX + w + 3, rightLimit - 50)
-      doc.fillColor(COLORS.ink).font(c.F).fontSize(7)
-      doc.text(`${d.value}`, bx, baseY + 3, { width: 46, lineBreak: false })
-    }
     accX += w
   })
   doc.y = baseY + labelH + 14
@@ -197,7 +189,7 @@ export function donutChart(c: Ctx, data: { label: string; value: number }[], opt
     doc.rect(lx, ly, 7, 7).fill()
     doc.restore()
     doc.fillColor(COLORS.slate).font(c.F).fontSize(7.5)
-    doc.text(fit(c, `${d.label} — ${d.value} (${pc} %)`, 7.5, colW - 16), lx + 11, ly - 1.5, { width: colW - 16, lineBreak: false })
+    doc.text(fit(c, `${d.label} — ${d.value} (${fmtPct(pc)})`, 7.5, colW - 16), lx + 11, ly - 1.5, { width: colW - 16, lineBreak: false })
     ly += 13
   })
   doc.y = Math.max(cy + 50, ly + 16)

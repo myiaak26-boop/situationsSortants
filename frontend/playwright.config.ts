@@ -32,26 +32,26 @@ export default defineConfig({
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } },
-      testIgnore: '**/report-audit.spec.ts',
+      testIgnore: '**/report-*.spec.ts',
     },
     {
       name: 'laptop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 768 } },
-      testIgnore: '**/report-audit.spec.ts',
+      testIgnore: '**/report-*.spec.ts',
     },
     {
       name: 'tablet',
       use: { ...devices['iPad Pro 11'] },
-      testIgnore: '**/report-audit.spec.ts',
+      testIgnore: '**/report-*.spec.ts',
     },
     {
       name: 'mobile',
       use: { ...devices['iPhone 14'] },
-      testIgnore: '**/report-audit.spec.ts',
+      testIgnore: '**/report-*.spec.ts',
     },
     {
       name: 'audit',
-      testMatch: '**/report-audit.spec.ts',
+      testMatch: '**/report-*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },

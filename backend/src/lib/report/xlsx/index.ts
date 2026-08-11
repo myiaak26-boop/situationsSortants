@@ -1,6 +1,6 @@
 import XLSX from 'xlsx'
 import ExcelJS from 'exceljs'
-import { buildCover, buildSynthese, buildComplet, buildStatsSheets, buildReponses, buildHistorique } from './sheets.js'
+import { buildCover, buildSynthese, buildComplet, buildStatsSheets, buildReponses, buildHistorique, buildAuditInterne, type AuditInterne } from './sheets.js'
 import { reportConfigFor, TABLE_COL_DEFS } from '../types.js'
 import type { ReportTypeConfig, TableColId } from '../types.js'
 import type { TableRow, SituationExecStats } from '../../situation-query.js'
@@ -23,6 +23,7 @@ export interface ExecXlsxInput {
   annexes?: AnnexesData
   compact?: boolean
   signataires?: SignataireInfo[]
+  auditInterne?: AuditInterne
 }
 
 export async function generateExecXlsx(input: ExecXlsxInput): Promise<Buffer> {
@@ -62,6 +63,9 @@ export async function generateExecXlsx(input: ExecXlsxInput): Promise<Buffer> {
     if (hasReponses) {
       XLSX.utils.book_append_sheet(wb, buildReponses(rows), 'Courriers réponses')
     }
+    if (input.auditInterne) {
+      XLSX.utils.book_append_sheet(wb, buildAuditInterne(input.auditInterne), 'Audit interne')
+    }
   }
 
   return injectSheetPatches(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }), config)
@@ -73,6 +77,17 @@ async function injectSheetPatches(buf: Buffer, config: ReportTypeConfig): Promis
   const wb = new ExcelJS.Workbook()
   wb.calcProperties = { fullCalcOnLoad: true }
   await wb.xlsx.load(buf as unknown as ArrayBuffer)
+  for (const ws of wb.worksheets) {
+    const landscape = ws.name === 'Situation complète'
+    ws.pageSetup = {
+      paperSize: 9,
+      orientation: landscape ? 'landscape' : 'portrait',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.3, footer: 0.3 },
+    }
+  }
   const ws = wb.getWorksheet('Situation complète')
   if (ws) {
     ws.views = [{ state: 'frozen', ySplit: 1, topLeftCell: 'A2' }]

@@ -16,6 +16,13 @@ export interface SituationFiltres {
   rappels?: boolean
 }
 
+// Numéros portant une trace de suppression de l'ancien système (ex. :
+// « 1278-26_del_OXPwS »). Ces courriers ont été supprimés dans la source
+// historique : ils sont exclus des rapports et des statistiques, et listés
+// dans la section de diagnostic interne des exports.
+const NUMERO_EXCLUS_PATTERN = '_del_'
+export const EXCLUSION_LEGACY: Prisma.CourrierWhereInput = { numero: { not: { contains: NUMERO_EXCLUS_PATTERN } } }
+
 const PERIOD_LABELS: Record<string, string> = {
   aujourdhui: "Aujourd'hui",
   hier: 'Hier',
@@ -23,13 +30,18 @@ const PERIOD_LABELS: Record<string, string> = {
   mois: 'Le mois en cours',
   trimestre: 'Le trimestre en cours',
   annee: 'Cette année',
-  personnalisee: 'Période personnalisée',
+}
+
+function fmtDateFr(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`)
+  if (isNaN(d.getTime())) return iso
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 export function periodLabel(periode?: string, debut?: string, fin?: string): string {
   const base = PERIOD_LABELS[periode ?? ''] || 'Toutes périodes'
   if (periode === 'personnalisee' && debut && fin) {
-    return `${base} (${debut} → ${fin})`
+    return `Du ${fmtDateFr(debut)} au ${fmtDateFr(fin)}`
   }
   return base
 }
@@ -122,7 +134,11 @@ export async function buildWhere(f: SituationFiltres): Promise<Prisma.CourrierWh
   }
   if (f.destinataire) and.push({ destinataire: { contains: f.destinataire } })
   if (f.situationId) and.push({ situationId: f.situationId })
-  if (f.retires) and.push({ retrait: { isNot: null } })
+  if (f.retires) {
+    and.push({
+      OR: [{ retrait: { isNot: null } }, { situation: { nom: { contains: 'Retiré' } } }],
+    })
+  }
   if (f.parMail && !f.parCoursier) and.push({ modeEnvoi: 'MAIL' })
   if (f.parCoursier && !f.parMail) and.push({ modeEnvoi: 'COURSIER' })
   if (f.reponseEntrant) and.push({ numeroEntrant: { not: null } })
@@ -130,8 +146,9 @@ export async function buildWhere(f: SituationFiltres): Promise<Prisma.CourrierWh
   if (f.rappels) and.push({ nbrRappels: { gt: 0 } })
 
   and.push({ deletedAt: null })
+  and.push(EXCLUSION_LEGACY)
 
-  return and.length > 0 ? { AND: and } : { deletedAt: null }
+  return { AND: and }
 }
 
 export interface SituationStats {
@@ -150,99 +167,6 @@ export interface SituationStats {
   parSignataire: Record<string, number>
 }
 
-export async function computeStats(where: Prisma.CourrierWhereInput): Promise<SituationStats> {
-  const courriers = await prisma.courrier.findMany({
-    where,
-    select: {
-      dateEnvoi: true,
-      numeroEntrant: true,
-      dateArriveeEntrant: true,
-      modeEnvoi: true,
-      modeTransmission: { select: { cle: true } },
-      nbrRappels: true,
-      signataire: true,
-      situation: { select: { nom: true } },
-      retrait: { select: { dateRetrait: true } },
-    },
-  })
-
-  const stats: SituationStats = {
-    total: courriers.length,
-    courriersSimples: 0,
-    courriersReponses: 0,
-    retires: 0,
-    envoyesMail: 0,
-    envoyesCoursier: 0,
-    enRetraitSecretariat: 0,
-    injoignables: 0,
-    reponsesEntrant: 0,
-    rappelsEffectues: 0,
-    tempsMoyenRetraitJours: null,
-    tempsMoyenReponseJours: null,
-    parSignataire: {},
-  }
-
-  let sommeJoursRetrait = 0
-  let retraitsComptes = 0
-  let sommeJoursReponse = 0
-  let reponsesComptees = 0
-
-  for (const c of courriers) {
-    // Simples vs réponses
-    if (c.numeroEntrant) {
-      stats.courriersReponses++
-      stats.reponsesEntrant++
-      // Délai de réponse
-      if (c.dateArriveeEntrant) {
-        const jours = (new Date(c.dateEnvoi).getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
-        if (jours >= 0) {
-          sommeJoursReponse += jours
-          reponsesComptees++
-        }
-      }
-    } else {
-      stats.courriersSimples++
-    }
-
-    // Retrait
-    if (c.retrait) {
-      stats.retires++
-      const jours = (new Date(c.retrait.dateRetrait).getTime() - new Date(c.dateEnvoi).getTime()) / 86400000
-      if (jours >= 0) {
-        sommeJoursRetrait += jours
-        retraitsComptes++
-      }
-    }
-
-    // Mode de transmission
-    const cle = c.modeTransmission?.cle || c.modeEnvoi || ''
-    if (cle === 'MAIL') stats.envoyesMail++
-    else if (cle === 'COURSIER') stats.envoyesCoursier++
-    else if (cle === 'RETRAIT') stats.enRetraitSecretariat++
-
-    // Situations particulières
-    const nomSit = c.situation.nom.toLowerCase()
-    if (nomSit.includes('injoignable')) stats.injoignables++
-
-    // Rappels
-    stats.rappelsEffectues += c.nbrRappels
-
-    // Par signataire
-    const sig = c.signataire || 'Inconnu'
-    stats.parSignataire[sig] = (stats.parSignataire[sig] || 0) + 1
-  }
-
-  if (retraitsComptes > 0) {
-    stats.tempsMoyenRetraitJours = Math.round((sommeJoursRetrait / retraitsComptes) * 10) / 10
-  }
-  if (reponsesComptees > 0) {
-    stats.tempsMoyenReponseJours = Math.round((sommeJoursReponse / reponsesComptees) * 10) / 10
-  }
-
-  return stats
-}
-
-
 export interface TrancheDelai {
   libelle: string
   count: number
@@ -256,6 +180,10 @@ export interface EvolutionPoint {
 
 export interface SituationExecStats extends SituationStats {
   aRappeler: number
+  livres: number
+  nouveaux: number
+  reponsesConcernes: number
+  retraitsConcernes: number
   tauxRetrait: number | null
   parSituation: Record<string, number>
   parModeTransmission: Record<string, number>
@@ -361,6 +289,10 @@ export async function computeExecStats(
     tempsMoyenReponseJours: null,
     parSignataire: {},
     aRappeler: 0,
+    livres: 0,
+    nouveaux: 0,
+    reponsesConcernes: 0,
+    retraitsConcernes: 0,
     tauxRetrait: null,
     parSituation: {},
     parModeTransmission: {},
@@ -398,6 +330,7 @@ export async function computeExecStats(
         if (jours >= 0) {
           sommeJoursReponse += jours
           reponsesComptees++
+          stats.reponsesConcernes++
           const jArr = Math.floor(jours)
           if (jArr < minJours) minJours = jArr
           if (jArr > maxJours) maxJours = jArr
@@ -412,12 +345,20 @@ export async function computeExecStats(
       : (now.getTime() - new Date(c.dateEnvoi).getTime()) / 86400000
     const joursArrondis = Math.floor(joursEcoutes)
 
-    if (c.retrait) {
+    // Retrait — un courrier est considéré retiré s'il a un enregistrement de
+    // retrait OU si sa situation de suivi est « Retiré » (cas CRUD sans Retrait).
+    const nomSit = c.situation.nom.toLowerCase()
+    const estRetire = c.retrait !== null || nomSit.includes('retir')
+
+    if (estRetire) {
       stats.retires++
-      const jours = joursArrondis
-      if (jours >= 0) {
-        sommeJoursRetrait += jours
-        retraitsComptes++
+      if (c.retrait) {
+        const jours = joursArrondis
+        if (jours >= 0) {
+          sommeJoursRetrait += jours
+          retraitsComptes++
+          stats.retraitsConcernes++
+        }
       }
     } else if (joursArrondis >= seuilRappelJours) {
       stats.aRappeler++
@@ -428,8 +369,9 @@ export async function computeExecStats(
     else if (cle === 'COURSIER') stats.envoyesCoursier++
     else if (cle === 'RETRAIT') stats.enRetraitSecretariat++
 
-    const nomSit = c.situation.nom.toLowerCase()
     if (nomSit.includes('injoignable')) stats.injoignables++
+    if (nomSit.includes('livr')) stats.livres++
+    if (nomSit.includes('nouveau')) stats.nouveaux++
 
     stats.rappelsEffectues += c.nbrRappels
 
@@ -445,7 +387,7 @@ export async function computeExecStats(
     const bk = buckets.key(c.dateEnvoi)
     const pt = evolMap.get(bk) || { libelle: buckets.label(bk), total: 0, retires: 0 }
     pt.total++
-    if (c.retrait) pt.retires++
+    if (estRetire) pt.retires++
     evolMap.set(bk, pt)
   }
 

@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { prisma } from '../lib/prisma.js'
 import { PERMS, requirePermission } from '../lib/auth.js'
+import { EXCLUSION_LEGACY } from '../lib/situation-query.js'
 import type { Prisma } from '@prisma/client'
 
 const ACTIF = { deletedAt: null }
@@ -14,7 +15,7 @@ interface StatsFiltres {
 
 function buildStatsWhere(q: Record<string, unknown>): Prisma.CourrierWhereInput {
   const { debut, fin, signataire, situationId } = q as StatsFiltres
-  const where: Prisma.CourrierWhereInput = { ...ACTIF }
+  const where: Prisma.CourrierWhereInput = { ...ACTIF, ...EXCLUSION_LEGACY }
   const date: Prisma.DateTimeFilter = {}
   if (debut) date.gte = new Date(`${debut}T00:00:00`)
   if (fin) date.lte = new Date(`${fin}T23:59:59.999`)
@@ -87,7 +88,12 @@ export async function statistiquesRoutes(app: FastifyInstance) {
     const where = buildStatsWhere(req.query as Record<string, unknown>)
     const [total, retires, situations, courriers] = await Promise.all([
       prisma.courrier.count({ where }),
-      prisma.courrier.count({ where: { ...where, retrait: { isNot: null } } }),
+      prisma.courrier.count({
+        where: {
+          ...where,
+          OR: [{ retrait: { isNot: null } }, { situation: { nom: { contains: 'Retiré' } } }],
+        },
+      }),
       prisma.situation.findMany({ orderBy: { ordre: 'asc' } }),
       prisma.courrier.findMany({
         where,
@@ -113,6 +119,8 @@ export async function statistiquesRoutes(app: FastifyInstance) {
     let simples = 0
     let reponses = 0
     let injoignables = 0
+    let livres = 0
+    let nouveaux = 0
     let sommeReponse = 0
     let nbReponse = 0
     let sommeRetrait = 0
@@ -143,7 +151,10 @@ export async function statistiquesRoutes(app: FastifyInstance) {
       }
 
       const nomSit = situationMap[c.situationId] || ''
-      if (nomSit.toLowerCase().includes('injoignable')) injoignables++
+      const nomSitLower = nomSit.toLowerCase()
+      if (nomSitLower.includes('injoignable')) injoignables++
+      if (nomSitLower.includes('livr')) livres++
+      if (nomSitLower.includes('nouveau')) nouveaux++
 
       const nom = nomSit || 'Inconnu'
       distribution[nom] = (distribution[nom] || 0) + 1
@@ -158,6 +169,8 @@ export async function statistiquesRoutes(app: FastifyInstance) {
       courriersSimples: simples,
       courriersReponses: reponses,
       injoignables,
+      livres,
+      nouveaux,
       parSignataire,
       distribution,
       tempsMoyenReponseJours: nbReponse > 0 ? Math.round((sommeReponse / nbReponse) * 10) / 10 : null,
@@ -172,7 +185,7 @@ export async function statistiquesRoutes(app: FastifyInstance) {
     const where = buildStatsWhere(q as unknown as Record<string, unknown>)
     const courriers = await prisma.courrier.findMany({
       where,
-      select: { dateEnvoi: true, retrait: true },
+      select: { dateEnvoi: true, retrait: true, situation: { select: { nom: true } } },
       orderBy: { dateEnvoi: 'asc' },
     })
 
@@ -182,7 +195,8 @@ export async function statistiquesRoutes(app: FastifyInstance) {
       const key = buckets.key(c.dateEnvoi)
       if (!series[key]) series[key] = { total: 0, retires: 0 }
       series[key].total++
-      if (c.retrait) series[key].retires++
+      const estRetire = c.retrait !== null || (c.situation?.nom ?? '').toLowerCase().includes('retir')
+      if (estRetire) series[key].retires++
     }
 
     return Object.entries(series).map(([cle, data]) => ({
@@ -227,7 +241,7 @@ export async function statistiquesRoutes(app: FastifyInstance) {
 
     for (const mode of modes) {
       const courriers = await prisma.courrier.findMany({
-        where: { modeTransmissionId: mode.id, deletedAt: null },
+        where: { modeTransmissionId: mode.id, deletedAt: null, ...EXCLUSION_LEGACY },
         select: {
           id: true,
           createdAt: true,
