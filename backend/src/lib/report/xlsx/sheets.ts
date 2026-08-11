@@ -1,7 +1,7 @@
 ﻿import XLSX from 'xlsx'
 import { COLORS, tint } from '../theme.js'
 import { STYLE, badgeStyle, kpiValueStyle, kpiLabelStyle, type CellStyle } from './styles.js'
-import { KPI_DEFS, TEMPORAL_DEFS, TABLE_COL_DEFS, visibleKpis } from '../types.js'
+import { KPI_DEFS, TABLE_COL_DEFS, visibleKpis, PAR_AUTEUR, KPI_NOTE } from '../types.js'
 import type { KpiId, ReportTypeConfig, TableColId } from '../types.js'
 import type { TableRow, SituationExecStats } from '../../situation-query.js'
 import type { AnnexesData } from '../pdf/pages.js'
@@ -114,8 +114,7 @@ export function buildCover(cover: Cover, periode: string): XLSX.WorkSheet {
     ['Période', periode],
     ["Date d'élaboration", fmtDateTime(cover.genereLe).split(' ')[0]],
     ['Heure', fmtDateTime(cover.genereLe).split(' ')[1]],
-    ['Utilisateur', cover.utilisateur || '—'],
-    ['Numéro du rapport', `N° ${cover.numeroRapport}`],
+    ['Par', PAR_AUTEUR],
   ]
   meta.forEach(([label, value], i) => {
     const r = 9 + i
@@ -181,11 +180,7 @@ export function buildSynthese(
   periode: string,
 ): XLSX.WorkSheet {
   const ws = baseSheet(Array(16).fill(8))
-  sheetTitleBand(ws, 0, 15, '1 · Synthèse exécutive', `Période : ${periode} — ${stats.total} courriers`)
-
-  const intro = `La présente situation fait état de ${stats.total} courriers sortants, dont ${stats.courriersSimples} simples et ${stats.courriersReponses} réponses (${stats.reponsesEntrant} à un courrier entrant). ${stats.retires} retirés (${stats.tauxRetrait == null ? '—' : stats.tauxRetrait + ' %'}).`
-  merge(ws, 2, 0, 2, 15)
-  cell(ws, 2, 0, intro, { ...STYLE.sub, alignment: { wrapText: true, vertical: 'top' } })
+  sheetTitleBand(ws, 0, 15, '1 · Synthèse des indicateurs', `Période : ${periode} — ${stats.total} courriers`)
 
   // Liaison dynamique : valeurs KPI en formules Excel pointant vers « Situation complète ».
   const dataRows = opts.rows?.length ?? 0
@@ -242,24 +237,15 @@ export function buildSynthese(
   })
   const kpiGroups: typeof kpis[] = []
   for (let i = 0; i < kpis.length; i += 4) kpiGroups.push(kpis.slice(i, i + 4))
-  let row = 4
+  let row = 3
   kpiGroups.forEach((group) => {
     kpiCardsRow(ws, row, group, 15)
     row += 2
   })
 
-  if (config.temporals.length > 0) {
-    row += 1
-    sheetTitleBand(ws, row, 15, '2 · Indicateurs temporels')
-    row += 2
-    config.temporals.forEach((id, i) => {
-      merge(ws, row, 0, row, 9)
-      cell(ws, row, 0, TEMPORAL_DEFS[id].label, { font: { sz: 10, color: { rgb: COLORS.muted } }, fill: { fgColor: { rgb: i % 2 === 1 ? COLORS.panel : COLORS.white } } })
-      merge(ws, row, 10, row, 15)
-      cell(ws, row, 10, TEMPORAL_DEFS[id].value(stats), { font: { bold: true, sz: 10, color: { rgb: COLORS.ink } }, fill: { fgColor: { rgb: i % 2 === 1 ? COLORS.panel : COLORS.white } } })
-      row++
-    })
-  }
+  merge(ws, row, 0, row, 15)
+  cell(ws, row, 0, KPI_NOTE, { ...STYLE.sub, alignment: { wrapText: true, vertical: 'top' } })
+  row += 2
 
   if (opts.inlineTable && opts.rows && opts.rows.length > 0) {
     row += 1

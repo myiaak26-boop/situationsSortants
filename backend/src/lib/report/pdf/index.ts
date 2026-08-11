@@ -4,7 +4,7 @@ import type { TableRow, SituationExecStats } from '../../situation-query.js'
 import { reportConfigFor } from '../types.js'
 import type { ReportTypeConfig } from '../types.js'
 import { buildSignataireMap, signataireCode, hasSignataireCode, type SignataireInfo } from '../signataires.js'
-import { drawCover, drawSummary, drawCharts, drawDetailedTablePage, drawConclusion, drawAnnexes, type AnnexesData } from './pages.js'
+import { drawCover, drawCharts, drawDetailedTablePage, type AnnexesData } from './pages.js'
 
 export interface ExecCoverInfo {
   institutionNom: string
@@ -36,7 +36,6 @@ export interface ExecPdfInput {
 export async function generateExecPdf(input: ExecPdfInput): Promise<Buffer> {
   const { cover, rows, stats } = input
   const config = input.config ?? reportConfigFor(undefined)
-  const annexes = input.annexes ?? {}
   const compact = !!input.compact
 
   const sigMap = buildSignataireMap(input.signataires ?? [])
@@ -77,15 +76,12 @@ export async function generateExecPdf(input: ExecPdfInput): Promise<Buffer> {
 
   const c: Ctx = { doc, cover, ...fonts }
 
-  drawCover(c)
-  drawSummary(c, statsAffichage, config)
-  if (!compact) {
-    drawCharts(c, statsAffichage, config)
-  }
+  // Structure : couverture + synthèse KPI (page 1), tableau détaillé
+  // (page 2 et suivantes), répartitions graphiques (dernières pages).
+  drawCover(c, statsAffichage, config)
   drawDetailedTablePage(c, rowsAffichage, config)
   if (!compact) {
-    drawConclusion(c, statsAffichage)
-    drawAnnexes(c, config, annexes)
+    drawCharts(c, statsAffichage, config)
   }
   addFooters(c)
 

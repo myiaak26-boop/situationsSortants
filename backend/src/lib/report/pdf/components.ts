@@ -310,7 +310,7 @@ export interface TableRowData {
 // Colonnes à privilégier (textes longs) et colonnes à garder compactes lors
 // du redimensionnement automatique du tableau sur la largeur imprimable.
 const LONG_TEXT_IDS = new Set(['destinataire', 'objet', 'nomRetraitant'])
-const COMPACT_IDS = new Set(['numero', 'signataire', 'numeroEntrant', 'dateArriveeEntrant', 'dateRetrait', 'delaiReponse', 'delaiTraitement'])
+const COMPACT_IDS = new Set(['numero', 'dateEnvoi', 'signataire', 'situation', 'modeTransmission', 'dateArriveeEntrant', 'dateRetrait', 'delaiReponse', 'delaiTraitement'])
 
 function scaleColumns(c: Ctx, cols: TableCol[]): TableCol[] {
   const usable = c.doc.page.width - GRID.marginL - GRID.marginR
