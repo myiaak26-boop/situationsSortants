@@ -1,6 +1,6 @@
 import { COLORS, GRID, usableWidth, chartColorFor } from '../theme.js'
 import { existsSync } from 'node:fs'
-import { KPI_DEFS, TABLE_COL_DEFS, CHART_TITLES, CHART_NUMBERS, PAR_AUTEUR, KPI_NOTE, visibleKpis } from '../types.js'
+import { KPI_DEFS, TABLE_COL_DEFS, CHART_TITLES, CHART_NUMBERS, PAR_AUTEUR, KPI_NOTE, visibleKpis, ALWAYS_VISIBLE_COLS } from '../types.js'
 import type { ReportTypeConfig, TableColId } from '../types.js'
 import type { TableRow, SituationExecStats } from '../../situation-query.js'
 import type { ExecCoverInfo } from './index.js'
@@ -197,7 +197,7 @@ export function drawDetailedTablePage(c: Ctx, rows: TableRow[], config: ReportTy
   // Colonnes vides sur la sélection : adaptées (masquées) pour ne pas laisser
   // de zone blanche et donner plus de largeur aux colonnes de texte.
   const cols: TableCol[] = config.cols
-    .filter((id) => rows.some((r) => tableValue(r, id) !== '—'))
+    .filter((id) => ALWAYS_VISIBLE_COLS.has(id) || rows.some((r) => tableValue(r, id) !== '—'))
     .map((id) => {
       const def = TABLE_COL_DEFS[id]
       return {

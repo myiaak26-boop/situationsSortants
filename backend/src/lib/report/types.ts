@@ -94,6 +94,11 @@ export const TABLE_COL_DEFS: Record<TableColId, TableColDef> = {
   observation: { id: 'observation', header: 'Obs.', w: 40 },
 }
 
+// Colonnes toujours affichées si présentes dans la sélection du type de
+// rapport, même quand aucune ligne n'a de valeur (masquage des colonnes
+// vides désactivé pour ces colonnes).
+export const ALWAYS_VISIBLE_COLS: ReadonlySet<TableColId> = new Set(['numeroEntrant', 'delaiReponse'])
+
 export interface ReportTypeConfig {
   id: string
   label: string

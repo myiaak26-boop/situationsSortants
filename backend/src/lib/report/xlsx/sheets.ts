@@ -1,7 +1,7 @@
 ﻿import XLSX from 'xlsx'
 import { COLORS, tint } from '../theme.js'
 import { STYLE, badgeStyle, kpiValueStyle, kpiLabelStyle, type CellStyle } from './styles.js'
-import { KPI_DEFS, TABLE_COL_DEFS, visibleKpis, PAR_AUTEUR, KPI_NOTE } from '../types.js'
+import { KPI_DEFS, TABLE_COL_DEFS, visibleKpis, PAR_AUTEUR, KPI_NOTE, ALWAYS_VISIBLE_COLS } from '../types.js'
 import type { KpiId, ReportTypeConfig, TableColId } from '../types.js'
 import type { TableRow, SituationExecStats } from '../../situation-query.js'
 import type { AnnexesData } from '../pdf/pages.js'
@@ -250,7 +250,7 @@ export function buildSynthese(
     row += 1
     sheetTitleBand(ws, row, 15, '1 · Tableau détaillé des courriers', `${opts.rows.length} courriers`)
     row += 2
-    const cols: TableColId[] = config.cols.filter((id) => opts.rows!.some((r) => tableValue(r, id) !== ''))
+    const cols: TableColId[] = config.cols.filter((id) => ALWAYS_VISIBLE_COLS.has(id) || opts.rows!.some((r) => tableValue(r, id) !== ''))
     cols.forEach((id, ci) => {
       cell(ws, row, ci, TABLE_COL_DEFS[id].header, STYLE.th)
     })
@@ -303,7 +303,7 @@ function tableValue(r: TableRow, colId: TableColId): string {
 // ---------------------------------------------------------------------------
 export function buildComplet(rows: TableRow[], config: ReportTypeConfig): XLSX.WorkSheet {
   // Colonnes vides sur la sélection : masquées pour éviter les zones blanches.
-  const cols: TableColId[] = config.cols.filter((id) => rows.some((r) => tableValue(r, id) !== ''))
+  const cols: TableColId[] = config.cols.filter((id) => ALWAYS_VISIBLE_COLS.has(id) || rows.some((r) => tableValue(r, id) !== ''))
   const ws = baseSheet(cols.map((id) => Math.min(TABLE_COL_DEFS[id].w, 40)))
   cols.forEach((id, ci) => cell(ws, 0, ci, TABLE_COL_DEFS[id].header, STYLE.th))
   rows.forEach((r, ri) => {
