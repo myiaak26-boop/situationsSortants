@@ -38,10 +38,12 @@ export function Topbar({
   session,
   onLogout,
   onMenuClick,
+  collapsed = false,
 }: {
   session?: Session | null
   onLogout?: () => void
   onMenuClick?: () => void
+  collapsed?: boolean
 }) {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
   const [showProfile, setShowProfile] = useState(false)
@@ -82,7 +84,8 @@ export function Topbar({
     <header
       className={cn(
         'fixed right-0 top-0 z-20 flex h-topbar items-center gap-4 border-b border-topbar-border/80 bg-topbar/85 px-5 shadow-topbar backdrop-blur-xl transition-all duration-300',
-        'left-0 lg:left-sidebar'
+        'left-0 lg:left-sidebar',
+        collapsed ? 'lg:left-sidebar-collapsed' : 'lg:left-sidebar'
       )}
     >
       {/* Mobile menu */}

@@ -58,8 +58,19 @@ const ACTIVE_CLASS =
 const IDLE_CLASS =
   'text-sidebar-foreground/55 hover:bg-sidebar-muted hover:text-sidebar-foreground'
 
-export function Sidebar({ mobileOpen, onClose, session }: { mobileOpen: boolean; onClose: () => void; session: Session | null }) {
-  const [collapsed, setCollapsed] = useState(false)
+export function Sidebar({
+  mobileOpen,
+  onClose,
+  session,
+  collapsed,
+  onToggle,
+}: {
+  mobileOpen: boolean
+  onClose: () => void
+  session: Session | null
+  collapsed: boolean
+  onToggle: () => void
+}) {
   const [search, setSearch] = useState('')
   const { pathname } = useLocation()
 
@@ -239,7 +250,7 @@ export function Sidebar({ mobileOpen, onClose, session }: { mobileOpen: boolean;
             {expanded && <span>Déconnexion</span>}
           </button>
           <button
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={onToggle}
             className="mt-0.5 hidden w-full items-center justify-center rounded-xl px-3 py-2 text-sidebar-foreground/30 hover:bg-sidebar-muted hover:text-sidebar-foreground transition-colors lg:flex"
           >
             {collapsed ? (

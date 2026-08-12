@@ -7,6 +7,7 @@ import { LoginPage } from '@/components/auth/login-page'
 import { setUnauthorizedHandler } from '@/lib/api'
 import { fetchSession, logout, type Session } from '@/lib/session'
 import { SessionProvider } from '@/lib/session-context'
+import { cn } from '@/lib/cn'
 
 type AuthState =
   | { status: 'loading' }
@@ -19,6 +20,7 @@ export const Route = createRootRoute({
 
 function RootLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [auth, setAuth] = useState<AuthState>({ status: 'loading' })
 
   const checkAuth = () => {
@@ -60,11 +62,22 @@ function RootLayout() {
     <SessionProvider session={auth.session}>
       <div className="flex min-h-screen">
         <div className="print:hidden">
-          <Sidebar mobileOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} session={auth.session} />
+          <Sidebar
+            mobileOpen={mobileMenuOpen}
+            onClose={() => setMobileMenuOpen(false)}
+            session={auth.session}
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
         </div>
-        <div className="flex min-w-0 flex-1 flex-col pl-0 transition-all duration-300 lg:pl-sidebar print:pl-0">
+        <div
+          className={cn(
+            'flex min-w-0 flex-1 flex-col pl-0 transition-all duration-300 print:pl-0',
+            sidebarCollapsed ? 'lg:pl-sidebar-collapsed' : 'lg:pl-sidebar',
+          )}
+        >
           <div className="print:hidden">
-            <Topbar session={auth.session} onLogout={handleLogout} onMenuClick={() => setMobileMenuOpen(true)} />
+            <Topbar session={auth.session} onLogout={handleLogout} onMenuClick={() => setMobileMenuOpen(true)} collapsed={sidebarCollapsed} />
           </div>
           <main className="flex-1 p-5 pt-[calc(var(--topbar-height)+1.25rem)] lg:p-6 lg:pt-[calc(var(--topbar-height)+1.5rem)] print:p-0 print:pt-0">
             <Outlet />
