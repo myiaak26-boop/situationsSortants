@@ -38,7 +38,7 @@ export async function seedDatabase(db: PrismaClient) {
 
   const userRole = await db.role.upsert({
     where: { name: 'Utilisateur' },
-    update: { permissions: userRolePerms },
+    update: {},
     create: {
       name: 'Utilisateur',
       description: 'Import, suivi et consultation',
