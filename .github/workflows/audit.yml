@@ -1,0 +1,45 @@
+name: Audit des rapports (PDF + Excel)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DEX_ADMIN_EMAIL: ${{ secrets.DEX_ADMIN_EMAIL }}
+      DEX_ADMIN_PASSWORD: ${{ secrets.DEX_ADMIN_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installation des dépendances
+        run: npm ci
+
+      - name: Navigateur Chromium (Playwright)
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Lancement de l'audit (PDF + Excel)
+        working-directory: frontend
+        run: npm run test:audit
+
+      - name: Upload du rapport d'audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-audit
+          path: |
+            test-results/report-audit
+            test-results/playwright-report
+          if-no-files-found: ignore

@@ -452,11 +452,7 @@ export function assessPdf(raw: { pages: AuditPageRaw[] }, scenario: Scenario, ex
   const numProbs: string[] = []
   const pageText = (p: AuditPageRaw) => p.text.map((t) => t.str).join(' ')
   const expects: [string, string][] = [
-    ['Synthèse exécutive', '1'],
-    ['Indicateurs temporels', '2'],
-    ['Graphiques et analyse', '3'],
-    ['Tableau détaillé des courriers', '4'],
-    ['Conclusion', '5'],
+    ['Tableau détaillé des courriers', '1'],
   ]
   for (const [name, num] of expects) {
     const p = pages.find((x) => pageText(x).includes(name))
@@ -466,7 +462,7 @@ export function assessPdf(raw: { pages: AuditPageRaw[] }, scenario: Scenario, ex
   }
   push({
     id: 'numerotation', label: 'Sections numérotées', cat: 'Hiérarchie', severity: numProbs.length ? 'mineur' : 'info',
-    ok: numProbs.length === 0, detail: numProbs.length ? numProbs.join(' ; ') : 'Sections 1 à 5 numérotées',
+    ok: numProbs.length === 0, detail: numProbs.length ? numProbs.join(' ; ') : 'Section « Tableau détaillé des courriers » numérotée',
     cause: numProbs.length ? 'Numéro manquant dans sectionTitle' : 'sectionTitle(num, titre) appelé partout',
     impact: 'Référencement des sections dans les comptes rendus', fix: 'Passer le numéro à sectionTitle',
     priority: 'P3',

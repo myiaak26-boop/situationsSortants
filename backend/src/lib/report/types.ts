@@ -78,12 +78,12 @@ export interface TableColDef {
 
 export const TABLE_COL_DEFS: Record<TableColId, TableColDef> = {
   numero: { id: 'numero', header: 'N°', w: 56 },
-  dateEnvoi: { id: 'dateEnvoi', header: 'Date', w: 64 },
+  dateEnvoi: { id: 'dateEnvoi', header: 'Date de Sign.', w: 64 },
   signataire: { id: 'signataire', header: 'Signataire', w: 56 },
   destinataire: { id: 'destinataire', header: 'Destinataire', w: 100 },
   objet: { id: 'objet', header: 'Objet', w: 128 },
   situation: { id: 'situation', header: 'Situation', w: 84 },
-  modeTransmission: { id: 'modeTransmission', header: 'Mode', w: 62 },
+  modeTransmission: { id: 'modeTransmission', header: 'Mode de Transm.', w: 62 },
   numeroEntrant: { id: 'numeroEntrant', header: 'Réponse du courrier N°', w: 72 },
   dateArriveeEntrant: { id: 'dateArriveeEntrant', header: 'Arrivée', w: 64 },
   dateRetrait: { id: 'dateRetrait', header: 'Retrait', w: 46 },
@@ -115,12 +115,12 @@ export const CHART_TITLES: Record<ChartId, string> = {
   destinataire: 'Répartition par destinataire',
 }
 
-// Numérotation des sections graphiques du rapport (structure fixe).
+// Numérotation des sections graphiques du rapport (section 2, structure fixe).
 export const CHART_NUMBERS: Partial<Record<ChartId, string>> = {
-  signataire: '4.1',
-  situation: '4.2',
-  mode: '4.3',
-  delais: '4.4',
+  signataire: '2.1',
+  situation: '2.2',
+  mode: '2.3',
+  delais: '2.4',
 }
 
 // Auteur du rapport — valeur FIXE, indépendante de l'utilisateur connecté.

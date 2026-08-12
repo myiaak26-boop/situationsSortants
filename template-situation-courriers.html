@@ -248,157 +248,26 @@
 <div class="page-break"></div>
 
 <!-- ============================================================
-     SECTION 1 — SYNTHESE EXECUTIVE
+     SECTION 1 — TABLEAU DETAILLE
      ============================================================ -->
 <div class="page-header">
   <span class="doc-ref">N° {{numero_rapport}}</span>
   <span>{{date_elaboration}}</span>
 </div>
 
-<h1 class="section-title"><span class="section-number">1</span>Synthèse exécutive</h1>
-
-<p>
-  La présente situation fait état de {{total_courriers}} courriers sortants sur la période considérée,
-  dont {{nb_simples}} courriers simples et {{nb_reponses}} courriers réponses.
-  {{nb_retires}} courriers ont été retirés, soit un taux de {{taux_retrait}} %.
-</p>
-
-<div class="kpi-row">
-  <div class="kpi-total">
-    <div class="value">{{total_courriers}}</div>
-    <div class="label">TOTAL COURRIERS</div>
-  </div>
-  <div class="kpi-secondary">
-    <div class="kpi-card"><div class="value">{{nb_simples}}</div><div class="label">SIMPLES</div></div>
-    <div class="kpi-card"><div class="value">{{nb_reponses}}</div><div class="label">RÉPONSES</div></div>
-    <div class="kpi-card"><div class="value">{{nb_retires}}</div><div class="label">RETIRÉS</div></div>
-    <div class="kpi-card"><div class="value">{{nb_injoignables}}</div><div class="label">INJOIGNABLES</div></div>
-  </div>
-</div>
-<p class="kpi-note">
-  Note : SIMPLES + RÉPONSES = TOTAL. RETIRÉS et INJOIGNABLES sont des statuts de suivi
-  qui ne s'additionnent pas au total (un courrier compte une seule fois dans TOTAL,
-  quel que soit son statut de suivi).
-</p>
-
-<div class="kpi-row">
-  <div class="kpi-card"><div class="value">{{nb_relances}}</div><div class="label">RELANCES EFFECTUÉES</div></div>
-</div>
-
-<div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
-
-<div class="page-break"></div>
-
-<!-- ============================================================
-     SECTION 2 — INDICATEURS TEMPORELS
-     ============================================================ -->
-<div class="page-header">
-  <span class="doc-ref">N° {{numero_rapport}}</span>
-  <span>{{date_elaboration}}</span>
-</div>
-
-<h1 class="section-title"><span class="section-number">2</span>Indicateurs temporels</h1>
-
-<div class="indic-row">
-  <div class="indic-card"><div class="value">{{delai_moyen_reponse}} j</div><div class="label">Temps moyen de réponse</div></div>
-  <div class="indic-card"><div class="value">{{delai_moyen_retrait}} j</div><div class="label">Temps moyen avant retrait</div></div>
-</div>
-<div class="indic-row">
-  <div class="indic-card"><div class="value">{{delai_min}} j</div><div class="label">Délai de traitement min.</div></div>
-  <div class="indic-card"><div class="value">{{delai_max}} j</div><div class="label">Délai de traitement max.</div></div>
-</div>
-
-<div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
-
-<div class="page-break"></div>
-
-<!-- ============================================================
-     SECTION 3 — GRAPHIQUES ET ANALYSE
-     ============================================================ -->
-<div class="page-header">
-  <span class="doc-ref">N° {{numero_rapport}}</span>
-  <span>{{date_elaboration}}</span>
-</div>
-
-<h1 class="section-title"><span class="section-number">3</span>Graphiques et analyse</h1>
-
-<div class="chart-block">
-  <div class="chart-title">1. Répartition par signataire</div>
-  <div class="bar-chart">
-    <!-- {{#each repartition_signataire}} -->
-    <div class="bar-row">
-      <div class="bar-label">{{code}}</div>
-      <div class="bar-track"><div class="bar-fill" style="width: {{pourcentage_largeur}}%;"></div></div>
-      <div class="bar-value">{{valeur}}</div>
-    </div>
-    <!-- {{/each}} -->
-  </div>
-</div>
-
-<div class="chart-block">
-  <div class="chart-title">2. Répartition par statut de suivi</div>
-  <!--
-    IMPORTANT : ce graphique ne doit lister QUE des statuts de
-    suivi (Retire, Appel effectue, Destinataire joint, Injoignable,
-    Livre). "E-mail envoye" ne doit plus y figurer : c'est un mode
-    de transmission, affiche dans le graphique suivant. Un courrier
-    peut donc apparaitre dans les deux graphiques a la fois
-    (ex: Retire ET Envoi par e-mail), ce n'est pas une incoherence.
-  -->
-  <div class="pie-legend">
-    <!-- {{#each repartition_statut_suivi}} -->
-    <div><span class="swatch" style="background:{{couleur}};"></span>{{libelle}} — {{valeur}} ({{pourcentage}} %)</div>
-    <!-- {{/each}} -->
-  </div>
-</div>
-
-<div class="chart-block">
-  <div class="chart-title">3. Répartition par mode de transmission</div>
-  <div class="pie-legend">
-    <!-- {{#each repartition_mode}} -->
-    <div><span class="swatch" style="background:{{couleur}};"></span>{{libelle}} — {{valeur}} ({{pourcentage}} %)</div>
-    <!-- {{/each}} -->
-  </div>
-</div>
-
-<div class="chart-block">
-  <div class="chart-title">4. Répartition des délais de traitement</div>
-  <div class="bar-chart">
-    <!-- {{#each repartition_delais}} -->
-    <div class="bar-row">
-      <div class="bar-label">{{tranche}}</div>
-      <div class="bar-track"><div class="bar-fill" style="width: {{pourcentage_largeur}}%;"></div></div>
-      <div class="bar-value">{{valeur}}</div>
-    </div>
-    <!-- {{/each}} -->
-  </div>
-</div>
-
-<div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
-
-<div class="page-break"></div>
-
-<!-- ============================================================
-     SECTION 4 — TABLEAU DETAILLE
-     ============================================================ -->
-<div class="page-header">
-  <span class="doc-ref">N° {{numero_rapport}}</span>
-  <span>{{date_elaboration}}</span>
-</div>
-
-<h1 class="section-title"><span class="section-number">4</span>Tableau détaillé des courriers</h1>
+<h1 class="section-title"><span class="section-number">1</span>Tableau détaillé des courriers</h1>
 <p style="font-size:9pt; color:#666; margin-top:-3mm;">{{total_courriers}} courriers — triés par date de signature croissante</p>
 
 <table class="detail">
   <thead>
     <tr>
       <th class="col-num">N°</th>
-      <th class="col-date">Date sign.</th>
+      <th class="col-date">Date de Sign.</th>
       <th class="col-sign">Signataire</th>
       <th class="col-dest">Destinataire</th>
       <th class="col-objet">Objet</th>
       <th class="col-statut">Statut de suivi</th>
-      <th class="col-mode">Mode transm.</th>
+      <th class="col-mode">Mode de Transm.</th>
       <th class="col-dates">Dates clés</th>
     </tr>
   </thead>
@@ -430,53 +299,70 @@
 <div class="page-break"></div>
 
 <!-- ============================================================
-     SECTION 5 — CONCLUSION
+     SECTION 2 — GRAPHIQUES ET ANALYSE
      ============================================================ -->
 <div class="page-header">
   <span class="doc-ref">N° {{numero_rapport}}</span>
   <span>{{date_elaboration}}</span>
 </div>
 
-<h1 class="section-title"><span class="section-number">5</span>Conclusion</h1>
+<h1 class="section-title"><span class="section-number">2</span>Graphiques et analyse</h1>
 
-<p>
-  Au cours de la période analysée, {{total_courriers}} courriers sortants ont été enregistrés,
-  dont {{nb_simples}} courriers simples et {{nb_reponses}} courriers réponses.
-</p>
+<div class="chart-block">
+  <div class="chart-title">2.1 Répartition par signataire</div>
+  <div class="bar-chart">
+    <!-- {{#each repartition_signataire}} -->
+    <div class="bar-row">
+      <div class="bar-label">{{code}}</div>
+      <div class="bar-track"><div class="bar-fill" style="width: {{pourcentage_largeur}}%;"></div></div>
+      <div class="bar-value">{{valeur}}</div>
+    </div>
+    <!-- {{/each}} -->
+  </div>
+</div>
 
-<p><strong>Répartition par statut de suivi :</strong></p>
-<ul class="conclusion-list">
-  <!-- {{#each repartition_statut_suivi}} -->
-  <li>{{libelle}} : {{valeur}} ({{pourcentage}} %)</li>
-  <!-- {{/each}} -->
-</ul>
+<div class="chart-block">
+  <div class="chart-title">2.2 Répartition par statut de suivi</div>
+  <!--
+    IMPORTANT : ce graphique ne doit lister QUE des statuts de
+    suivi (Retire, Appel effectue, Destinataire joint, Injoignable,
+    Livre). "E-mail envoye" ne doit plus y figurer : c'est un mode
+    de transmission, affiche dans le graphique suivant. Un courrier
+    peut donc apparaitre dans les deux graphiques a la fois
+    (ex: Retire ET Envoi par e-mail), ce n'est pas une incoherence.
+  -->
+  <div class="pie-legend">
+    <!-- {{#each repartition_statut_suivi}} -->
+    <div><span class="swatch" style="background:{{couleur}};"></span>{{libelle}} — {{valeur}} ({{pourcentage}} %)</div>
+    <!-- {{/each}} -->
+  </div>
+</div>
 
-<p><strong>Répartition par mode de transmission :</strong></p>
-<ul class="conclusion-list">
-  <!-- {{#each repartition_mode}} -->
-  <li>{{libelle}} : {{valeur}} ({{pourcentage}} %)</li>
-  <!-- {{/each}} -->
-</ul>
+<div class="chart-block">
+  <div class="chart-title">2.3 Répartition par mode de transmission</div>
+  <div class="pie-legend">
+    <!-- {{#each repartition_mode}} -->
+    <div><span class="swatch" style="background:{{couleur}};"></span>{{libelle}} — {{valeur}} ({{pourcentage}} %)</div>
+    <!-- {{/each}} -->
+  </div>
+</div>
 
-<ul class="conclusion-list">
-  <li>{{nb_retires}} courriers retirés sur la période, soit {{taux_retrait}} % de l'ensemble.</li>
-  <li>{{nb_injoignables}} courriers enregistrés au statut « Injoignable ».</li>
-  <li>{{nb_relances}} relances effectuées sur la période.</li>
-  <li>Temps moyen de retrait : {{delai_moyen_retrait}} jours.</li>
-  <li>Délai moyen de réponse : {{delai_moyen_reponse}} jours.</li>
-</ul>
-
-<p style="font-size:8.5pt; color:#777;">
-  Les indicateurs présentés reflètent la situation observée à la date d'élaboration du rapport.
-</p>
-
-<div class="signature-block">
-  <div class="fonction">{{signataire_fonction}}</div>
-  <!-- meme variable {{auteur}} que la page de garde : plus de decalage entre les deux -->
-  <div class="nom">{{auteur}}</div>
+<div class="chart-block">
+  <div class="chart-title">2.4 Répartition des délais de traitement</div>
+  <div class="bar-chart">
+    <!-- {{#each repartition_delais}} -->
+    <div class="bar-row">
+      <div class="bar-label">{{tranche}}</div>
+      <div class="bar-track"><div class="bar-fill" style="width: {{pourcentage_largeur}}%;"></div></div>
+      <div class="bar-value">{{valeur}}</div>
+    </div>
+    <!-- {{/each}} -->
+  </div>
 </div>
 
 <div class="footer">Secrétariat Central et Documentation — N° {{numero_rapport}}</div>
 
-</body>
+<div class="page-break"></div>
+
+
 </html>

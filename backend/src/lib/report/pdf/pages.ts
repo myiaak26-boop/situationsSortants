@@ -189,7 +189,7 @@ function groupKeyOf(r: TableRow, groupBy: string | null): { key?: string; label?
 export function drawDetailedTablePage(c: Ctx, rows: TableRow[], config: ReportTypeConfig) {
   const { doc } = c
   addReportPage(c, 'landscape')
-  sectionTitle(c, 'Tableau détaillé des courriers', '4')
+  sectionTitle(c, 'Tableau détaillé des courriers', '1')
   doc.moveDown(0.2)
   sectionSub(c, `${fmtNum(rows.length)} courriers — triés par date de signature croissante`)
   doc.moveDown(0.25)
@@ -274,7 +274,7 @@ export function drawCharts(c: Ctx, stats: SituationExecStats, config: ReportType
   const evoData = stats.evolution.length ? stats.evolution.map((e) => ({ label: e.libelle, total: e.total })) : null
 
   for (const item of allData) {
-    // Sections 4.1 à 4.4 : structure fixe du rapport (répartitions).
+    // Sections 2.1 à 2.4 : structure fixe du rapport (répartitions).
     const num = CHART_NUMBERS[item.id] ?? `${slot}.`
     const title = `${num} ${CHART_TITLES[item.id]}`
     switch (item.id) {

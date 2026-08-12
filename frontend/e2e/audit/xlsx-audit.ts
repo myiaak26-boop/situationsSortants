@@ -40,7 +40,7 @@ export async function auditXlsxBuffer(buf: Buffer, opts: { exec: boolean } = { e
     }
     note('Ligne TOTAL finale', totalRow > 1, totalRow > 1 ? `TOTAL ligne ${totalRow + 1}` : 'TOTAL absent')
 
-    const headerIdx = ['N°', 'Date de sign.', 'Signataire', 'Destinataire', 'Objet'].map((h) => {
+    const headerIdx = ['N°', 'Date de Sign.', 'Signataire', 'Destinataire', 'Objet'].map((h) => {
       for (let c = 0; c < 20; c++) if (cellAt(0, c) === h) return h
       return null
     })

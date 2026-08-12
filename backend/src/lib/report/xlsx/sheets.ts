@@ -180,7 +180,6 @@ export function buildSynthese(
   periode: string,
 ): XLSX.WorkSheet {
   const ws = baseSheet(Array(16).fill(8))
-  sheetTitleBand(ws, 0, 15, '1 · Synthèse des indicateurs', `Période : ${periode} — ${stats.total} courriers`)
 
   // Liaison dynamique : valeurs KPI en formules Excel pointant vers « Situation complète ».
   const dataRows = opts.rows?.length ?? 0
@@ -237,7 +236,7 @@ export function buildSynthese(
   })
   const kpiGroups: typeof kpis[] = []
   for (let i = 0; i < kpis.length; i += 4) kpiGroups.push(kpis.slice(i, i + 4))
-  let row = 3
+  let row = 0
   kpiGroups.forEach((group) => {
     kpiCardsRow(ws, row, group, 15)
     row += 2
@@ -249,7 +248,7 @@ export function buildSynthese(
 
   if (opts.inlineTable && opts.rows && opts.rows.length > 0) {
     row += 1
-    sheetTitleBand(ws, row, 15, '4 · Tableau détaillé des courriers', `${opts.rows.length} courriers`)
+    sheetTitleBand(ws, row, 15, '1 · Tableau détaillé des courriers', `${opts.rows.length} courriers`)
     row += 2
     const cols: TableColId[] = config.cols.filter((id) => opts.rows!.some((r) => tableValue(r, id) !== ''))
     cols.forEach((id, ci) => {

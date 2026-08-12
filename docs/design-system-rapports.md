@@ -12,7 +12,7 @@ Version 1.0 — Norme de conception. Ce document fait foi pour toute génératio
 1. **Un seul template, une seule charte.** Tous les rapports (générale, par signataire, par période, par destinataire, réponses, délais, retraits, mail, coursier, en attente, injoignables, rappels, personnalisée) utilisent exactement la même mise en page, les mêmes couleurs, la même typographie. Seules les données changent.
 2. **Reconnaissance immédiate.** Chaque page porte la signature visuelle : bande teal (couverture), en-tête courant institution + titre, pied de page République · Institution — N° rapport + pagination.
 3. **Hiérarchie stricte.** L'œil descend toujours : République → Institution → Titre → Période → Synthèse → Détail.
-4. **PDF = rapport, jamais export de données.** Le PDF est construit en pages narratives : couverture, synthèse, indicateurs, graphiques, tableau, conclusion, annexes.
+4. **PDF = rapport, jamais export de données.** Le PDF est construit en pages narratives : couverture, tableau détaillé, graphiques, annexes.
 5. **Excel = miroir du PDF.** Mêmes couleurs (hex identiques), même hiérarchie de titres, mêmes KPI, mêmes libellés. L'Excel est un tableau de bord, pas une extraction brute.
 
 ## 2. Charte graphique (tokens)
@@ -93,45 +93,34 @@ Règle : les segments (donut, barres empilées, barres horizontales) prennent le
 - Bloc métadonnées centré (fond `panel`, hauteur 22 pt/ligne) : DATE, HEURE, ÉTABLI PAR, NUMÉRO DU RAPPORT.
 - Mention « Document officiel — Primature, République de Guinée ».
 - **La couverture est la seule page sans en-tête courant ni pagination.**
+- Synthèse KPI sur la couverture : carte « TOTAL » dominante, autres indicateurs en grille (pastille d'icône 12×12, label uppercase 6,5, valeur Bold 16), note discrète en dessous.
+- Les sections « Synthèse exécutive » et « Indicateurs temporels » autonomes n'existent plus : elles sont intégrées à la couverture.
 
-### Page 2 — Synthèse exécutive
+### Page 2 — Tableau détaillé
 
-- Section « 1 · Synthèse exécutive » : barre teal + numérotation.
-- Paragraphe narratif généré automatiquement (total, simples, réponses, retirés, taux, en attente).
-- Grille de 10 cartes KPI (4 colonnes × 3 rangées — la dernière ligne complétée par les indicateurs restants). Chaque carte : pastille d'icône 12×12, label uppercase 6,5, valeur Bold 16.
-- Section « 2 · Indicateurs temporels » : 4 lignes (temps moyen de réponse, temps moyen avant retrait, délai min, délai max), lignes alternées `panel`.
-
-### Page 3 — Graphiques et analyse
-
-- Section « 3 · Graphiques et analyse ».
-- Slots standardisés, dans cet ordre d'importance, chacun avec titre `3.x` + filet :
-
-| Slot | Graphique | Utilisé quand |
-|---|---|---|
-| 3.1 Répartition par signataire | Barres verticales | données signataire |
-| 3.2 Répartition par situation | Donut | données situation |
-| 3.3 Répartition par mode | Barres horizontales empilées (100 %) | données mode |
-| 3.4 Évolution | Ligne ou aires | évolution par jour/semaine/mois |
-| 3.5 Répartition des délais | Barres verticales | tranches de délai |
-
-Règle : les slots vides sont omis ; l'ordre relatif est conservé. Un rapport « Délais » place 3.5 en premier slot.
-
-### Page 4+ — Tableau détaillé
-
-- A4 paysage. Section « 4 · Tableau détaillé des courriers » + sous-titre « N courriers — triés par date d'envoi croissante ».
-- En-tête foncé `ink`, texte blanc, répété sur chaque page.
+- A4 paysage. Section « 1 · Tableau détaillé des courriers » + sous-titre « N courriers — triés par date de signature croissante ».
+- En-tête foncé `ink`, texte blanc, répété sur chaque page (retour à la ligne automatique des intitulés longs).
+- Colonnes : N°, Date de Sign., Signataire, Destinataire, Objet, Situation, Mode de Transm., etc. selon le type de rapport.
 - Lignes alternées : impaire `panel`.
 - Badge pilule pour la colonne Situation (fond = couleur de la situation à 15 % + texte = couleur de la situation).
 - Numéro de courrier en Bold.
 - **Sous-totaux** : quand le rapport est groupé (par signataire, situation, destinataire), une ligne de sous-total `panel` apparaît après chaque groupe.
 - **Total** : ligne finale Bold, fond teal clair, valeur totale en pied de colonnes numériques.
 
-### Page finale — Conclusion
+### Page 3+ — Graphiques et analyse
 
-- Section « 5 · Conclusion ».
-- Observations à puces (cercles teal 1,8 pt), paragraphes justifiés.
-- Filet de séparation, bloc signature « LE SECRÉTAIRE CENTRAL » (Bold 12, centré).
-- Mention de génération + « N° rapport — Institution ».
+- Section « 2 · Graphiques et analyse ».
+- Slots standardisés, dans cet ordre d'importance, chacun avec titre `2.x` + filet :
+
+| Slot | Graphique | Utilisé quand |
+|---|---|---|
+| 2.1 Répartition par signataire | Barres verticales | données signataire |
+| 2.2 Répartition par statut de suivi | Donut | données situation |
+| 2.3 Répartition par mode de transmission | Barres horizontales empilées (100 %) | données mode |
+| 2.4 Évolution | Ligne ou aires | évolution par jour/semaine/mois |
+| 2.5 Répartition des délais | Barres verticales | tranches de délai |
+
+Règle : les slots vides sont omis ; l'ordre relatif est conservé. Un rapport « Délais » place 2.5 en premier slot.
 
 ### Annexes
 
@@ -155,10 +144,10 @@ Règle : les slots vides sont omis ; l'ordre relatif est conservé. Un rapport �
 ## 5. Règles d'utilisation
 
 1. **N'utiliser que les tokens de `theme.ts`.** Aucune couleur en dur dans les générateurs.
-2. **Un rapport = les pages obligatoires** (couverture, synthèse, KPI, tableau, conclusion) **+ les pages optionnelles** (graphiques, annexes) déclarées dans la configuration du type (`report/types.ts`).
-3. **Compact vs complet** : format « PDF Standard » / « Excel » = compact (couverture, synthèse + KPI, tableau). Format « Exécutif » = complet (tout). Le style est strictement identique.
+2. **Un rapport = les pages obligatoires** (couverture avec synthèse KPI, tableau détaillé) **+ les pages optionnelles** (graphiques, annexes) déclarées dans la configuration du type (`report/types.ts`).
+3. **Compact vs complet** : format « PDF Standard » / « Excel » = compact (couverture + KPI, tableau, graphiques). Format « Exécutif » = complet (tout). Le style est strictement identique.
 4. **Libellés en français**, dates `jj/mm/aaaa`, nombres séparateur d'espace (`1 234`).
-5. **Numérotation des sections** toujours 1 Synthèse, 2 Indicateurs temporels, 3 Graphiques, 4 Tableau, 5 Conclusion.
+5. **Numérotation des sections** toujours 1 Tableau détaillé des courriers, 2 Graphiques et analyse (2.1-2.4 répartitions).
 6. La **première page** n'a ni en-tête ni pagination ; les suivantes ont l'en-tête courant ; toutes ont le pied.
 
 ## 6. Mise en correspondance des types de rapports
