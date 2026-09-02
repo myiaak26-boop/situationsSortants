@@ -31,7 +31,6 @@ import { Button } from '@/components/ui/button'
 import { LoadingState } from '@/components/ui/feedback'
 import { GenerateSituationDialog, PERIODES } from '@/components/situations/generate-situation-dialog'
 import { BarsChart, DonutChart, LineChart as EvolutionChart } from '@/components/charts'
-import { StatusBadge } from '@/components/ui/status-badge'
 import { useSession } from '@/lib/session-context'
 import { Guard } from '@/components/ui/guard'
 
@@ -127,7 +126,7 @@ const INDICATEUR_LABELS: Record<string, string> = {
   rappels: 'Avec relances',
 }
 
-const SORTABLE = ['numero', 'dateEnvoi', 'destinataire', 'objet', 'signataire', 'numeroEntrant', 'situation', 'dateRetrait', 'observation']
+const SORTABLE = ['numero', 'dateEnvoi', 'destinataire', 'objet', 'signataire', 'numeroEntrant', 'dateRetrait', 'observation']
 
 const FORMAT_LABELS: Record<string, { label: string; className: string }> = {
   'exec-pdf': { label: 'PDF Exécutif', className: 'bg-red-500/10 text-red-500' },
@@ -260,8 +259,6 @@ function SituationsPage() {
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [signataire, setSignataire] = useState('')
-  const [destinataire, setDestinataire] = useState('')
-  const [situationId, setSituationId] = useState('')
   const [type, setType] = useState('tous')
 
   const [stats, setStats] = useState<SituationStats | null>(null)
@@ -325,12 +322,10 @@ function SituationsPage() {
     if (dateDebut) p.set('dateDebut', dateDebut)
     if (dateFin) p.set('dateFin', dateFin)
     if (signataire) p.set('signataire', signataire)
-    if (destinataire) p.set('destinataire', destinataire)
-    if (situationId) p.set('situationId', situationId)
     if (type === 'reponses') p.set('reponseEntrant', '1')
     if (type === 'retires') p.set('retires', '1')
     return p
-  }, [periode, dateDebut, dateFin, signataire, destinataire, situationId, type])
+  }, [periode, dateDebut, dateFin, signataire, type])
 
   useEffect(() => {
     setLoading(true)
@@ -390,8 +385,6 @@ function SituationsPage() {
     setDateDebut('')
     setDateFin('')
     setSignataire('')
-    setDestinataire('')
-    setSituationId('')
     setType('tous')
     setIndicateurType(null)
     setActiveStats(null)
@@ -577,37 +570,6 @@ function SituationsPage() {
               ))}
             </select>
           </label>
-          <label className="block">
-            <span className="mb-1 block text-2xs font-medium uppercase tracking-wider text-muted-foreground">Destinataire</span>
-            <input
-              type="text"
-              value={destinataire}
-              onChange={(e) => {
-                setDestinataire(e.target.value)
-                setPage(1)
-              }}
-              placeholder="Nom du destinataire"
-              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/20"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-2xs font-medium uppercase tracking-wider text-muted-foreground">Situation</span>
-            <select
-              value={situationId}
-              onChange={(e) => {
-                setSituationId(e.target.value)
-                setPage(1)
-              }}
-              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
-            >
-              <option value="">Toutes les situations</option>
-              {(meta?.situations || []).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nom}
-                </option>
-              ))}
-            </select>
-          </label>
         </div>
       </Card>
 
@@ -738,8 +700,6 @@ function SituationsPage() {
                         { key: 'signataire', label: 'Signataire' },
                         { key: 'destinataire', label: 'Destinataire' },
                         { key: 'objet', label: 'Objet' },
-                        { key: 'situation', label: 'Situation' },
-                        { key: 'mode', label: 'Mode' },
                         { key: 'numeroEntrant', label: 'Réponse à' },
                         { key: 'dateArrivee', label: 'Date arrivée' },
                         { key: 'delai', label: 'Délai rép.' },
@@ -769,7 +729,7 @@ function SituationsPage() {
                 <tbody className="divide-y divide-border">
                   {rows.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                      <td colSpan={10} className="px-4 py-12 text-center text-sm text-muted-foreground">
                         Aucun courrier pour ces critères
                       </td>
                     </tr>
@@ -787,10 +747,6 @@ function SituationsPage() {
                           <td className="whitespace-nowrap px-4 py-3 text-sm">{r.signataire}</td>
                           <td className="max-w-[180px] truncate px-4 py-3 text-sm">{r.destinataire}</td>
                           <td className="max-w-[220px] truncate px-4 py-3 text-sm text-muted-foreground">{r.objet}</td>
-                          <td className="whitespace-nowrap px-4 py-3 text-sm">
-                            <StatusBadge couleur={r.situation.couleur} nom={r.situation.nom} />
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{r.modeTransmission?.nom || '—'}</td>
                           <td className="whitespace-nowrap px-4 py-3 text-sm">{r.numeroEntrant || '—'}</td>
                           <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{fmtDate(r.dateArriveeEntrant)}</td>
                           <td className="whitespace-nowrap px-4 py-3 text-sm tabular-nums">
@@ -894,7 +850,7 @@ function SituationsPage() {
         onClose={() => setDialogOpen(false)}
         onGenerated={refreshHistorique}
         meta={meta}
-        defaults={{ periode, dateDebut, dateFin, signataire, destinataire, situationId, type }}
+        defaults={{ periode, dateDebut, dateFin, signataire, type }}
         onGenerate={handleWizardGenerate}
       />
     </div>

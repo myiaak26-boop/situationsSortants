@@ -83,14 +83,7 @@ function CourrierFichePage() {
           </div>
           <div className="text-right text-2xs text-muted-foreground">
             <p>Édité le {formatDateFull(new Date().toISOString())}</p>
-            {courrier.modeTransmission && (
-              <span
-                className="mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-2xs font-semibold"
-                style={{ backgroundColor: `${courrier.modeTransmission.couleur}14`, color: courrier.modeTransmission.couleur }}
-              >
-                {courrier.modeTransmission.nom}
-              </span>
-            )}
+
           </div>
         </div>
 
@@ -101,7 +94,6 @@ function CourrierFichePage() {
           <FicheField label="Réponse au courrier (N°)" value={courrier.numeroEntrant || '—'} mono />
           <FicheField label="Date d'arrivée (courrier entrant)" value={courrier.dateArriveeEntrant ? formatDateFull(courrier.dateArriveeEntrant) : '—'} mono />
           <FicheField label="Durée de traitement" value={formatDureeTraitement(courrier.dureeTraitement)} />
-          <FicheField label="Situation actuelle" value={<StatusBadge couleur={courrier.situation.couleur} nom={courrier.situation.nom} />} />
           <FicheField label="Créé par" value={courrier.createdBy.name} />
           <FicheField label="Date de création" value={formatDateFull(courrier.createdAt)} mono />
           <FicheField

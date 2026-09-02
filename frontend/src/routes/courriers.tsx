@@ -34,7 +34,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  StatusBadge,
   DELAI_SEUILS_DEFAULTS,
   type DelaiSeuils,
 } from '@/components/ui/status-badge'
@@ -44,7 +43,7 @@ import { formatDateFull, formatDateTime } from '@/lib/utils'
 import { apiFetch } from '@/lib/api'
 import { fetchSession, can, PERM, type Session } from '@/lib/session'
 import { Guard } from '@/components/ui/guard'
-import type { Courrier, ModeTransmission } from '@/lib/types'
+import type { Courrier } from '@/lib/types'
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -53,18 +52,9 @@ declare module '@tanstack/react-table' {
   }
 }
 
-interface SituationOption {
-  id: string
-  nom: string
-  couleur: string
-  ordre: number
-}
-
 interface CourrierMeta {
-  situations: SituationOption[]
   signataires: { id: string; code: string; nom: string; actif: boolean; ordre: number }[]
   signataireOptions: { id: string; nom: string }[]
-  modes: ModeTransmission[]
 }
 
 interface CourrierList {
@@ -74,14 +64,12 @@ interface CourrierList {
 
 interface Filters {
   search: string
-  situationId: string
-  modeTransmissionId: string
   signataire: string
   dateDebut: string
   dateFin: string
 }
 
-const EMPTY_FILTERS: Filters = { search: '', situationId: '', modeTransmissionId: '', signataire: '', dateDebut: '', dateFin: '' }
+const EMPTY_FILTERS: Filters = { search: '', signataire: '', dateDebut: '', dateFin: '' }
 const PAGE_SIZES = [20, 50, 100, 200]
 
 const COLUMN_MENU = [
@@ -90,8 +78,6 @@ const COLUMN_MENU = [
   { key: 'signataire', label: 'Signataire' },
   { key: 'destinataire', label: 'Destinataire' },
   { key: 'objet', label: 'Objet' },
-  { key: 'modeTransmission', label: 'Mode' },
-  { key: 'situation', label: 'Situation' },
   { key: 'numeroEntrant', label: 'Réponse au courrier (N°)' },
   { key: 'dateArriveeEntrant', label: "Date d'arrivée (entrant)" },
   { key: 'dateRetrait', label: 'Date de retrait' },
@@ -117,7 +103,7 @@ export const Route = createRoute({
 function CourriersPage() {
   const [rows, setRows] = useState<CourrierRow[]>([])
   const [total, setTotal] = useState(0)
-  const [meta, setMeta] = useState<CourrierMeta>({ situations: [], signataires: [], signataireOptions: [], modes: [] })
+  const [meta, setMeta] = useState<CourrierMeta>({ signataires: [], signataireOptions: [] })
   const [seuils, setSeuils] = useState<DelaiSeuils>(DELAI_SEUILS_DEFAULTS)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -181,7 +167,6 @@ function CourriersPage() {
     setError(null)
     const usp = new URLSearchParams()
     if (filters.search) usp.set('search', filters.search)
-    if (filters.situationId) usp.set('situationId', filters.situationId)
     if (filters.signataire) usp.set('signataire', filters.signataire)
     if (filters.dateDebut) usp.set('dateDebut', filters.dateDebut)
     if (filters.dateFin) usp.set('dateFin', filters.dateFin)
@@ -270,8 +255,6 @@ function CourriersPage() {
     setLoading(true)
     const usp = new URLSearchParams()
     if (filters.search) usp.set('search', filters.search)
-    if (filters.situationId) usp.set('situationId', filters.situationId)
-    if (filters.modeTransmissionId) usp.set('modeTransmissionId', filters.modeTransmissionId)
     if (filters.signataire) usp.set('signataire', filters.signataire)
     if (filters.dateDebut) usp.set('dateDebut', filters.dateDebut)
     if (filters.dateFin) usp.set('dateFin', filters.dateFin)
@@ -286,7 +269,7 @@ function CourriersPage() {
       const r = await fetch(`/api/courriers?${usp.toString()}`)
       const data = (await r.json()) as CourrierList
       const all = [
-        ['N°', "Date de signature", 'Signataire', 'Destinataire', 'Objet', 'Mode', 'Situation', 'Réponse au courrier (N°)', "Date d'arrivée (entrant)", 'Date de retrait'],
+        ['N°', "Date de signature", 'Signataire', 'Destinataire', 'Objet', 'Réponse au courrier (N°)', "Date d'arrivée (entrant)", 'Date de retrait'],
         ...data.items.map((c) => {
           const row = decorate(c)
           return [
@@ -295,8 +278,6 @@ function CourriersPage() {
             row.signataire,
             row.destinataire,
             row.objet,
-            row.modeTransmission?.nom ?? '',
-            row.situation.nom,
             row.numeroEntrant || '',
             row.dateArriveeEntrant ? formatDateFull(row.dateArriveeEntrant) : '',
             row.dateRetrait || '',
@@ -368,9 +349,7 @@ function CourriersPage() {
         onApply={applyPart}
         onReset={resetFilters}
         hasFilters={hasFilters}
-        situations={meta.situations}
         signataireOptions={meta.signataireOptions}
-        modes={meta.modes}
         hiddenCols={hiddenCols}
         showCols={showCols}
         onToggleCol={toggleCol}
@@ -493,16 +472,14 @@ interface CourrierToolbarProps {
   onApply: (p: Partial<Filters>) => void
   onReset: () => void
   hasFilters: boolean
-  situations: SituationOption[]
   signataireOptions: { id: string; nom: string }[]
-  modes: ModeTransmission[]
   hiddenCols: Set<string>
   showCols: boolean
   onToggleCol: (key: string) => void
   onOpenCols: () => void
 }
 
-function CourrierToolbar({ searchInput, onSearchChange, filters, onApply, onReset, hasFilters, situations, signataireOptions, modes, hiddenCols, showCols, onToggleCol, onOpenCols }: CourrierToolbarProps) {
+function CourrierToolbar({ searchInput, onSearchChange, filters, onApply, onReset, hasFilters, signataireOptions, hiddenCols, showCols, onToggleCol, onOpenCols }: CourrierToolbarProps) {
   const field = 'h-9 rounded-xl border border-border/80 bg-background px-2.5 text-sm text-foreground focus:border-ring focus:outline-none'
   const lab = 'flex flex-col gap-1 text-2xs font-medium text-muted-foreground'
   return (
@@ -520,34 +497,6 @@ function CourrierToolbar({ searchInput, onSearchChange, filters, onApply, onRese
           />
         </div>
         <div className="flex flex-wrap items-end gap-2.5">
-          <label className={lab}>
-            Situation
-            <select
-              data-testid="filter-situation"
-              value={filters.situationId}
-              onChange={(e) => onApply({ situationId: e.target.value })}
-              className={field}
-            >
-              <option value="">Toutes</option>
-              {situations.map((s) => (
-                <option key={s.id} value={s.id}>{s.nom}</option>
-              ))}
-            </select>
-          </label>
-          <label className={lab}>
-            Mode
-            <select
-              data-testid="filter-mode"
-              value={filters.modeTransmissionId}
-              onChange={(e) => onApply({ modeTransmissionId: e.target.value })}
-              className={field}
-            >
-              <option value="">Tous</option>
-              {modes.map((m) => (
-                <option key={m.id} value={m.id}>{m.nom}</option>
-              ))}
-            </select>
-          </label>
           <label className={lab}>
             Signataire
             <select
@@ -721,32 +670,6 @@ const TableColumns = (handlers: RowActionHandlers) => {
       header: ({ column }) => <SortHeader column={column} label="Objet" />,
       cell: ({ getValue }) => <ObjetCell text={getValue()} />,
       meta: { className: 'max-w-[13rem]' },
-    }),
-    columnHelper.accessor((r) => r.modeTransmission?.nom ?? '', {
-      id: 'modeTransmission',
-      header: ({ column }) => <SortHeader column={column} label="Mode" />,
-      cell: ({ row }) => {
-        const m = row.original.modeTransmission
-        return m ? (
-          <span
-            className="inline-flex items-center rounded-full px-2.5 py-1 text-2xs font-semibold"
-            style={{ backgroundColor: `${m.couleur}14`, color: m.couleur }}
-            data-testid="badge-mode"
-          >
-            {m.nom}
-          </span>
-        ) : (
-          <span className="text-sm text-muted-foreground/40">-</span>
-        )
-      },
-      meta: { className: 'whitespace-nowrap' },
-    }),
-    columnHelper.accessor((r) => r.situation.nom, {
-      id: 'situation',
-      header: ({ column }) => <SortHeader column={column} label="Situation" />,
-      cell: ({ row }) => (
-        <StatusBadge couleur={row.original.situation.couleur} nom={row.original.situation.nom} />
-      ),
     }),
     columnHelper.accessor('numeroEntrant', {
       id: 'numeroEntrant',
@@ -963,16 +886,6 @@ function CardCourrier({ c, seuils, index, actionOpen, onActionToggle, canUpdate,
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <span className="font-mono text-xs font-semibold text-foreground">{c.numero}</span>
-            {c.modeTransmission && (
-              <span
-                className="inline-flex items-center rounded-full px-2 py-0.5 text-2xs font-semibold"
-                style={{ backgroundColor: `${c.modeTransmission.couleur}14`, color: c.modeTransmission.couleur }}
-                data-testid="badge-mode"
-              >
-                {c.modeTransmission.nom}
-              </span>
-            )}
-            <StatusBadge couleur={c.situation.couleur} nom={c.situation.nom} />
           </div>
         </div>
         <p className="mt-2 line-clamp-2 text-sm font-medium text-foreground">{c.objet}</p>

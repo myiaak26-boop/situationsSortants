@@ -34,7 +34,6 @@ const ALL_PERMISSIONS = [
   { key: 'courrier:history', label: "Consulter l'historique" },
   { key: 'courrier:print', label: 'Imprimer la fiche' },
   { key: 'statistique:read', label: 'Lecture statistiques' },
-  { key: 'workflow:manage', label: 'Gérer le moteur de workflow (modes, situations, transitions)' },
   { key: 'import', label: 'Import Excel' },
   { key: 'situation:read', label: 'Lecture situations' },
   { key: 'situation:export', label: 'Export situations' },

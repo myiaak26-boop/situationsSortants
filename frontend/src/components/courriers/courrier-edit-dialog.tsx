@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
 import { Dialog } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import type { Courrier, ModeTransmission, Signataire, Situation } from '@/lib/types'
+import type { Courrier, Signataire } from '@/lib/types'
 
 interface EditForm {
   dateEnvoi: string
@@ -11,8 +11,6 @@ interface EditForm {
   objet: string
   numeroEntrant: string
   dateArriveeEntrant: string
-  modeTransmissionId: string
-  situationId: string
 }
 
 interface CourrierEditDialogProps {
@@ -33,9 +31,7 @@ function toDateInput(iso: string): string {
 
 export function CourrierEditDialog({ open, courrier, onClose, onSaved }: CourrierEditDialogProps) {
   const [form, setForm] = useState<EditForm | null>(null)
-  const [situations, setSituations] = useState<Situation[]>([])
   const [signataires, setSignataires] = useState<Signataire[]>([])
-  const [modes, setModes] = useState<ModeTransmission[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -48,18 +44,14 @@ export function CourrierEditDialog({ open, courrier, onClose, onSaved }: Courrie
       objet: courrier.objet,
       numeroEntrant: courrier.numeroEntrant || '',
       dateArriveeEntrant: toDateInput(courrier.dateArriveeEntrant || ''),
-      modeTransmissionId: courrier.modeTransmissionId || '',
-      situationId: courrier.situationId,
     })
     setError(null)
     setSaving(false)
     fetch('/api/courriers/meta')
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { situations: Situation[]; signataires: Signataire[]; modes: ModeTransmission[] } | null) => {
+      .then((d: { signataires: Signataire[] } | null) => {
         if (d) {
-          setSituations(d.situations)
           setSignataires(d.signataires.filter((s) => s.actif))
-          setModes(d.modes)
         }
       })
       .catch(() => {})
@@ -80,10 +72,6 @@ export function CourrierEditDialog({ open, courrier, onClose, onSaved }: Courrie
       setError('Champs requis : destinataire, objet')
       return
     }
-    if (!form.modeTransmissionId) {
-      setError('Le mode de transmission est requis')
-      return
-    }
     setSaving(true)
     setError(null)
     try {
@@ -97,8 +85,6 @@ export function CourrierEditDialog({ open, courrier, onClose, onSaved }: Courrie
           objet: form.objet.trim(),
           numeroEntrant: form.numeroEntrant.trim() || null,
           dateArriveeEntrant: form.dateArriveeEntrant ? new Date(form.dateArriveeEntrant).toISOString() : null,
-          modeTransmissionId: form.modeTransmissionId,
-          situationId: form.situationId,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -196,37 +182,6 @@ export function CourrierEditDialog({ open, courrier, onClose, onSaved }: Courrie
                 className="mt-1.5 w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
                 data-testid="edit-objet"
               />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                Mode de transmission <span className="text-destructive">*</span>
-              </label>
-              <select
-                value={form.modeTransmissionId}
-                onChange={set('modeTransmissionId')}
-                className="mt-1.5 w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
-                data-testid="edit-mode"
-              >
-                <option value="">— Choisir un mode —</option>
-                {modes.map((m) => (
-                  <option key={m.id} value={m.id}>{m.nom}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">
-                Situation <span className="text-destructive">*</span>
-              </label>
-              <select
-                value={form.situationId}
-                onChange={set('situationId')}
-                className="mt-1.5 w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
-                data-testid="edit-situation"
-              >
-                {situations.map((s) => (
-                  <option key={s.id} value={s.id}>{s.nom}</option>
-                ))}
-              </select>
             </div>
           </div>
 

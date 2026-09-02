@@ -1,20 +1,15 @@
 import { createRoute, useNavigate, Link } from '@tanstack/react-router'
 import { Route as rootRoute } from '@/routes/__root'
 import { useState, useEffect } from 'react'
-import { cn } from '@/lib/cn'
 import { apiFetch } from '@/lib/api'
 import { fetchSession, can, PERM, type Session } from '@/lib/session'
-import type { ModeTransmission, Signataire } from '@/lib/types'
+import type { Signataire } from '@/lib/types'
 import {
-  Mail,
-  Truck,
-  Phone,
   FileText,
   CheckCircle2,
   Loader2,
   ArrowLeft,
   AlertCircle,
-  type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LoadingState, EmptyState } from '@/components/ui/feedback'
@@ -24,16 +19,6 @@ export const Route = createRoute({
   path: '/courriers/nouveau',
   component: CourrierNouveauPage,
 })
-
-const MODE_ICONS: Record<string, LucideIcon> = { Phone, Mail, Truck, FileText }
-
-function modeIcon(m: ModeTransmission): LucideIcon {
-  const base = (m.icone || '').toLowerCase()
-  if (base.includes('mail')) return Mail
-  if (base.includes('truck')) return Truck
-  if (base.includes('phone')) return Phone
-  return FileText
-}
 
 const EMPTY_FORM = {
   numero: '',
@@ -49,11 +34,9 @@ const EMPTY_FORM = {
 function CourrierNouveauPage() {
   const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
-  const [modes, setModes] = useState<ModeTransmission[]>([])
   const [signataires, setSignataires] = useState<Signataire[]>([])
   const [creationManuelle, setCreationManuelle] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedModeId, setSelectedModeId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,11 +45,10 @@ function CourrierNouveauPage() {
     fetchSession().then((s) => setSession(s))
     fetch('/api/courriers/meta')
       .then((r) => r.json())
-      .then((d: { modes: ModeTransmission[]; signataires: Signataire[] }) => {
-        setModes(d.modes)
+      .then((d: { signataires: Signataire[] }) => {
         setSignataires(d.signataires.filter((s) => s.actif))
       })
-      .catch(() => setError('Impossible de charger les modes de transmission'))
+      .catch(() => setError('Impossible de charger les signataires'))
     fetch('/api/parametres')
       .then((r) => r.json())
       .then((params: { cle: string; valeur: string }[]) => {
@@ -84,7 +66,7 @@ function CourrierNouveauPage() {
   const selectedSignataire = signataires.find((s) => s.id === form.signataireId)
 
   const requiredOk =
-    !!selectedModeId && !!form.numero.trim() && !!selectedSignataire && !!form.destinataire.trim() && !!form.objet.trim()
+    !!form.numero.trim() && !!selectedSignataire && !!form.destinataire.trim() && !!form.objet.trim()
 
   const submit = async () => {
     if (!requiredOk || submitting) return
@@ -103,7 +85,6 @@ function CourrierNouveauPage() {
           numeroEntrant: form.numeroEntrant.trim() || null,
           dateArriveeEntrant: form.dateArriveeEntrant ? new Date(form.dateArriveeEntrant).toISOString() : null,
           observation: form.observation.trim() || null,
-          modeTransmissionId: selectedModeId,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -139,8 +120,6 @@ function CourrierNouveauPage() {
     )
   }
 
-  const selectedMode = modes.find((m) => m.id === selectedModeId) || null
-
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
@@ -153,7 +132,7 @@ function CourrierNouveauPage() {
         <div>
           <h1 className="text-xl font-semibold text-foreground">Nouveau courrier</h1>
           <p className="text-sm text-muted-foreground">
-            Renseignez le courrier et choisissez son mode de transmission
+            Renseignez les informations du courrier
           </p>
         </div>
       </div>
@@ -167,59 +146,6 @@ function CourrierNouveauPage() {
           {error}
         </div>
       )}
-
-      <section className="rounded-xl border bg-card">
-        <div className="border-b border-border px-6 py-4">
-          <h2 className="text-sm font-semibold text-foreground">
-            Mode de transmission <span className="text-destructive">*</span>
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-6 sm:grid-cols-3">
-          {modes.map((m) => {
-            const Icon = modeIcon(m)
-            const active = m.id === selectedModeId
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setSelectedModeId(m.id)}
-                data-testid={`mode-option-${m.nom}`}
-                className={cn(
-                  'relative rounded-xl border p-4 text-left transition-all',
-                  active
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-border bg-background hover:border-primary/40 hover:bg-muted/40',
-                )}
-              >
-                {active && (
-                  <span className="absolute right-3 top-3 text-primary">
-                    <CheckCircle2 className="h-5 w-5" />
-                  </span>
-                )}
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: `${m.couleur}18`, color: m.couleur }}
-                >
-                  <Icon className="h-5 w-5" />
-                </div>
-                <p className="mt-3 text-sm font-semibold text-foreground">{m.nom}</p>
-                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                  {m.description || 'Aucune précision'}
-                </p>
-              </button>
-            )
-          })}
-        </div>
-        {selectedMode && (
-          <div className="border-t border-border px-6 py-3" data-testid="workflow-hint">
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium" style={{ color: selectedMode.couleur }}>{selectedMode.nom}</span>
-              {' — '}
-              {selectedMode.description || 'Aucune précision'}
-            </p>
-          </div>
-        )}
-      </section>
 
       <section className="rounded-xl border bg-card">
         <div className="border-b border-border px-6 py-4">

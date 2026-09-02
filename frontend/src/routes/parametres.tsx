@@ -17,7 +17,6 @@ import {
   Users,
   ShieldCheck,
   ScrollText,
-  Workflow,
   Plus,
   Trash2,
   Database,
@@ -32,8 +31,7 @@ import UtilisateursPage from '@/routes/utilisateurs'
 import RolesPage from '@/routes/roles'
 import PermissionsPage from '@/routes/permissions'
 import JournalPage from '@/routes/journal'
-import WorkflowsPage from '@/routes/workflows'
-import { useSession, useCan } from '@/lib/session-context'
+import { useSession } from '@/lib/session-context'
 import { can } from '@/lib/session'
 import { Guard } from '@/components/ui/guard'
 
@@ -61,7 +59,6 @@ const TABS: { id: string; label: string; icon: LucideIcon; permission?: string }
   { id: 'seuils', label: 'Seuils des délais', icon: Timer },
   { id: 'institution', label: 'Institution', icon: Building2 },
   { id: 'signataires', label: 'Signataires', icon: PenSquare },
-  { id: 'workflows', label: 'Workflows', icon: Workflow, permission: 'workflow:manage' },
   { id: 'utilisateurs', label: 'Utilisateurs', icon: Users, permission: 'utilisateur:read' },
   { id: 'roles', label: 'Rôles & Permissions', icon: ShieldCheck, permission: 'role:read' },
   { id: 'journal', label: 'Journal', icon: ScrollText, permission: 'audit:read' },
@@ -711,7 +708,6 @@ function ParametresPage() {
         {activeTab === 'seuils' && <SeuilsTab />}
         {activeTab === 'institution' && <InstitutionTab />}
         {activeTab === 'signataires' && <SignatairesTab />}
-        {activeTab === 'workflows' && <WorkflowsPage />}
         {activeTab === 'utilisateurs' && <UtilisateursPage />}
         {activeTab === 'roles' && (
           <div className="space-y-5">

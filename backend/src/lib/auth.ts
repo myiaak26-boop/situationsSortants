@@ -11,7 +11,6 @@ export const PERMS = {
   COURRIER_DELETE: 'courrier:delete',
   COURRIER_HISTORY: 'courrier:history',
   COURRIER_PRINT: 'courrier:print',
-  WORKFLOW_MANAGE: 'workflow:manage',
   IMPORT: 'import',
   SITUATION_READ: 'situation:read',
   SITUATION_EXPORT: 'situation:export',

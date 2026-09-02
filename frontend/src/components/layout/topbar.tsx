@@ -25,7 +25,6 @@ const breadcrumbMap: Record<string, { label: string; icon?: LucideIcon }> = {
   '/import': { label: 'Importation Excel' },
   '/courriers': { label: 'Courriers sortants' },
   '/historique': { label: 'Historique' },
-  '/situations': { label: 'Situations' },
   '/statistiques': { label: 'Statistiques' },
   '/utilisateurs': { label: 'Utilisateurs' },
   '/roles': { label: 'Rôles' },

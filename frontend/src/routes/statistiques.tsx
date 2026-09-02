@@ -41,16 +41,6 @@ interface GlobalStats {
   distribution: Record<string, number>
 }
 
-interface SituationMeta {
-  id: string
-  nom: string
-}
-
-interface SituationMetaResp {
-  situations: SituationMeta[]
-  signataires: string[]
-}
-
 export const Route = createRoute({
   getParentRoute: () => rootRoute,
   path: '/statistiques',
@@ -85,20 +75,9 @@ function StatistiquesPage() {
   const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null)
   const [evolution, setEvolution] = useState<EvolutionItem[]>([])
   const [destinataires, setDestinataires] = useState<DestinataireItem[]>([])
-  const [meta, setMeta] = useState<SituationMetaResp | null>(null)
   const [periode, setPeriode] = useState('12m')
   const [signataire, setSignataire] = useState('')
-  const [situationId, setSituationId] = useState('')
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/situations/meta')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d && Array.isArray(d.situations) && Array.isArray(d.signataires)) setMeta(d as SituationMetaResp)
-      })
-      .catch(() => {})
-  }, [])
 
   const load = useCallback(() => {
     setLoading(true)
@@ -106,7 +85,6 @@ function StatistiquesPage() {
     const params = new URLSearchParams()
     if (p?.jours) params.set('debut', periodeDebut(p.jours))
     if (signataire) params.set('signataire', signataire)
-    if (situationId) params.set('situationId', situationId)
     const qs = params.toString()
 
     const f1 = fetch(`/api/statistiques/global${qs ? `?${qs}` : ''}`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
@@ -121,18 +99,17 @@ function StatistiquesPage() {
       if (Array.isArray(dest)) setDestinataires(dest as DestinataireItem[])
       setLoading(false)
     })
-  }, [periode, signataire, situationId])
+  }, [periode, signataire])
 
   useEffect(load, [load])
 
   const maxEvol = Math.max(...evolution.map((e) => e.total), 1)
-  const filtreActif = periode !== '12m' || signataire !== '' || situationId !== ''
+  const filtreActif = periode !== '12m' || signataire !== ''
   const periodeLabel = PERIODES.find((p) => p.v === periode)?.label || ''
 
   const resetFilters = () => {
     setPeriode('12m')
     setSignataire('')
-    setSituationId('')
   }
 
   return (
@@ -181,21 +158,6 @@ function StatistiquesPage() {
               {(meta?.signataires || []).map((s) => (
                 <option key={s} value={s}>
                   {s}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-2xs font-medium uppercase tracking-wider text-muted-foreground">Situation</span>
-            <select
-              value={situationId}
-              onChange={(e) => setSituationId(e.target.value)}
-              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
-            >
-              <option value="">Toutes les situations</option>
-              {(meta?.situations || []).map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nom}
                 </option>
               ))}
             </select>
@@ -392,7 +354,6 @@ function StatistiquesPage() {
             <p className="text-xs text-muted-foreground">
               Analyse limitée à : {periodeLabel}
               {signataire ? ` · signataire : ${signataire}` : ''}
-              {situationId && meta ? ` · situation : ${meta.situations.find((s) => s.id === situationId)?.nom || situationId}` : ''}
             </p>
           )}
         </>

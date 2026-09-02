@@ -56,8 +56,6 @@ const PRESETS: PresetDef[] = [
 const GROUP_BY: { v: string; label: string; reportType: string }[] = [
   { v: '', label: 'Aucun regroupement', reportType: '' },
   { v: 'signataire', label: 'Par signataire', reportType: 'parSignataire' },
-  { v: 'situation', label: 'Par situation', reportType: 'parSituation' },
-  { v: 'destinataire', label: 'Par destinataire', reportType: 'parDestinataire' },
 ]
 
 const FORMATS: { v: WizardFormat; label: string; description: string; icon: LucideIcon; recommended?: boolean }[] = [
@@ -71,8 +69,6 @@ interface WizardDefaults {
   dateDebut: string
   dateFin: string
   signataire: string
-  destinataire: string
-  situationId: string
   type: string
 }
 
@@ -98,8 +94,6 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
   const [signataire, setSignataire] = useState('')
-  const [destinataire, setDestinataire] = useState('')
-  const [situationId, setSituationId] = useState('')
   const [groupBy, setGroupBy] = useState('')
   const [format, setFormat] = useState<WizardFormat>('exec-pdf')
   const [advanced, setAdvanced] = useState(false)
@@ -112,8 +106,6 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
       setDateDebut(defaults.dateDebut)
       setDateFin(defaults.dateFin)
       setSignataire(defaults.signataire)
-      setDestinataire(defaults.destinataire)
-      setSituationId(defaults.situationId)
       setGroupBy('')
       setFormat('exec-pdf')
       setAdvanced(false)
@@ -139,8 +131,6 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
     if (dateDebut) p.set('dateDebut', dateDebut)
     if (dateFin) p.set('dateFin', dateFin)
     if (signataire) p.set('signataire', signataire)
-    if (destinataire) p.set('destinataire', destinataire)
-    if (situationId) p.set('situationId', situationId)
     for (const [k, v] of Object.entries(preset.flags || {})) if (v) p.set(k, '1')
     p.set('reportType', reportType)
     p.set('situationType', situationType)
@@ -162,8 +152,6 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
     ['Préréglage', preset.label],
     ['Période', periodeFull],
     ...(signataire ? [['Signataire', signataire] as [string, string]] : []),
-    ...(situationId ? [['Situation', meta?.situations.find((s) => s.id === situationId)?.nom || situationId] as [string, string]] : []),
-    ...(destinataire ? [['Destinataire', destinataire] as [string, string]] : []),
     ['Format', formatDef.label],
   ]
 
@@ -266,21 +254,6 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
                   ))}
                 </select>
               </label>
-              <label className="block">
-                <span className="mb-1 block text-2xs font-medium text-muted-foreground">Situation</span>
-                <select
-                  value={situationId}
-                  onChange={(e) => setSituationId(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
-                >
-                  <option value="">Toutes les situations</option>
-                  {(meta?.situations || []).map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nom}
-                    </option>
-                  ))}
-                </select>
-              </label>
             </div>
 
             {/* Options avancées */}
@@ -299,17 +272,7 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <label className="block">
-                    <span className="mb-1 block text-2xs font-medium text-muted-foreground">Destinataire</span>
-                    <input
-                      type="text"
-                      value={destinataire}
-                      onChange={(e) => setDestinataire(e.target.value)}
-                      placeholder="Nom du destinataire"
-                      className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/20"
-                    />
-                  </label>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-1 block text-2xs font-medium text-muted-foreground">Regrouper par</span>
                     <select

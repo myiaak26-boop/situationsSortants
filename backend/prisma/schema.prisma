@@ -63,9 +63,7 @@ model Courrier {
   expediteur          String?
   dateObservation     DateTime?
   dureeTraitement     Float?
-  situationId         String
   observation         String?
-  modeTransmissionId  String?
   modeEnvoi           String?
   nbrRappels          Int       @default(0)
   createdById         String
@@ -76,79 +74,20 @@ model Courrier {
 
   createdBy         User              @relation(fields: [createdById], references: [id])
   deletedBy         User?             @relation("SuppriméPar", fields: [deletedById], references: [id])
-  situation         Situation         @relation(fields: [situationId], references: [id])
-  modeTransmission  ModeTransmission? @relation(fields: [modeTransmissionId], references: [id])
   signataireRef     Signataire?       @relation(fields: [signataireId], references: [id])
   historiqueActions HistoriqueAction[]
   retrait           Retrait?
 
   @@index([dateEnvoi])
   @@index([signataire])
-  @@index([situationId])
-  @@index([modeTransmissionId])
   @@index([signataireId])
   @@index([deletedAt])
-}
-
-model Situation {
-  id        String   @id @default(cuid())
-  nom       String   @unique
-  ordre     Int      @default(0)
-  couleur   String   @default("gray")
-  icone     String?
-  estInitial Boolean @default(false)
-  estFinal  Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  transitionsSortantes Transition[] @relation("FromSituation")
-  transitionsEntrantes Transition[] @relation("ToSituation")
-  courriers            Courrier[]
-  historiquesFrom      HistoriqueAction[] @relation("HistoriqueFromSituation")
-  historiquesTo        HistoriqueAction[] @relation("HistoriqueToSituation")
-}
-
-model Transition {
-  id                String   @id @default(cuid())
-  modeTransmissionId String?
-  fromSituationId   String
-  toSituationId     String
-  nom               String
-  description       String?
-  type              String   @default("MANUAL")
-  alerte            Boolean  @default(false)
-  demandeRetrait    Boolean  @default(false)
-  estRappel         Boolean  @default(false)
-  ordre             Int      @default(0)
-  createdAt         DateTime @default(now())
-
-  fromSituation    Situation        @relation("FromSituation", fields: [fromSituationId], references: [id])
-  toSituation      Situation        @relation("ToSituation", fields: [toSituationId], references: [id])
-  modeTransmission ModeTransmission? @relation(fields: [modeTransmissionId], references: [id])
-
-  @@unique([modeTransmissionId, fromSituationId, toSituationId])
-}
-
-model ModeTransmission {
-  id          String   @id @default(cuid())
-  nom         String   @unique
-  description String?
-  couleur     String   @default("#6B7280")
-  icone       String?
-  cle         String?
-  ordre       Int      @default(0)
-  actif       Boolean  @default(true)
-  createdAt   DateTime @default(now())
-
-  courriers   Courrier[]
-  transitions Transition[]
 }
 
 model HistoriqueAction {
   id              String   @id @default(cuid())
   courrierId      String
   transitionId    String?
-  fromSituationId String?
-  toSituationId   String?
   action          String
   commentaire     String?
   userId          String
@@ -156,8 +95,6 @@ model HistoriqueAction {
 
   courrier           Courrier   @relation(fields: [courrierId], references: [id], onDelete: Cascade)
   user               User       @relation(fields: [userId], references: [id])
-  fromSituation      Situation? @relation("HistoriqueFromSituation", fields: [fromSituationId], references: [id])
-  toSituation        Situation? @relation("HistoriqueToSituation", fields: [toSituationId], references: [id])
 
   @@index([courrierId])
   @@index([createdAt])

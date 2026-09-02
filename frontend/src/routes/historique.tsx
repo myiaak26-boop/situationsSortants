@@ -28,8 +28,6 @@ interface HistoriqueItem {
   createdAt: string
   user: { id: string; name: string }
   courrier: { id: string; numero: string; destinataire: string }
-  fromSituation: { nom: string; couleur: string } | null
-  toSituation: { nom: string; couleur: string } | null
 }
 
 export const Route = createRoute({
@@ -140,13 +138,6 @@ function HistoriquePage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     <span className="text-sm font-medium text-foreground">{a.action}</span>
-                    {a.fromSituation && a.toSituation && (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <span style={{ color: a.fromSituation.couleur }}>{a.fromSituation.nom}</span>
-                        <span>→</span>
-                        <span style={{ color: a.toSituation.couleur }}>{a.toSituation.nom}</span>
-                      </span>
-                    )}
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-2xs text-muted-foreground">
                     <span className="flex items-center gap-1">

@@ -10,14 +10,12 @@ export type KpiId =
   | 'nouveaux'
   | 'mail'
   | 'coursier'
-  | 'retraitSecretariat'
-  | 'injoignables'
   | 'aRappeler'
   | 'rappels'
 
-export type GroupBy = 'signataire' | 'situation' | 'destinataire' | null
+export type GroupBy = 'signataire' | 'destinataire' | null
 
-export type ChartId = 'signataire' | 'situation' | 'evolution' | 'delais' | 'destinataire'
+export type ChartId = 'signataire' | 'evolution' | 'delais' | 'destinataire'
 
 export type AnnexId = 'historique' | 'reponses' | 'retraits' | 'glossaire'
 
@@ -27,7 +25,6 @@ export type TableColId =
   | 'signataire'
   | 'destinataire'
   | 'objet'
-  | 'situation'
   | 'numeroEntrant'
   | 'dateArriveeEntrant'
   | 'dateRetrait'
@@ -54,8 +51,6 @@ export const KPI_DEFS: Record<KpiId, KpiDef> = {
   nouveaux: { id: 'nouveaux', label: 'Nouveaux', glyph: '＋', color: COLORS.blue, value: (s) => fmt(s.nouveaux) },
   mail: { id: 'mail', label: 'Envoyés mail', glyph: '✉', color: COLORS.blue, value: (s) => fmt(s.envoyesMail) },
   coursier: { id: 'coursier', label: 'Envoyés coursier', glyph: '➤', color: COLORS.slate, value: (s) => fmt(s.envoyesCoursier) },
-  retraitSecretariat: { id: 'retraitSecretariat', label: 'Retrait secrétariat', glyph: '▣', color: COLORS.teal, value: (s) => fmt(s.enRetraitSecretariat) },
-  injoignables: { id: 'injoignables', label: 'Injoignables', glyph: '✗', color: COLORS.rose, value: (s) => fmt(s.injoignables) },
   aRappeler: { id: 'aRappeler', label: 'À rappeler', glyph: '⚠', color: COLORS.red, value: (s) => fmt(s.aRappeler) },
   rappels: { id: 'rappels', label: 'Relances effectuées', glyph: '↻', color: COLORS.amber, value: (s) => fmt(s.rappelsEffectues) },
 }
@@ -81,7 +76,6 @@ export const TABLE_COL_DEFS: Record<TableColId, TableColDef> = {
   signataire: { id: 'signataire', header: 'Signataire', w: 56 },
   destinataire: { id: 'destinataire', header: 'Destinataire', w: 100 },
   objet: { id: 'objet', header: 'Objet', w: 128 },
-  situation: { id: 'situation', header: 'Situation', w: 84 },
   numeroEntrant: { id: 'numeroEntrant', header: 'Réponse du courrier N°', w: 72 },
   dateArriveeEntrant: { id: 'dateArriveeEntrant', header: 'Arrivée', w: 64 },
   dateRetrait: { id: 'dateRetrait', header: 'Retrait', w: 46 },
@@ -111,7 +105,6 @@ export interface ReportTypeConfig {
 
 export const CHART_TITLES: Record<ChartId, string> = {
   signataire: 'Répartition par signataire',
-  situation: 'Répartition par statut de suivi',
   evolution: 'Évolution des courriers par période',
   delais: 'Répartition des délais de traitement',
   destinataire: 'Répartition par destinataire',
@@ -120,8 +113,7 @@ export const CHART_TITLES: Record<ChartId, string> = {
 // Numérotation des sections graphiques du rapport (section 2, structure fixe).
 export const CHART_NUMBERS: Partial<Record<ChartId, string>> = {
   signataire: '2.1',
-  situation: '2.2',
-  delais: '2.4',
+  delais: '2.2',
 }
 
 // Auteur du rapport — valeur FIXE, indépendante de l'utilisateur connecté.
@@ -130,9 +122,9 @@ export const PAR_AUTEUR = 'Aboubacar BANGOURA (Chef de Division)'
 // Note discrète sous les KPI de la couverture.
 export const KPI_NOTE = 'Courriers simples + réponses = total des courriers.'
 
-const DEFAULT_KPIS: KpiId[] = ['total', 'simples', 'reponses', 'retires', 'livres', 'nouveaux', 'injoignables', 'aRappeler', 'rappels']
-const DEFAULT_CHARTS: ChartId[] = ['signataire', 'situation', 'delais']
-const DEFAULT_COLS: TableColId[] = ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'situation', 'numeroEntrant', 'delaiReponse']
+const DEFAULT_KPIS: KpiId[] = ['total', 'simples', 'reponses', 'retires', 'livres', 'nouveaux', 'aRappeler', 'rappels']
+const DEFAULT_CHARTS: ChartId[] = ['signataire', 'delais']
+const DEFAULT_COLS: TableColId[] = ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'numeroEntrant', 'delaiReponse']
 const DEFAULT_ANNEXES: AnnexId[] = ['historique', 'glossaire']
 
 export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
@@ -160,25 +152,16 @@ export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
     label: 'Par signataire',
     kpis: ['total', 'simples', 'reponses', 'retires'],
     charts: ['signataire', 'evolution'],
-    cols: ['numero', 'dateEnvoi', 'destinataire', 'objet', 'situation', 'numeroEntrant'],
+    cols: ['numero', 'dateEnvoi', 'destinataire', 'objet', 'numeroEntrant'],
     groupBy: 'signataire',
     annexes: ['glossaire'],
-  },
-  parSituation: {
-    id: 'parSituation',
-    label: 'Par situation',
-    kpis: ['total', 'retires', 'injoignables'],
-    charts: ['situation'],
-    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet'],
-    groupBy: 'situation',
-    annexes: [],
   },
   parDestinataire: {
     id: 'parDestinataire',
     label: 'Par destinataire',
     kpis: ['total', 'simples', 'reponses', 'retires'],
     charts: ['destinataire', 'evolution'],
-    cols: ['numero', 'dateEnvoi', 'signataire', 'objet', 'situation', 'numeroEntrant'],
+    cols: ['numero', 'dateEnvoi', 'signataire', 'objet', 'numeroEntrant'],
     groupBy: 'destinataire',
     annexes: ['glossaire'],
   },
@@ -186,8 +169,8 @@ export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
     id: 'reponses',
     label: 'Courriers réponses',
     kpis: ['total', 'reponses', 'retires'],
-    charts: ['situation', 'evolution'],
-    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'numeroEntrant', 'dateArriveeEntrant', 'delaiReponse', 'situation'],
+    charts: ['evolution'],
+    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'numeroEntrant', 'dateArriveeEntrant', 'delaiReponse'],
     groupBy: null,
     annexes: ['reponses', 'glossaire'],
   },
@@ -214,7 +197,7 @@ export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
     label: 'Envoyés par email',
     kpis: ['total', 'mail', 'retires'],
     charts: ['evolution'],
-    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'situation'],
+    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet'],
     groupBy: null,
     annexes: ['glossaire'],
   },
@@ -223,16 +206,7 @@ export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
     label: 'Envoyés par coursier',
     kpis: ['total', 'coursier', 'retires'],
     charts: ['evolution'],
-    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'situation'],
-    groupBy: null,
-    annexes: ['glossaire'],
-  },
-  injoignables: {
-    id: 'injoignables',
-    label: 'Injoignables',
-    kpis: ['total', 'injoignables', 'aRappeler'],
-    charts: [],
-    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'situation', 'telephone'],
+    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet'],
     groupBy: null,
     annexes: ['glossaire'],
   },
@@ -240,8 +214,8 @@ export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
     id: 'rappels',
     label: 'Avec relances',
     kpis: ['total', 'rappels', 'aRappeler'],
-    charts: ['situation'],
-    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'situation'],
+    charts: [],
+    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet'],
     groupBy: null,
     annexes: ['glossaire'],
   },

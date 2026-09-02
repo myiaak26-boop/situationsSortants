@@ -1,31 +1,9 @@
-export interface Situation {
-  id: string
-  nom: string
-  ordre: number
-  couleur: string
-  icone: string | null
-  estInitial: boolean
-  estFinal: boolean
-}
-
 export interface Signataire {
   id: string
   code: string
   nom: string
   actif: boolean
   ordre: number
-}
-
-export interface ModeTransmission {
-  id: string
-  nom: string
-  description: string | null
-  couleur: string
-  icone: string | null
-  cle: string | null
-  ordre: number
-  actif: boolean
-  _count?: { courriers: number; transitions: number }
 }
 
 export interface Retrait {
@@ -52,14 +30,10 @@ export interface Courrier {
   expediteur: string | null
   dateObservation: string | null
   dureeTraitement: number | null
-  situationId: string
   observation: string | null
-  modeTransmissionId: string | null
   createdById: string
   createdAt: string
   updatedAt: string
-  situation: Situation
-  modeTransmission: ModeTransmission | null
   retrait: Retrait | null
   createdBy: { id: string; name: string }
   historiqueActions?: HistoriqueAction[]
@@ -72,51 +46,40 @@ export interface HistoriqueAction {
   commentaire: string | null
   userId: string
   createdAt: string
-  fromSituationId: string | null
-  toSituationId: string | null
   user: { id: string; name: string }
 }
 
-export interface Transition {
+export interface WorkflowModeTransmission {
   id: string
-  modeTransmissionId: string | null
-  fromSituationId: string
-  toSituationId: string
   nom: string
   description: string | null
-  type: string
-  alerte: boolean
-  demandeRetrait: boolean
-  estRappel: boolean
-  ordre: number
+  couleur: string
+  icone: string | null
+  actif: boolean
+  _count?: { courriers: number; transitions: number }
 }
 
-export interface AvailableTransition {
+export interface WorkflowSituation {
   id: string
   nom: string
-  description: string | null
-  toSituationNom: string
-  toSituationCouleur: string
-  toSituationEstFinal: boolean
+  couleur: string
+  ordre: number
+  estInitial: boolean
+  estFinal: boolean
+}
+
+export interface WorkflowTransition {
+  id: string
+  nom: string
+  fromSituationId: string
+  toSituationId: string
+  modeTransmissionId: string
   demandeRetrait: boolean
   estRappel: boolean
-  modeNom: string | null
 }
 
 export interface WorkflowAdminData {
-  modes: ModeTransmission[]
-  situations: Situation[]
-  transitions: Transition[]
-}
-
-export interface WorkflowModeStats {
-  mode: { id: string; nom: string; couleur: string; icone: string | null }
-  total: number
-  finalises: number
-  enCours: number
-  retires: number
-  rappels: number
-  tempsMoyenJours: number | null
-  distribution: Record<string, number>
-  situationsDuMode: { id: string; nom: string; couleur: string; estFinal: boolean }[]
+  modes: WorkflowModeTransmission[]
+  situations: WorkflowSituation[]
+  transitions: WorkflowTransition[]
 }

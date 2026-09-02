@@ -15,7 +15,6 @@ import { Route as permissionsRoute } from '@/routes/permissions'
 import { Route as parametresRoute } from '@/routes/parametres'
 import { Route as profilRoute } from '@/routes/profil'
 import { Route as journalRoute } from '@/routes/journal'
-import { Route as workflowsRoute } from '@/routes/workflows'
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -33,7 +32,6 @@ const routeTree = rootRoute.addChildren([
   parametresRoute,
   profilRoute,
   journalRoute,
-  workflowsRoute,
 ])
 
 export const router = createRouter({ routeTree })

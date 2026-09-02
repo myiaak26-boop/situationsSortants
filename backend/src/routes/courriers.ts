@@ -10,7 +10,6 @@ const SORT_COLUMNS: Record<string, string> = {
   signataire: 'signataire',
   destinataire: 'destinataire',
   objet: 'objet',
-  situation: 'situation.nom',
   createdAt: 'createdAt',
 }
 
@@ -36,8 +35,6 @@ function buildWhere(q: Record<string, string | undefined>) {
     ]
   }
 
-  if (q.situationId) where.situationId = q.situationId
-  if (q.modeTransmissionId) where.modeTransmissionId = q.modeTransmissionId
   if (q.signataire) where.signataire = q.signataire
 
   const dateFilter: Record<string, Date> = {}
@@ -50,8 +47,6 @@ function buildWhere(q: Record<string, string | undefined>) {
 
 function courrierIncludes() {
   return {
-    situation: true,
-    modeTransmission: true,
     createdBy: { select: { id: true, name: true } },
     deletedBy: { select: { id: true, name: true } },
     retrait: true,
@@ -65,16 +60,12 @@ function courrierIncludes() {
 
 function courrierListIncludes() {
   return {
-    situation: true,
-    modeTransmission: true,
     createdBy: { select: { id: true, name: true } },
     deletedBy: { select: { id: true, name: true } },
     retrait: true,
   }
 }
 
-// L'adapter better-sqlite3 échoue (P2029) sur les jointures to-many avec un
-// LIMIT important : la dernière action est donc chargée par lots séparés.
 async function attachLastActions(rows: Array<{ id: string } & Record<string, unknown>>) {
   if (rows.length === 0) return
   const ids = rows.map((r) => r.id)
@@ -102,18 +93,10 @@ export async function courrierRoutes(app: FastifyInstance) {
   app.get('/api/courriers/meta', async (req, reply) => {
     const user = await requirePermission(req, reply, PERMS.COURRIER_READ)
     if (!user) return
-    const [situations, signataires, modes, legacy] = await Promise.all([
-      prisma.situation.findMany({
-        select: { id: true, nom: true, couleur: true, ordre: true },
-        orderBy: { ordre: 'asc' },
-      }),
+    const [signataires, legacy] = await Promise.all([
       prisma.signataire.findMany({
         select: { id: true, code: true, nom: true, actif: true, ordre: true },
         orderBy: [{ actif: 'desc' }, { ordre: 'asc' }, { nom: 'asc' }],
-      }),
-      prisma.modeTransmission.findMany({
-        select: { id: true, nom: true, description: true, couleur: true, icone: true, actif: true },
-        orderBy: { ordre: 'asc' },
       }),
       prisma.courrier.findMany({
         select: { signataire: true },
@@ -138,10 +121,8 @@ export async function courrierRoutes(app: FastifyInstance) {
     }
     signataireOptions.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
     return {
-      situations,
       signataires,
       signataireOptions,
-      modes,
     }
   })
 
@@ -201,8 +182,6 @@ export async function courrierRoutes(app: FastifyInstance) {
     const courrier = await prisma.courrier.findUnique({
       where: { id },
       include: {
-        situation: true,
-        modeTransmission: true,
         createdBy: { select: { id: true, name: true } },
         deletedBy: { select: { id: true, name: true } },
         retrait: true,
@@ -238,7 +217,6 @@ export async function courrierRoutes(app: FastifyInstance) {
       dateArriveeEntrant?: string | null
       observation?: string | null
       modeEnvoi?: string | null
-      modeTransmissionId?: string | null
     }
 
     const numero = body.numero?.trim()
@@ -246,9 +224,6 @@ export async function courrierRoutes(app: FastifyInstance) {
     if (!numero) return reply.status(400).send({ error: 'Le numéro est requis' })
     if (!body.destinataire?.trim() || !body.objet?.trim()) {
       return reply.status(400).send({ error: 'Champs requis : destinataire, objet' })
-    }
-    if (!body.modeTransmissionId) {
-      return reply.status(400).send({ error: 'Le mode de transmission est requis' })
     }
     if (isNaN(dateEnvoi.getTime())) {
       return reply.status(400).send({ error: "La date de signature est invalide" })
@@ -260,12 +235,6 @@ export async function courrierRoutes(app: FastifyInstance) {
 
     const existing = await prisma.courrier.findUnique({ where: { numero } })
     if (existing) return reply.status(409).send({ error: `Le numéro ${numero} existe déjà` })
-
-    const situationInitiale = await prisma.situation.findFirst({ where: { estInitial: true } })
-    if (!situationInitiale) return reply.status(500).send({ error: 'Situation initiale non configurée' })
-
-    const mode = await prisma.modeTransmission.findUnique({ where: { id: body.modeTransmissionId } })
-    if (!mode) return reply.status(400).send({ error: 'Mode de transmission introuvable' })
 
     let signataireId: string | null = body.signataireId || null
     let signataireNom = body.signataire?.trim() || ''
@@ -288,9 +257,7 @@ export async function courrierRoutes(app: FastifyInstance) {
           numeroEntrant: body.numeroEntrant?.trim() || null,
           dateArriveeEntrant,
           observation: body.observation?.trim() || null,
-          modeEnvoi: mode.cle || null,
-          modeTransmissionId: mode.id,
-          situationId: situationInitiale.id,
+          modeEnvoi: body.modeEnvoi?.trim() || null,
           createdById: user.id,
         },
         include: courrierIncludes(),
@@ -326,7 +293,7 @@ export async function courrierRoutes(app: FastifyInstance) {
 
   app.put('/api/courriers/:id', async (req, reply) => {
     const { id } = req.params as { id: string }
-    const courrier = await prisma.courrier.findUnique({ where: { id }, include: { retrait: true, situation: true } })
+    const courrier = await prisma.courrier.findUnique({ where: { id }, include: { retrait: true } })
     if (!courrier) return reply.status(404).send({ error: 'Courrier introuvable' })
 
     const body = req.body as {
@@ -345,8 +312,6 @@ export async function courrierRoutes(app: FastifyInstance) {
         dateRetrait?: string
         observation?: string | null
       }
-      modeTransmissionId?: string | null
-      situationId?: string | null
     }
 
     const officialChanges: Record<string, string | null> = {}
@@ -367,12 +332,6 @@ export async function courrierRoutes(app: FastifyInstance) {
       if ((newDate?.getTime() ?? null) !== (courrier.dateArriveeEntrant?.getTime() ?? null)) {
         officialChanges.dateArriveeEntrant = newDate ? newDate.toISOString() : null
       }
-    }
-    if (body.modeTransmissionId && body.modeTransmissionId !== courrier.modeTransmissionId) {
-      officialChanges.modeTransmissionId = body.modeTransmissionId
-    }
-    if (body.situationId !== undefined && body.situationId && body.situationId !== courrier.situationId) {
-      officialChanges.situationId = body.situationId
     }
 
     const user: SessionUser | null = await requirePermission(
@@ -438,34 +397,9 @@ export async function courrierRoutes(app: FastifyInstance) {
       if (officialChanges.dateArriveeEntrant !== undefined) {
         data.dateArriveeEntrant = officialChanges.dateArriveeEntrant ? new Date(officialChanges.dateArriveeEntrant as string) : null
       }
-      if (officialChanges.modeTransmissionId) {
-        const newModeId = officialChanges.modeTransmissionId
-        const mode = await tx.modeTransmission.findUnique({ where: { id: newModeId } })
-        if (!mode) throw new Error('Mode de transmission introuvable')
-        data.modeTransmissionId = mode.id
-        data.modeEnvoi = mode.cle || null
-      }
-      if (officialChanges.situationId) {
-        const newSituation = await tx.situation.findUnique({ where: { id: officialChanges.situationId } })
-        if (!newSituation) throw new Error('Situation introuvable')
-        data.situationId = newSituation.id
-      }
       if (editableChanges.observation !== undefined) data.observation = editableChanges.observation
 
       const updated = await tx.courrier.update({ where: { id }, data, include: courrierIncludes() })
-
-      if (officialChanges.situationId) {
-        await tx.historiqueAction.create({
-          data: {
-            courrierId: id,
-            action: 'Changement de situation',
-            commentaire: `Situation modifiée via CRUD : ${courrier.situation.nom} → ${updated.situation.nom}`,
-            userId: user.id,
-            fromSituationId: courrier.situationId,
-            toSituationId: updated.situationId,
-          },
-        })
-      }
 
       if (officialChanges.signataireId !== undefined && officialChanges.signataireId !== null) {
         const oldNom = courrier.signataire || 'Non renseigné'
@@ -516,7 +450,6 @@ export async function courrierRoutes(app: FastifyInstance) {
         objet: 'objet',
         numeroEntrant: 'numeroEntrant',
         dateArriveeEntrant: 'dateArriveeEntrant',
-        situationId: 'situationId',
       }
       for (const k of Object.keys(officialChanges)) {
         const key = mapOfficial[k]

@@ -486,15 +486,9 @@ export interface ExecuteContext {
   fileName: string
   userId: string
   userName: string
-  situationId: string
-  modeTransmissionId: string
-  modeCle: string | null
   batchSize: number
   existingByKey: Map<string, string>
   deletedByKey?: Map<string, string>
-  // Feuille Excel d'origine + numéros de ligne réels (parallèles à `records`) :
-  // permet de vérifier le format de cellule avant de convertir une durée
-  // numérique (une cellule formatée comme une date n'est PAS une durée).
   sheet?: XLSX.WorkSheet
   sheetRowNumbers?: number[]
   onProgress?: (processed: number, importes: number, ignores: number, maj: number, erreurs: number) => void
@@ -514,7 +508,7 @@ function dureeEquals(a: number | null, b: number | null): boolean {
 }
 
 export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome> {
-  const { records, mapping, duplicatePolicy, fileName, userId, situationId, modeTransmissionId, modeCle, batchSize, onProgress, isCancelled } = ctx
+  const { records, mapping, duplicatePolicy, fileName, userId, batchSize, onProgress, isCancelled } = ctx
   const deletedByKey = ctx.deletedByKey ?? new Map<string, string>()
   const columns = records.length > 0 ? Object.keys(records[0]) : []
   const resolved = resolveMapping(mapping, columns)
@@ -652,9 +646,6 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
           expediteur: r.expediteur,
           dateObservation: r.dateObservation,
           dureeTraitement: r.dureeTraitement,
-          situationId,
-          modeTransmissionId,
-          modeEnvoi: modeCle,
           createdById: userId,
           createdAt: now,
           updatedAt: now,
@@ -669,8 +660,6 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
         action: 'IMPORT',
         commentaire: `Importé via fichier ${fileName}`,
         userId,
-        fromSituationId: situationId,
-        toSituationId: situationId,
         createdAt: now,
       })),
     })
@@ -707,9 +696,6 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
           // La durée est écrasée uniquement si Excel en fournit une ; une
           // valeur vide dans Excel ne remplace jamais une durée existante.
           dureeTraitement: r.dureeTraitement ?? base,
-          situationId,
-          modeTransmissionId,
-          modeEnvoi: modeCle,
           deletedAt: null,
           deletedById: null,
           updatedAt: now,
@@ -725,8 +711,6 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
         action: 'IMPORT',
         commentaire: `Réimporté via fichier ${fileName} (courrier préalablement supprimé)`,
         userId,
-        fromSituationId: situationId,
-        toSituationId: situationId,
         createdAt: now,
       })),
     })

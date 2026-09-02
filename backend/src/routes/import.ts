@@ -236,15 +236,6 @@ export async function importRoutes(app: FastifyInstance) {
 
     void (async () => {
       try {
-        const situation = await prisma.situation.findFirst({ where: { estInitial: true } })
-        if (!situation) throw new Error('Aucune situation initiale configurée')
-
-        const mode = await prisma.modeTransmission.findFirst({
-          where: { actif: true },
-          orderBy: { ordre: 'asc' },
-        })
-        if (!mode) throw new Error('Aucun mode de transmission configuré')
-
         const batchParam = await prisma.parametre.findUnique({ where: { cle: 'import.batchSize' } })
         const batchSize = Math.max(50, parseInt(batchParam?.valeur || '250', 10) || 250)
 
@@ -263,9 +254,6 @@ export async function importRoutes(app: FastifyInstance) {
           fileName: session.fileName,
           userId: user.id,
           userName: user.name,
-          situationId: situation.id,
-          modeTransmissionId: mode.id,
-          modeCle: mode.cle || null,
           batchSize,
           existingByKey,
           deletedByKey,

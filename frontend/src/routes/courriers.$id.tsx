@@ -22,10 +22,7 @@ import {
   Loader2,
   X,
   Phone as PhoneIcon,
-  Mail,
-  Truck,
   Pencil,
-  type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LoadingState, EmptyState } from '@/components/ui/feedback'
@@ -34,20 +31,7 @@ import { CourrierEditDialog } from '@/components/courriers/courrier-edit-dialog'
 interface AvailableTransition {
   id: string
   nom: string
-  toSituationNom: string
-  toSituationCouleur: string
   demandeRetrait: boolean
-  toSituationEstFinal: boolean
-}
-
-const MODE_ICONS: Record<string, LucideIcon> = { Phone: PhoneIcon, Mail, Truck, FileText }
-
-function modeIconFor(c: Courrier): LucideIcon {
-  const base = (c.modeTransmission?.icone || '').toLowerCase()
-  if (base.includes('mail')) return Mail
-  if (base.includes('truck')) return Truck
-  if (base.includes('phone')) return PhoneIcon
-  return FileText
 }
 
 export const Route = createRoute({
@@ -166,15 +150,6 @@ function CourrierDetailPage() {
           <div>
             <h1 className="flex items-center gap-3 text-2xl font-semibold text-foreground">
               {courrier.numero}
-              {courrier.modeTransmission && (
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-2xs font-semibold"
-                  style={{ backgroundColor: `${courrier.modeTransmission.couleur}14`, color: courrier.modeTransmission.couleur }}
-                  data-testid="detail-badge-mode"
-                >
-                  {courrier.modeTransmission.nom}
-                </span>
-              )}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">{courrier.objet}</p>
           </div>
@@ -298,34 +273,6 @@ function CourrierDetailPage() {
         </div>
 
         <div className="space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="rounded-xl border bg-card"
-          >
-            <div className="border-b border-border px-6 py-4">
-              <h2 className="text-sm font-semibold text-foreground">Situation actuelle</h2>
-            </div>
-            <div className="p-6 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl"
-                style={{ backgroundColor: `${courrier.situation.couleur}15` }}>
-                <div className="h-8 w-8 rounded-full"
-                  style={{ backgroundColor: courrier.situation.couleur }} />
-              </div>
-              <p className="mt-3 text-sm font-semibold text-foreground"
-                style={{ color: courrier.situation.couleur }}>
-                {courrier.situation.nom}
-              </p>
-              {courrier.situation.estFinal && (
-                <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-2xs font-medium text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Situation finale
-                </span>
-              )}
-            </div>
-          </motion.div>
-
           {courrier.retrait && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}

@@ -23,10 +23,6 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     ],
   },
   {
-    title: 'Workflow',
-    permissions: [{ key: 'workflow:manage', label: 'Gérer les workflows' }],
-  },
-  {
     title: 'Import',
     permissions: [{ key: 'import', label: 'Importer des données Excel' }],
   },
