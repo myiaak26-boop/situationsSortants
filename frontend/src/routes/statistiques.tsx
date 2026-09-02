@@ -41,6 +41,11 @@ interface GlobalStats {
   distribution: Record<string, number>
 }
 
+interface SituationMetaResp {
+  signataires: string[]
+  situations: { id: string; nom: string }[]
+}
+
 export const Route = createRoute({
   getParentRoute: () => rootRoute,
   path: '/statistiques',
@@ -75,9 +80,19 @@ function StatistiquesPage() {
   const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null)
   const [evolution, setEvolution] = useState<EvolutionItem[]>([])
   const [destinataires, setDestinataires] = useState<DestinataireItem[]>([])
+  const [meta, setMeta] = useState<SituationMetaResp | null>(null)
   const [periode, setPeriode] = useState('12m')
   const [signataire, setSignataire] = useState('')
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/situations/meta')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && Array.isArray(d.signataires)) setMeta(d as SituationMetaResp)
+      })
+      .catch(() => {})
+  }, [])
 
   const load = useCallback(() => {
     setLoading(true)
