@@ -30,7 +30,8 @@ test.describe('Situations', () => {
     const historyTable = page.locator('table').nth(1)
 
     await page.getByTestId('btn-generer-situation').click()
-    await expect(page.getByTestId('wizard-type-generale')).toBeVisible()
+    // Volet Contenu supprimé — génération toujours "Tous les courriers" / Générale par défaut
+    await expect(page.getByRole('dialog')).toContainText('Générer une situation')
 
     // Période par défaut sûre : « Ce mois »
     await expect(page.getByRole('dialog').getByRole('button', { name: 'Ce mois' })).toHaveClass(/bg-primary/)
@@ -48,22 +49,11 @@ test.describe('Situations', () => {
     await expect(historyTable.locator('tbody tr').first()).toContainText('Générale')
   })
 
-  test('presets filter the report without manual flags', async ({ page }) => {
-    await page.getByTestId('btn-generer-situation').click()
-    await page.getByTestId('wizard-type-retraits').click()
-    await expect(page.getByTestId('wizard-type-retraits')).toHaveClass(/border-primary/)
-
-    const downloadPromise = page.waitForEvent('download')
-    await page.getByTestId('wizard-generate').click()
-    const download = await downloadPromise
-    expect(download.suggestedFilename()).toMatch(/^situation-executive-ST-\d{8}-\d{4}\.pdf$/)
-  })
-
   test('advanced options: group by signataire', async ({ page }) => {
     await page.getByTestId('btn-generer-situation').click()
     await page.getByRole('button', { name: 'Options avancées' }).click()
-    await page.getByRole('dialog').locator('select').nth(2).selectOption('signataire')
-    await expect(page.getByRole('dialog').locator('select').nth(2)).toHaveValue('signataire')
+    await page.getByRole('dialog').locator('select').nth(1).selectOption('signataire')
+    await expect(page.getByRole('dialog').locator('select').nth(1)).toHaveValue('signataire')
   })
 
   test('should display history table with columns and actions', async ({ page }) => {

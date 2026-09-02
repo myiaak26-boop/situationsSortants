@@ -4,13 +4,6 @@ import { cn } from '@/lib/cn'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import {
-  LayoutDashboard,
-  Reply,
-  CheckCircle2,
-  Mail,
-  Truck,
-  PhoneCall,
-  Clock,
   FileText,
   FileSpreadsheet,
   FileDown,
@@ -33,25 +26,6 @@ export const PERIODES: { v: string; label: string }[] = [
 ]
 
 export type WizardFormat = 'exec-pdf' | 'exec-xlsx' | 'csv'
-
-interface PresetDef {
-  v: string
-  label: string
-  description: string
-  icon: LucideIcon
-  flags?: Record<string, boolean>
-  recommended?: boolean
-}
-
-const PRESETS: PresetDef[] = [
-  { v: 'generale', label: 'Tous les courriers', description: "Vue d'ensemble complète", icon: LayoutDashboard, recommended: true },
-  { v: 'reponses', label: 'Réponses', description: 'Envoyés en réponse à un courrier entrant', icon: Reply, flags: { reponseEntrant: true } },
-  { v: 'retraits', label: 'Retirés', description: 'Courriers retirés de la situation', icon: CheckCircle2, flags: { retires: true } },
-  { v: 'mail', label: 'Par email', description: 'Courriers transmis par email', icon: Mail, flags: { parMail: true } },
-  { v: 'coursier', label: 'Par coursier', description: 'Courriers remis par coursier', icon: Truck, flags: { parCoursier: true } },
-  { v: 'injoignables', label: 'Injoignables', description: 'Destinataires injoignables', icon: PhoneCall, flags: { injoignables: true } },
-  { v: 'delais', label: 'Délais', description: 'Analyse des délais de réponse et de traitement', icon: Clock },
-]
 
 const GROUP_BY: { v: string; label: string; reportType: string }[] = [
   { v: '', label: 'Aucun regroupement', reportType: '' },
@@ -81,15 +55,7 @@ interface GenerateSituationDialogProps {
   onGenerate: (format: 'exec-pdf' | 'exec-xlsx' | 'pdf' | 'xlsx' | 'csv', params: URLSearchParams, openInTab: boolean) => Promise<void>
 }
 
-function presetFromDefaults(t: string): string {
-  if (t === 'reponses') return 'reponses'
-  if (t === 'retires') return 'retraits'
-  if (t === 'injoignables') return 'injoignables'
-  return 'generale'
-}
-
 export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defaults, onGenerate }: GenerateSituationDialogProps) {
-  const [presetV, setPresetV] = useState('generale')
   const [periode, setPeriode] = useState('mois')
   const [dateDebut, setDateDebut] = useState('')
   const [dateFin, setDateFin] = useState('')
@@ -101,7 +67,6 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
 
   useEffect(() => {
     if (open) {
-      setPresetV(presetFromDefaults(defaults.type))
       setPeriode(defaults.periode || 'mois')
       setDateDebut(defaults.dateDebut)
       setDateFin(defaults.dateFin)
@@ -113,12 +78,12 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
     }
   }, [open, defaults])
 
-  const preset = PRESETS.find((p) => p.v === presetV) ?? PRESETS[0]
   const group = GROUP_BY.find((g) => g.v === groupBy) ?? GROUP_BY[0]
   const formatDef = FORMATS.find((f) => f.v === format) ?? FORMATS[0]
 
-  const reportType = group.reportType || preset.v
-  const situationType = group.reportType ? group.label : preset.v === 'generale' ? 'Générale' : preset.label
+  const reportType = group.reportType || 'generale'
+  const situationType = group.reportType ? group.label : 'Générale'
+  const presetLabel = 'Tous les courriers'
 
   const periodeFull =
     periode === 'personnalisee' && dateDebut && dateFin
@@ -131,7 +96,6 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
     if (dateDebut) p.set('dateDebut', dateDebut)
     if (dateFin) p.set('dateFin', dateFin)
     if (signataire) p.set('signataire', signataire)
-    for (const [k, v] of Object.entries(preset.flags || {})) if (v) p.set(k, '1')
     p.set('reportType', reportType)
     p.set('situationType', situationType)
     return p
@@ -149,7 +113,7 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
   }
 
   const chips = [
-    ['Préréglage', preset.label],
+    ['Préréglage', presetLabel],
     ['Période', periodeFull],
     ...(signataire ? [['Signataire', signataire] as [string, string]] : []),
     ['Format', formatDef.label],
@@ -195,44 +159,6 @@ export function GenerateSituationDialog({ open, onClose, onGenerated, meta, defa
                 />
               </div>
             )}
-          </div>
-
-          {/* Préréglages */}
-          <div>
-            <p className="mb-2 text-2xs font-medium uppercase tracking-wider text-muted-foreground">Contenu</p>
-            <div className="grid max-h-[26vh] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
-              {PRESETS.map((t) => (
-                <button
-                  key={t.v}
-                  data-testid={`wizard-type-${t.v}`}
-                  onClick={() => setPresetV(t.v)}
-                  className={cn(
-                    'group relative rounded-xl border p-3 text-left transition-all duration-150',
-                    presetV === t.v ? 'border-primary bg-primary/5 ring-2 ring-ring/20' : 'border-border bg-card hover:border-primary/40 hover:bg-muted/30',
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={cn(
-                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-                        presetV === t.v ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground group-hover:text-foreground',
-                      )}
-                    >
-                      <t.icon className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-                        {t.label}
-                        {t.recommended && (
-                          <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-2xs font-medium text-amber-600">Populaire</span>
-                        )}
-                      </p>
-                      <p className="mt-0.5 text-2xs leading-relaxed text-muted-foreground">{t.description}</p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Critères */}
