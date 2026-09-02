@@ -2,7 +2,7 @@ import { createRoute, Link } from '@tanstack/react-router'
 import { Route as rootRoute } from '@/routes/__root'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/cn'
-import { formatDateFull } from '@/lib/utils'
+import { formatDateFull, formatDureeTraitement } from '@/lib/utils'
 import type { Courrier } from '@/lib/types'
 import { fetchSession, can, PERM, type Session } from '@/lib/session'
 import { Printer, ArrowLeft, Calendar, Building2, User, Hash, FileText, CheckCircle2, Ban } from 'lucide-react'
@@ -100,6 +100,7 @@ function CourrierFichePage() {
           <FicheField label="Destinataire" value={courrier.destinataire} />
           <FicheField label="Réponse au courrier (N°)" value={courrier.numeroEntrant || '—'} mono />
           <FicheField label="Date d'arrivée (courrier entrant)" value={courrier.dateArriveeEntrant ? formatDateFull(courrier.dateArriveeEntrant) : '—'} mono />
+          <FicheField label="Durée de traitement" value={formatDureeTraitement(courrier.dureeTraitement)} />
           <FicheField label="Situation actuelle" value={<StatusBadge couleur={courrier.situation.couleur} nom={courrier.situation.nom} />} />
           <FicheField label="Créé par" value={courrier.createdBy.name} />
           <FicheField label="Date de création" value={formatDateFull(courrier.createdAt)} mono />

@@ -14,7 +14,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { StepShell, StepNav } from './stepper'
-import { ValidationReport } from '@/lib/import'
+import { ValidationReport, DureeDecision } from '@/lib/import'
+import { formatDureeCourt } from '@/lib/utils'
 
 interface StepValidateProps {
   busy: boolean
@@ -27,6 +28,7 @@ interface StepValidateProps {
 
 export function StepValidate({ busy, report, duplicatePolicy, onPolicyChange, onImport, onBack }: StepValidateProps) {
   const canImport = !!report && report.valid && !report.erreurCritique
+  const hasSomething = !!report && (report.prets > 0 || report.doublonsBase.length > 0)
 
   return (
     <StepShell
@@ -137,14 +139,76 @@ export function StepValidate({ busy, report, duplicatePolicy, onPolicyChange, on
             </div>
           )}
 
+          {report.lignes.length > 0 && (
+            <div className="rounded-xl border bg-card">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <ListChecks className="h-3.5 w-3.5 text-primary" />
+                  <p className="text-sm font-medium text-foreground">Aperçu des lignes ({report.lignes.length.toLocaleString('fr-FR')})</p>
+                </div>
+                <div className="flex items-center gap-2 text-2xs">
+                  <StatBadge statut="NOUVEAU" />
+                  <StatBadge statut="EXISTANT" />
+                  <StatBadge statut="A_VERIFIER" />
+                </div>
+              </div>
+              <div className="max-h-80 overflow-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="sticky top-0 bg-card">
+                    <tr className="border-b border-border text-2xs uppercase tracking-wide text-muted-foreground">
+                      <th className="px-3 py-2">N°</th>
+                      <th className="px-3 py-2">Date</th>
+                      <th className="px-3 py-2">Signataire</th>
+                      <th className="px-3 py-2">Destinataire</th>
+                      <th className="px-3 py-2">Objet</th>
+                      <th className="px-3 py-2">Réponse</th>
+                      <th className="px-3 py-2">Durée Excel</th>
+                      <th className="px-3 py-2">Durée DEX</th>
+                      <th className="px-3 py-2">Résultat</th>
+                      <th className="px-3 py-2">État</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.lignes.slice(0, 100).map((l) => (
+                      <tr key={l.ligne} className="border-b border-border/60 last:border-0">
+                        <td className="whitespace-nowrap px-3 py-2 font-mono">{l.numero || '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2">{l.dateEnvoi ? new Date(l.dateEnvoi).toLocaleDateString('fr-FR') : '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2" title={l.message}>{l.signataire || '—'}</td>
+                        <td className="max-w-[10rem] truncate px-3 py-2">{l.destinataire || '—'}</td>
+                        <td className="max-w-[14rem] truncate px-3 py-2" title={l.objet}>{l.objet || '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2 font-mono">{l.numeroEntrant || '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2" title={l.dureeTraitement || undefined}>{l.dureeTraitement || '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2">{formatDureeCourt(l.dureeExcel)}</td>
+                        <td className="whitespace-nowrap px-3 py-2">{formatDureeCourt(l.dureeBase)}</td>
+                        <td className="whitespace-nowrap px-3 py-2">
+                          <DureeBadge decision={l.dureeDecision} />
+                        </td>
+                        <td className="px-3 py-2">
+                          <StatBadge statut={l.statut} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {report.lignes.length > 100 && (
+                <div className="border-t border-border px-4 py-2 text-2xs text-muted-foreground">
+                  … et {report.lignes.length - 100} autres lignes (aperçu limité à 100)
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground/80">
               {report.erreurCritique
                 ? 'Import bloqué : colonnes obligatoires manquantes.'
-                : `${report.prets.toLocaleString('fr-FR')} courrier${report.prets > 1 ? 's' : ''} seront traités.`}
+                : report.prets === 0 && report.doublonsBase.length > 0
+                  ? 'Aucun nouveau courrier : tous déjà présents en base.'
+                  : `${report.prets.toLocaleString('fr-FR')} courrier${report.prets > 1 ? 's' : ''} seront traités.`}
             </p>
             <div className="flex items-center gap-3">
-              <StepNav onBack={onBack} onNext={onImport} nextLabel={`Importer ${report.prets > 0 ? report.prets.toLocaleString('fr-FR') : ''} courrier${report.prets > 1 ? 's' : ''}`} nextDisabled={!canImport || report.prets === 0} />
+              <StepNav onBack={onBack} onNext={onImport} nextLabel={report.prets > 0 ? `Importer ${report.prets.toLocaleString('fr-FR')} courrier${report.prets > 1 ? 's' : ''}` : report.doublonsBase.length > 0 ? 'Importer (tous déjà en base)' : `Importer ${report.prets.toLocaleString('fr-FR')} courrier${report.prets > 1 ? 's' : ''}`} nextDisabled={!canImport || !hasSomething} />
             </div>
           </div>
         </motion.div>
@@ -155,6 +219,34 @@ export function StepValidate({ busy, report, duplicatePolicy, onPolicyChange, on
 
 function RefreshCcwIcon() {
   return <RefreshCcw className="h-4 w-4" />
+}
+
+function StatBadge({ statut }: { statut: 'NOUVEAU' | 'EXISTANT' | 'A_VERIFIER' }) {
+  const styles = {
+    NOUVEAU: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-400',
+    EXISTANT: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-400',
+    A_VERIFIER: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-400',
+  }
+  const labels = { NOUVEAU: 'NOUVEAU', EXISTANT: 'EXISTANT', A_VERIFIER: 'À VÉRIFIER' }
+  return (
+    <span className={cn('inline-flex rounded-full px-2 py-0.5 text-2xs font-semibold', styles[statut])}>
+      {labels[statut]}
+    </span>
+  )
+}
+
+function DureeBadge({ decision }: { decision: DureeDecision }) {
+  const styles = {
+    importer: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-400',
+    conserver: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+    a_verifier: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-400',
+  }
+  const labels = { importer: 'Importer', conserver: 'Conserver DEX', a_verifier: 'À vérifier' }
+  return (
+    <span className={cn('inline-flex rounded-full px-2 py-0.5 text-2xs font-semibold', styles[decision])}>
+      {labels[decision]}
+    </span>
+  )
 }
 
 function StatBox({ label, value, tone, icon }: { label: string; value: number; tone: 'default' | 'ok' | 'warn' | 'err'; icon: React.ReactNode }) {

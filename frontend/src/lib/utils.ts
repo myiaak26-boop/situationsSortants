@@ -47,3 +47,28 @@ export function getAlertLevel(jours: number, seuils: { normal: number; attention
   if (jours >= seuils.attention) return 'attention'
   return 'normal'
 }
+
+// Durée de traitement (jours) → « 7 jours », « 6 j 20 h 26 min », « — »
+export function formatDureeTraitement(n: number | null | undefined): string {
+  if (n === null || n === undefined || !Number.isFinite(n) || n < 0) return '—'
+  if (Number.isInteger(n)) return n === 1 ? '1 jour' : `${n} jours`
+  const d = Math.floor(n)
+  const restH = (n - d) * 24
+  let h = Math.floor(restH)
+  let m = Math.round((restH - h) * 60)
+  if (m === 60) {
+    h += 1
+    m = 0
+  }
+  if (d === 0 && h === 0 && m === 0) return "Moins d'une heure"
+  const parts: string[] = []
+  if (d > 0) parts.push(`${d} j`)
+  if (h > 0) parts.push(`${h} h`)
+  if (m > 0) parts.push(`${m} min`)
+  return parts.join(' ')
+}
+
+export function formatDureeCourt(n: number | null | undefined): string {
+  if (n === null || n === undefined || !Number.isFinite(n)) return '—'
+  return `${Math.round(n * 10) / 10}`.replace('.', ',')
+}

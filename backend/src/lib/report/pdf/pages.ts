@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { KPI_DEFS, TABLE_COL_DEFS, CHART_TITLES, CHART_NUMBERS, PAR_AUTEUR, KPI_NOTE, visibleKpis, ALWAYS_VISIBLE_COLS } from '../types.js'
 import type { ReportTypeConfig, TableColId } from '../types.js'
 import type { TableRow, SituationExecStats } from '../../situation-query.js'
+import { formatDureeJours } from '../../duree.js'
 import type { ExecCoverInfo } from './index.js'
 import {
   sectionTitle,
@@ -146,15 +147,14 @@ function tableValue(r: TableRow, colId: TableColId): string {
       return r.retrait ? fmtDateShort(new Date(r.retrait.dateRetrait)) : '—'
     case 'situation':
       return r.situation.nom
-    case 'modeTransmission':
-      return r.modeTransmission?.nom || '—'
     case 'nomRetraitant':
       return r.retrait?.nomRetraitant || '—'
     case 'telephone':
       return r.retrait?.telephone || '—'
     case 'delaiReponse': {
-      // Durée de traitement : date du courrier sortant − date d'arrivée du
-      // courrier entrant. Sans courrier entrant associé : aucun délai calculé.
+      // Durée de traitement : valeur importée depuis Excel en priorité,
+      // sinon date du courrier sortant − date d'arrivée du courrier entrant.
+      if (r.dureeTraitement != null) return formatDureeJours(r.dureeTraitement)
       if (!r.dateArriveeEntrant) return '—'
       const j = Math.round((new Date(r.dateEnvoi).getTime() - new Date(r.dateArriveeEntrant).getTime()) / 86400000)
       if (j < 0) return '—'
@@ -205,7 +205,7 @@ export function drawDetailedTablePage(c: Ctx, rows: TableRow[], config: ReportTy
         header: def.header,
         w: def.w,
         bold: id === 'numero',
-        badge: id === 'situation' || id === 'modeTransmission',
+        badge: id === 'situation',
       }
     })
 
@@ -214,7 +214,6 @@ export function drawDetailedTablePage(c: Ctx, rows: TableRow[], config: ReportTy
     for (const col of cols) cells[col.id] = tableValue(r, col.id as TableColId)
     const badgeColors: Record<string, string> = {}
     if (cols.some((col) => col.id === 'situation')) badgeColors['situation'] = r.situation.couleur || COLORS.teal
-    if (cols.some((col) => col.id === 'modeTransmission') && r.modeTransmission?.couleur) badgeColors['modeTransmission'] = r.modeTransmission.couleur
     const g = groupKeyOf(r, config.groupBy)
     return {
       cells,
@@ -238,10 +237,6 @@ function chartData(stats: SituationExecStats, chart: string): { label: string; v
     }
     case 'situation': {
       const e = Object.entries(stats.parSituation)
-      return e.length ? e.map(([label, value]) => ({ label, value })) : null
-    }
-    case 'mode': {
-      const e = Object.entries(stats.parModeTransmission)
       return e.length ? e.map(([label, value]) => ({ label, value })) : null
     }
     case 'destinataire': {
@@ -289,9 +284,6 @@ export function drawCharts(c: Ctx, stats: SituationExecStats, config: ReportType
         break
       case 'situation':
         donutChart(c, item.data, { title, colors: colorMap })
-        break
-      case 'mode':
-        hbarChart(c, item.data, { title, colors: colorMap })
         break
       case 'evolution':
         if (evoData) {

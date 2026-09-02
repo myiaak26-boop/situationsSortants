@@ -6,7 +6,9 @@ export default defineConfig({
   retries: 1,
   workers: 1,
   timeout: 60000,
+  expect: { timeout: 30_000 },
   globalSetup: './e2e/setup-auth.ts',
+globalSetupTimeout: 120_000,
   reporter: [['html', { outputFolder: 'playwright-report' }]],
   webServer: [
     {

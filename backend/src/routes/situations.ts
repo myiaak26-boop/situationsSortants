@@ -91,12 +91,15 @@ function buildExportRows(c: {
   signataire: string
   numeroEntrant: string | null
   dateArriveeEntrant: Date | null
+  dureeTraitement: number | null
   modeTransmission: { nom: string } | null
   situation: { nom: string }
   retrait: { dateRetrait: Date; nomRetraitant: string; telephone: string | null } | null
   observation: string | null
 }, sigMap: Map<string, string>): (string | number)[] {
-  const delaiReponse = calcDelaiJours(c.dateArriveeEntrant, c.dateEnvoi)
+  // Durée de traitement : valeur importée depuis Excel en priorité, sinon
+  // calcul date de signature − date d'arrivée du courrier entrant.
+  const delaiReponse = c.dureeTraitement ?? calcDelaiJours(c.dateArriveeEntrant, c.dateEnvoi)
   const delaiTraitement = c.retrait ? calcDelaiJours(c.dateEnvoi, c.retrait.dateRetrait) : null
   return [
     c.numero,

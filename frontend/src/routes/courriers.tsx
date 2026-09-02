@@ -121,7 +121,7 @@ function CourriersPage() {
   const [seuils, setSeuils] = useState<DelaiSeuils>(DELAI_SEUILS_DEFAULTS)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'dateEnvoi', desc: true }])
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'numero', desc: true }])
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [refreshTick, setRefreshTick] = useState(0)

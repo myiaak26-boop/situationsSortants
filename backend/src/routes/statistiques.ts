@@ -105,6 +105,7 @@ export async function statistiquesRoutes(app: FastifyInstance) {
           objet: true,
           numeroEntrant: true,
           dateArriveeEntrant: true,
+          dureeTraitement: true,
           signataire: true,
           situationId: true,
           retrait: { select: { dateRetrait: true } },
@@ -131,12 +132,14 @@ export async function statistiquesRoutes(app: FastifyInstance) {
     for (const c of courriers) {
       if (c.numeroEntrant) {
         reponses++
-        if (c.dateArriveeEntrant) {
-          const j = (c.dateEnvoi.getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
-          if (j >= 0) {
-            sommeReponse += j
-            nbReponse++
-          }
+        // Durée importée depuis Excel en priorité, sinon calcul par les dates.
+        let j = c.dureeTraitement
+        if (j === null && c.dateArriveeEntrant) {
+          j = (c.dateEnvoi.getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
+        }
+        if (j !== null && j >= 0) {
+          sommeReponse += j
+          nbReponse++
         }
       } else {
         simples++

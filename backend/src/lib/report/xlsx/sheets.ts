@@ -4,6 +4,7 @@ import { STYLE, badgeStyle, kpiValueStyle, kpiLabelStyle, type CellStyle } from 
 import { KPI_DEFS, TABLE_COL_DEFS, visibleKpis, PAR_AUTEUR, KPI_NOTE, ALWAYS_VISIBLE_COLS } from '../types.js'
 import type { KpiId, ReportTypeConfig, TableColId } from '../types.js'
 import type { TableRow, SituationExecStats } from '../../situation-query.js'
+import { formatDureeCourt } from '../../duree.js'
 import type { AnnexesData } from '../pdf/pages.js'
 
 interface Cover {
@@ -279,13 +280,14 @@ function tableValue(r: TableRow, colId: TableColId): string {
       return r.retrait ? fmtDate(new Date(r.retrait.dateRetrait)) : ''
     case 'situation':
       return r.situation.nom
-    case 'modeTransmission':
-      return r.modeTransmission?.nom || ''
     case 'nomRetraitant':
       return r.retrait?.nomRetraitant || ''
     case 'telephone':
       return r.retrait?.telephone || ''
     case 'delaiReponse': {
+      // Durée de traitement : valeur importée depuis Excel en priorité,
+      // sinon date de signature − date d'arrivée du courrier entrant.
+      if (r.dureeTraitement != null) return formatDureeCourt(r.dureeTraitement)
       const v = daysBetween(r.dateArriveeEntrant, r.dateEnvoi)
       return v === null ? '' : String(v)
     }
@@ -358,10 +360,6 @@ export function buildStatsSheets(stats: SituationExecStats): { name: string; ws:
     {
       name: 'Stats situation',
       ws: buildEntriesSheet('Par situation', null, ['Situation', 'Courriers'], Object.entries(stats.parSituation).sort((a, b) => b[1] - a[1])),
-    },
-    {
-      name: 'Stats mode',
-      ws: buildEntriesSheet('Par mode de transmission', null, ['Mode', 'Courriers'], Object.entries(stats.parModeTransmission).sort((a, b) => b[1] - a[1])),
     },
     {
       name: 'Délais',

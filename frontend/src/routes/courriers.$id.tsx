@@ -20,7 +20,6 @@ import {
   MessageSquare,
   ChevronRight,
   Loader2,
-  ArrowRight,
   X,
   Phone as PhoneIcon,
   Mail,
@@ -326,45 +325,6 @@ function CourrierDetailPage() {
               )}
             </div>
           </motion.div>
-
-          {can(session, PERM.UPDATE_SITUATION) && transitions.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="rounded-xl border bg-card"
-            >
-              <div className="border-b border-border px-6 py-4">
-                <div className="flex items-center gap-2">
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold text-foreground">Actions disponibles</h2>
-                </div>
-              </div>
-              <div className="space-y-2 p-4">
-                {transitions.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => doTransition(t.id)}
-                    disabled={transitioning === t.id}
-                    data-testid={`btn-transition-${t.nom}`}
-                    className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-all hover:bg-muted disabled:opacity-50"
-                  >
-                    <span className="text-foreground">{t.nom}</span>
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      {transitioning === t.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <>
-                          {t.toSituationNom}
-                          <ArrowRight className="h-3 w-3" />
-                        </>
-                      )}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
 
           {courrier.retrait && (
             <motion.div

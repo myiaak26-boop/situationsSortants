@@ -62,6 +62,7 @@ model Courrier {
   nombrePages         Int?
   expediteur          String?
   dateObservation     DateTime?
+  dureeTraitement     Float?
   situationId         String
   observation         String?
   modeTransmissionId  String?

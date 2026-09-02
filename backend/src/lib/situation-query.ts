@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from './prisma.js'
+import { formatDureeCourt, formatDureeJours } from './duree.js'
 
 export interface SituationFiltres {
   periode?: string
@@ -263,6 +264,7 @@ export async function computeExecStats(
       destinataire: true,
       numeroEntrant: true,
       dateArriveeEntrant: true,
+      dureeTraitement: true,
       modeEnvoi: true,
       nbrRappels: true,
       signataire: true,
@@ -363,16 +365,19 @@ export async function computeExecStats(
     if (c.numeroEntrant) {
       stats.courriersReponses++
       stats.reponsesEntrant++
-      if (c.dateArriveeEntrant) {
-        const jours = (new Date(c.dateEnvoi).getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
-        if (jours >= 0) {
-          sommeJoursReponse += jours
-          reponsesComptees++
-          stats.reponsesConcernes++
-          const jArr = Math.floor(jours)
-          if (jArr < minJours) minJours = jArr
-          if (jArr > maxJours) maxJours = jArr
-        }
+      // Durée de traitement : la valeur importée depuis Excel est la source ;
+      // à défaut, calcul date de signature − date d'arrivée du courrier entrant.
+      let jours: number | null = c.dureeTraitement
+      if (jours === null && c.dateArriveeEntrant) {
+        jours = (new Date(c.dateEnvoi).getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
+      }
+      if (jours !== null && jours >= 0) {
+        sommeJoursReponse += jours
+        reponsesComptees++
+        stats.reponsesConcernes++
+        const jArr = Math.floor(jours)
+        if (jArr < minJours) minJours = jArr
+        if (jArr > maxJours) maxJours = jArr
       }
     } else {
       stats.courriersSimples++
@@ -443,9 +448,13 @@ export async function computeExecStats(
 
   const delaiMap = new Map<string, number>()
   for (const c of courriers) {
-    if (!c.numeroEntrant || !c.dateArriveeEntrant) continue
-    const jours = (new Date(c.dateEnvoi).getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
-    if (jours < 0) continue
+    // Une durée importée depuis Excel est comptabilisée dans la répartition,
+    // même sans courrier entrant associé. À défaut : calcul par les dates.
+    let jours: number | null = c.dureeTraitement
+    if (jours === null && c.numeroEntrant && c.dateArriveeEntrant) {
+      jours = (new Date(c.dateEnvoi).getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
+    }
+    if (jours === null || jours < 0) continue
     const b = bucketDelai(Math.max(0, Math.floor(jours)))
     delaiMap.set(b, (delaiMap.get(b) || 0) + 1)
   }
@@ -510,6 +519,7 @@ export interface TableRow {
   signataire: string
   numeroEntrant: string | null
   dateArriveeEntrant: Date | null
+  dureeTraitement: number | null
   modeTransmission: { nom: string; couleur: string; cle: string | null } | null
   situation: { nom: string; couleur: string }
   retrait: { dateRetrait: Date; nomRetraitant: string; telephone: string | null } | null
@@ -525,6 +535,7 @@ const ROW_SELECT = {
   signataire: true,
   numeroEntrant: true,
   dateArriveeEntrant: true,
+  dureeTraitement: true,
   observation: true,
   modeTransmission: { select: { nom: true, couleur: true, cle: true } },
   situation: { select: { nom: true, couleur: true } },

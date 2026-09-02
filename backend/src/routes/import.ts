@@ -64,18 +64,19 @@ function getSession(token: string): Session | null {
   return s
 }
 
-function getRows(session: Session, sheetName: string): Record<string, unknown>[] {
+function getRows(session: Session, sheetName: string): { records: Record<string, unknown>[]; rowNumbers: number[] } {
   const cached = session.matrices.get(sheetName)
   const matrix = cached ?? buildMatrix(session.workbook.Sheets[sheetName])
   if (!cached) session.matrices.set(sheetName, matrix)
   const columns = matrix.columns
-  return matrix.rows.map((row) => {
+  const records = matrix.rows.map((row) => {
     const record: Record<string, unknown> = {}
     columns.forEach((col, i) => {
       record[col] = row[i] ?? ''
     })
     return record
   })
+  return { records, rowNumbers: matrix.rowNumbers }
 }
 
 function errorDetailList(details: string[]): string[] {
@@ -189,11 +190,16 @@ export async function importRoutes(app: FastifyInstance) {
       if (body.mapping[field] === undefined) body.mapping[field] = null
     }
 
-    const records = getRows(session, body.sheetName)
-    const existing = await prisma.courrier.findMany({ select: { numero: true } })
+    const { records } = getRows(session, body.sheetName)
+    const existing = await prisma.courrier.findMany({
+      where: { deletedAt: null },
+      select: { numero: true, dureeTraitement: true },
+    })
     const existingByKey = new Map(existing.map((c) => [numeroKey(c.numero), c.numero]))
+    const existingDureeByKey = new Map(existing.map((c) => [numeroKey(c.numero), c.dureeTraitement]))
+    const signataires = await prisma.signataire.findMany({ select: { code: true, nom: true } })
 
-    return reply.send(validateRows(records, body.mapping, existingByKey))
+    return reply.send(validateRows(records, body.mapping, existingByKey, signataires, existingDureeByKey))
   })
 
   app.post('/api/import/execute', async (req, reply) => {
@@ -224,6 +230,10 @@ export async function importRoutes(app: FastifyInstance) {
     }
     jobs.set(job.id, job)
 
+    req.raw.on('close', () => {
+      if (job.status === 'running') job.cancelRequested = true
+    })
+
     void (async () => {
       try {
         const situation = await prisma.situation.findFirst({ where: { estInitial: true } })
@@ -238,9 +248,11 @@ export async function importRoutes(app: FastifyInstance) {
         const batchParam = await prisma.parametre.findUnique({ where: { cle: 'import.batchSize' } })
         const batchSize = Math.max(50, parseInt(batchParam?.valeur || '250', 10) || 250)
 
-        const records = getRows(session, body.sheetName)
-        const existing = await prisma.courrier.findMany({ select: { numero: true } })
+        const { records, rowNumbers } = getRows(session, body.sheetName)
+        const existing = await prisma.courrier.findMany({ where: { deletedAt: null }, select: { numero: true } })
         const existingByKey = new Map(existing.map((c) => [numeroKey(c.numero), c.numero]))
+        const deleted = await prisma.courrier.findMany({ where: { deletedAt: { not: null } }, select: { numero: true } })
+        const deletedByKey = new Map(deleted.map((c) => [numeroKey(c.numero), c.numero]))
 
         job.total = records.filter((r) => Object.values(r).some((v) => String(v ?? '').trim() !== '')).length
 
@@ -256,6 +268,9 @@ export async function importRoutes(app: FastifyInstance) {
           modeCle: mode.cle || null,
           batchSize,
           existingByKey,
+          deletedByKey,
+          sheet: session.workbook.Sheets[body.sheetName],
+          sheetRowNumbers: rowNumbers,
           onProgress: (processed, importes, ignores, maj, erreurs) => {
             job.processed = processed
             job.importes = importes

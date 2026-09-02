@@ -8,7 +8,6 @@ import { StepSheet, StepPreview } from './step-sheet-preview'
 import { StepMapping } from './step-mapping'
 import { StepValidate } from './step-validate'
 import { StepImport } from './step-progress-report'
-import { ImportHistory } from './history-panel'
 import {
   InspectResponse,
   SheetResponse,
@@ -46,7 +45,6 @@ export function ImportWizard() {
   const [jobId, setJobId] = useState<string | null>(null)
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null)
   const [report, setReport] = useState<FinalReport | null>(null)
-  const [historyTrigger, setHistoryTrigger] = useState(0)
 
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -150,7 +148,6 @@ export function ImportWizard() {
           setReport(r)
           setProgress((prev) => (prev ? { ...prev, ...p } : prev))
           setBusy(false)
-          setHistoryTrigger((t) => t + 1)
         }
       } catch {
         /* réessai au prochain tick */
@@ -256,18 +253,6 @@ export function ImportWizard() {
           />
         )}
       </AnimatePresence>
-
-      {step === 6 && report && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <ImportHistory trigger={historyTrigger} />
-        </motion.div>
-      )}
-
-      {step === 1 && !file && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <ImportHistory trigger={historyTrigger} />
-        </motion.div>
-      )}
     </div>
   )
 }

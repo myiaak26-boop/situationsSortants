@@ -188,7 +188,6 @@
   .col-dest   { width: 19%; }
   .col-objet  { width: 26%; }
   .col-statut { width: 12%; }
-  .col-mode   { width: 12%; }
   .col-dates  { width: 11%; }
 
   .badge {
@@ -205,7 +204,6 @@
   .badge-joint       { background:#e8f0fe; color:#1a56db; }
   .badge-livre       { background:#e6f4ea; color:#1e7e34; }
 
-  .mode-tag { font-size: 7.3pt; color: #444; }
   .dates-cell { font-size: 7pt; color: #555; line-height: 1.6; }
   .dates-cell .lbl { color: #999; }
 
@@ -267,7 +265,6 @@
       <th class="col-dest">Destinataire</th>
       <th class="col-objet">Objet</th>
       <th class="col-statut">Statut de suivi</th>
-      <th class="col-mode">Mode de Transm.</th>
       <th class="col-dates">Dates clés</th>
     </tr>
   </thead>
@@ -284,7 +281,6 @@
              retire | injoignable | appel_effectue | destinataire_joint | livre -->
         <span class="badge badge-{{statut_suivi_classe}}">{{statut_suivi_libelle}}</span>
       </td>
-      <td><span class="mode-tag">{{mode_transmission_libelle}}</span></td>
       <td class="dates-cell">
         <span class="lbl">Arr.</span> {{date_arrivee}}<br>
         <span class="lbl">Ret.</span> {{date_retrait}}

@@ -1,5 +1,10 @@
 import XLSX from 'xlsx'
 import { prisma } from './prisma.js'
+import { CellMeta, formatDureeJours, normalizeDuration } from './duree.js'
+
+// Diagnostic temporaire de la durée de traitement (voir SPEC §14) : activé via
+// DEX_DEBUG_DUREE=1 dans l'environnement, désactivé par défaut en production.
+const DEBUG_DUREE = process.env.DEX_DEBUG_DUREE === '1'
 
 export const FIELD_LABELS: Record<string, string> = {
   numero: 'Numéro',
@@ -12,10 +17,11 @@ export const FIELD_LABELS: Record<string, string> = {
   dateObservation: "Date d'observation",
   numeroEntrant: 'Réponse au courrier (N°)',
   dateArriveeEntrant: "Date d'arrivée (courrier entrant)",
+  dureeTraitement: 'Durée de traitement',
 }
 
 export const REQUIRED_FIELDS = ['numero', 'dateEnvoi', 'destinataire', 'objet'] as const
-export const OPTIONAL_FIELDS = ['signataire', 'nombrePages', 'expediteur', 'dateObservation', 'numeroEntrant', 'dateArriveeEntrant'] as const
+export const OPTIONAL_FIELDS = ['signataire', 'nombrePages', 'expediteur', 'dateObservation', 'numeroEntrant', 'dateArriveeEntrant', 'dureeTraitement'] as const
 export const ALL_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS] as const
 
 export type FieldKey = (typeof ALL_FIELDS)[number]
@@ -30,8 +36,9 @@ const ALIASES: Record<FieldKey, string[]> = {
   nombrePages: ['Nombre de Page', 'Nombre de pages', 'Nbre pages', 'Pages'],
   expediteur: ['Expéditeur', 'Émetteur', 'Service expéditeur', 'Expéditeur service'],
   dateObservation: ["Date d'Observation", "Date d'observation", 'Date observation'],
-  numeroEntrant: ['Réponse au courrier (N°)', 'Reponse au courrier (N°)', 'N° réponse', 'N° Réponse', 'Numéro entrant', 'N° courrier entrant', 'N° courrier entrant'],
+  numeroEntrant: ['Réponse au courrier (N°)', 'Reponse au courrier (N°)', 'N° réponse', 'N° Réponse', 'Numéro entrant', 'N° courrier entrant', 'N° courrier entrant', "Numéro du courrier à l'arrivée", 'Numero du courrier a l arrivee', "Numéro courrier à l'arrivée", 'Numéro de courrier à l arrivée', "N° du courrier à l'arrivée"],
   dateArriveeEntrant: ["Date d'arrivée du courrier entrant", "Date d'arrivée courrier entrant", "Date d'arrivée", 'Date arrivée', 'Date arrivée courrier entrant', 'Date de réception', 'Date réception'],
+  dureeTraitement: ['Durée de traitement', 'Duree de traitement', 'Durée', 'Durée du traitement', 'Délai de traitement'],
 }
 
 const REQUIRED_MESSAGE: Record<string, string> = {
@@ -44,6 +51,10 @@ const REQUIRED_MESSAGE: Record<string, string> = {
 export interface SheetMatrix {
   columns: string[]
   rows: unknown[][]
+  // Numéro de ligne Excel (1-based, en-tête = 1) de chaque ligne non vide,
+  // parallèle à `rows` — permet de relire les métadonnées de cellule
+  // (format date, formule) dans la feuille d'origine.
+  rowNumbers: number[]
 }
 
 function normalizeKey(s: string): string {
@@ -81,8 +92,15 @@ export function buildMatrix(sheet: XLSX.WorkSheet): SheetMatrix {
     if (key !== '') seen.add(normalizeKey(key))
     columns.push(name)
   }
-  const rows = (matrix.slice(1) || []).filter((r) => !isRowEmpty(r))
-  return { columns, rows }
+  const rows: unknown[][] = []
+  const rowNumbers: number[] = []
+  ;(matrix.slice(1) || []).forEach((r, i) => {
+    if (!isRowEmpty(r)) {
+      rows.push(r)
+      rowNumbers.push(i + 2)
+    }
+  })
+  return { columns, rows, rowNumbers }
 }
 
 export function sheetToRecords(sheet: XLSX.WorkSheet): Record<string, unknown>[] {
@@ -111,7 +129,7 @@ function firstHeaderMatching(columns: string[], aliasKeys: string[]): string | n
 }
 
 export function detectMapping(columns: string[]): ColumnMapping {
-  const mapping: ColumnMapping = { numero: null, dateEnvoi: null, destinataire: null, objet: null, signataire: null, nombrePages: null, expediteur: null, dateObservation: null, numeroEntrant: null, dateArriveeEntrant: null }
+  const mapping: ColumnMapping = { numero: null, dateEnvoi: null, destinataire: null, objet: null, signataire: null, nombrePages: null, expediteur: null, dateObservation: null, numeroEntrant: null, dateArriveeEntrant: null, dureeTraitement: null }
   const used = new Set<string>()
 
   for (const field of ALL_FIELDS) {
@@ -132,7 +150,7 @@ export function detectMapping(columns: string[]): ColumnMapping {
 
 export function resolveMapping(mapping: ColumnMapping, columns: string[]): Record<FieldKey, number> {
   const normCols = columns.map(normalizeKey)
-  const resolved: Record<FieldKey, number> = { numero: -1, dateEnvoi: -1, destinataire: -1, objet: -1, signataire: -1, nombrePages: -1, expediteur: -1, dateObservation: -1, numeroEntrant: -1, dateArriveeEntrant: -1 }
+  const resolved: Record<FieldKey, number> = { numero: -1, dateEnvoi: -1, destinataire: -1, objet: -1, signataire: -1, nombrePages: -1, expediteur: -1, dateObservation: -1, numeroEntrant: -1, dateArriveeEntrant: -1, dureeTraitement: -1 }
   for (const field of ALL_FIELDS) {
     const header = mapping[field]
     if (!header) continue
@@ -262,11 +280,37 @@ export interface PreparedRow {
   nombrePages: number | null
   expediteur: string | null
   dateObservation: Date | null
+  dureeTraitement: number | null
 }
+
+export type DureeDecision = 'importer' | 'conserver' | 'a_verifier'
 
 export interface RowError {
   ligne: number
   type: 'numero_manquant' | 'date_invalide' | 'nombre_pages_invalide'
+  message: string
+}
+
+export type LigneStatut = 'NOUVEAU' | 'EXISTANT' | 'A_VERIFIER'
+
+export interface PreviewLigne {
+  ligne: number
+  numero: string
+  dateEnvoi: string | null
+  signataire: string
+  signataireReconnu: boolean
+  destinataire: string
+  objet: string
+  numeroEntrant: string | null
+  // Valeur brute lue dans Excel (affichée telle quelle)
+  dureeTraitement: string | null
+  // Valeur normalisée depuis Excel (jours) — affichée en « Durée Excel »
+  dureeExcel: number | null
+  // Valeur actuelle en base (jours) — affichée en « Durée DEX »
+  dureeBase: number | null
+  // Décision d'import : Importer / Conserver DEX / À vérifier
+  dureeDecision: DureeDecision
+  statut: LigneStatut
   message: string
 }
 
@@ -280,9 +324,16 @@ export interface ValidationReport {
   doublonsBase: { numero: string }[]
   erreurs: RowError[]
   erreurCritique: boolean
+  lignes: PreviewLigne[]
 }
 
-export function validateRows(records: Record<string, unknown>[], mapping: ColumnMapping, existingByKey: Map<string, string>): ValidationReport {
+export function validateRows(
+  records: Record<string, unknown>[],
+  mapping: ColumnMapping,
+  existingByKey: Map<string, string>,
+  signataires?: { code: string; nom: string }[],
+  existingDureeByKey?: Map<string, number | null>,
+): ValidationReport {
   const missing = mappingErrors(mapping)
   const columns = records.length > 0 ? Object.keys(records[0]) : []
   const resolved = resolveMapping(mapping, columns)
@@ -293,6 +344,34 @@ export function validateRows(records: Record<string, unknown>[], mapping: Column
   const doublonsBase: { numero: string }[] = []
   const erreurs: RowError[] = []
   const pretsNumeros = new Set<string>()
+  const lignes: PreviewLigne[] = []
+
+  const dureeBaseOf = (numero: string): number | null => {
+    const raw = existingDureeByKey?.get(numeroKey(numero))
+    return raw === undefined || raw === null ? null : normalizeDuration(raw)
+  }
+  const dureeDecisionOf = (excel: number | null, base: number | null): DureeDecision => {
+    if (excel === null) return 'conserver'
+    if (base === null) return 'importer'
+    return Math.abs(excel - base) < 1e-6 ? 'conserver' : 'a_verifier'
+  }
+  const dureeInfoOf = (numero: string, raw: unknown): { dureeExcel: number | null; dureeBase: number | null; dureeDecision: DureeDecision } => {
+    const dureeExcel = normalizeDuration(raw)
+    const dureeBase = dureeBaseOf(numero)
+    return { dureeExcel, dureeBase, dureeDecision: dureeDecisionOf(dureeExcel, dureeBase) }
+  }
+
+  const sigCodes = new Set((signataires ?? []).map((s) => s.code.trim().toUpperCase()))
+  const sigNoms = new Set((signataires ?? []).map((s) => normalizeKey(s.nom)))
+  const isSignataireReconnu = (v: string): boolean => {
+    const raw = v.trim()
+    if (!raw) return true
+    const upper = raw.toUpperCase()
+    if (sigCodes.has(upper)) return true
+    if (sigNoms.has(normalizeKey(raw))) return true
+    const idx = upper.indexOf(' ')
+    return idx > 0 && sigCodes.has(upper.slice(0, idx))
+  }
 
   let i = 0
   for (const row of records) {
@@ -304,32 +383,75 @@ export function validateRows(records: Record<string, unknown>[], mapping: Column
     const numero = cellToString(valueAt(values, resolved.numero))
     if (!numero) {
       erreurs.push({ ligne, type: 'numero_manquant', message: 'Numéro manquant' })
+      const dureeRawNumeroManquant = valueAt(values, resolved.dureeTraitement)
+      lignes.push({ ligne, numero: '', dateEnvoi: null, signataire: '', signataireReconnu: true, destinataire: '', objet: '', numeroEntrant: null, dureeTraitement: cellToString(dureeRawNumeroManquant) || null, dureeExcel: normalizeDuration(dureeRawNumeroManquant), dureeBase: null, dureeDecision: 'conserver', statut: 'A_VERIFIER', message: 'Numéro manquant' })
       continue
     }
     const key = numeroKey(numero)
 
     const dateV = valueAt(values, resolved.dateEnvoi)
-    if (resolved.dateEnvoi !== -1 && !parseDateValue(dateV)) {
-      erreurs.push({ ligne, type: 'date_invalide', message: `Date de signature invalide` })
-      continue
+    let dateEnvoiIso: string | null = null
+    if (resolved.dateEnvoi !== -1) {
+      const d = parseDateValue(dateV)
+      if (!d) {
+        erreurs.push({ ligne, type: 'date_invalide', message: `Date de signature invalide` })
+        const dureeRawDate = valueAt(values, resolved.dureeTraitement)
+        lignes.push({ ligne, numero, dateEnvoi: null, signataire: cellToString(valueAt(values, resolved.signataire)), signataireReconnu: isSignataireReconnu(cellToString(valueAt(values, resolved.signataire))), destinataire: cellToString(valueAt(values, resolved.destinataire)), objet: cellToString(valueAt(values, resolved.objet)), numeroEntrant: cellToString(valueAt(values, resolved.numeroEntrant)) || null, dureeTraitement: cellToString(dureeRawDate) || null, dureeExcel: normalizeDuration(dureeRawDate), dureeBase: dureeBaseOf(numero), dureeDecision: dureeDecisionOf(normalizeDuration(dureeRawDate), dureeBaseOf(numero)), statut: 'A_VERIFIER', message: 'Date de signature invalide' })
+        continue
+      }
+      dateEnvoiIso = d.toISOString()
     }
 
     const pagesV = valueAt(values, resolved.nombrePages)
     if (resolved.nombrePages !== -1 && cellToString(pagesV) !== '' && !isValidPageCount(pagesV)) {
       erreurs.push({ ligne, type: 'nombre_pages_invalide', message: `Nombre de pages invalide (« ${cellToString(pagesV)} »)` })
+      const dureeRawPages = valueAt(values, resolved.dureeTraitement)
+      lignes.push({ ligne, numero, dateEnvoi: dateEnvoiIso, signataire: cellToString(valueAt(values, resolved.signataire)), signataireReconnu: isSignataireReconnu(cellToString(valueAt(values, resolved.signataire))), destinataire: cellToString(valueAt(values, resolved.destinataire)), objet: cellToString(valueAt(values, resolved.objet)), numeroEntrant: cellToString(valueAt(values, resolved.numeroEntrant)) || null, dureeTraitement: cellToString(dureeRawPages) || null, dureeExcel: normalizeDuration(dureeRawPages), dureeBase: dureeBaseOf(numero), dureeDecision: dureeDecisionOf(normalizeDuration(dureeRawPages), dureeBaseOf(numero)), statut: 'A_VERIFIER', message: `Nombre de pages invalide (« ${cellToString(pagesV)} »)` })
       continue
     }
 
+    const signataireValue = cellToString(valueAt(values, resolved.signataire))
+    const signataireReconnu = isSignataireReconnu(signataireValue)
+    const dureeRaw = valueAt(values, resolved.dureeTraitement)
+    const dureeNorm = normalizeDuration(dureeRaw)
+    const dureeBase = dureeBaseOf(numero)
+    const ligneInfo: PreviewLigne = {
+      ligne,
+      numero,
+      dateEnvoi: dateEnvoiIso,
+      signataire: signataireValue || 'Non renseigné',
+      signataireReconnu,
+      destinataire: cellToString(valueAt(values, resolved.destinataire)) || 'Non renseigné',
+      objet: cellToString(valueAt(values, resolved.objet)) || 'Sans objet',
+      numeroEntrant: cellToString(valueAt(values, resolved.numeroEntrant)) || null,
+      dureeTraitement: cellToString(dureeRaw) || null,
+      dureeExcel: dureeNorm,
+      dureeBase,
+      dureeDecision: dureeDecisionOf(dureeNorm, dureeBase),
+      statut: 'NOUVEAU',
+      message: '',
+    }
+
     if (existingByKey.has(key) || pretsNumeros.has(key)) {
-      if (existingByKey.has(key)) doublonsBase.push({ numero })
-      else {
+      if (existingByKey.has(key)) {
+        doublonsBase.push({ numero })
+        ligneInfo.statut = 'EXISTANT'
+        ligneInfo.message = 'Déjà présent dans la base'
+      } else {
         const list = seen.get(key) || []
         list.push(ligne)
         seen.set(key, list)
+        ligneInfo.statut = 'A_VERIFIER'
+        ligneInfo.message = 'Numéro dupliqué dans le fichier'
       }
-      continue
+    } else {
+      pretsNumeros.add(key)
     }
-    pretsNumeros.add(key)
+    if (signataireValue && !signataireReconnu) {
+      ligneInfo.statut = 'A_VERIFIER'
+      ligneInfo.message = 'Signataire non reconnu'
+    }
+    lignes.push(ligneInfo)
   }
 
   const doublonsFichier = [...seen.entries()].map(([key, lignes]) => ({ numero: key, lignes }))
@@ -344,6 +466,7 @@ export function validateRows(records: Record<string, unknown>[], mapping: Column
     doublonsBase,
     erreurs,
     erreurCritique: missing.length > 0,
+    lignes,
   }
 }
 
@@ -368,12 +491,31 @@ export interface ExecuteContext {
   modeCle: string | null
   batchSize: number
   existingByKey: Map<string, string>
+  deletedByKey?: Map<string, string>
+  // Feuille Excel d'origine + numéros de ligne réels (parallèles à `records`) :
+  // permet de vérifier le format de cellule avant de convertir une durée
+  // numérique (une cellule formatée comme une date n'est PAS une durée).
+  sheet?: XLSX.WorkSheet
+  sheetRowNumbers?: number[]
   onProgress?: (processed: number, importes: number, ignores: number, maj: number, erreurs: number) => void
   isCancelled?: () => boolean
 }
 
+function cellMetaAt(sheet: XLSX.WorkSheet | undefined, excelRow: number | undefined, colIdx: number): CellMeta | null {
+  if (!sheet || !excelRow) return null
+  const cell = sheet[XLSX.utils.encode_cell({ r: excelRow - 1, c: colIdx })]
+  if (!cell) return null
+  return { t: cell.t, z: cell.z }
+}
+
+function dureeEquals(a: number | null, b: number | null): boolean {
+  if (a === null || b === null) return a === b
+  return Math.abs(a - b) < 1e-6
+}
+
 export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome> {
   const { records, mapping, duplicatePolicy, fileName, userId, situationId, modeTransmissionId, modeCle, batchSize, onProgress, isCancelled } = ctx
+  const deletedByKey = ctx.deletedByKey ?? new Map<string, string>()
   const columns = records.length > 0 ? Object.keys(records[0]) : []
   const resolved = resolveMapping(mapping, columns)
   const now = new Date()
@@ -382,18 +524,25 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
 
   const toCreate: PreparedRow[] = []
   const toUpdate: PreparedRow[] = []
+  const toRevive: PreparedRow[] = []
   const seen = new Set<string>()
   let ignores = 0
   let erreurs = 0
   let total = 0
 
-  const signataires = await prisma.signataire.findMany({ select: { id: true, code: true } })
-  const signataireByCode = new Map(signataires.map((s) => [s.code.toUpperCase(), s.id]))
-  const resolveSignataireId = (nom: string): string | null => {
-    const code = nom.trim().toUpperCase()
-    if (signataireByCode.has(code)) return signataireByCode.get(code)!
-    const idx = code.indexOf(' ')
-    return idx > 0 && signataireByCode.has(code.slice(0, idx)) ? signataireByCode.get(code.slice(0, idx))! : null
+  const signataires = await prisma.signataire.findMany({ select: { id: true, code: true, nom: true } })
+  const signataireByCode = new Map(signataires.map((s) => [s.code.trim().toUpperCase(), { id: s.id, code: s.code }]))
+  const signataireByNom = new Map(signataires.map((s) => [normalizeKey(s.nom), { id: s.id, code: s.code }]))
+  const resolveSignataire = (nom: string): { id: string; code: string } | null => {
+    const raw = nom.trim()
+    if (!raw) return null
+    const upper = raw.toUpperCase()
+    if (signataireByCode.has(upper)) return signataireByCode.get(upper)!
+    const byNom = signataireByNom.get(normalizeKey(raw))
+    if (byNom) return byNom
+    const idx = upper.indexOf(' ')
+    if (idx > 0 && signataireByCode.has(upper.slice(0, idx))) return signataireByCode.get(upper.slice(0, idx))!
+    return null
   }
 
   const pushDetail = (d: string) => {
@@ -430,6 +579,21 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
 
     const dateArriveeEntrant = parseDateValue(valueAt(values, resolved.dateArriveeEntrant))
     const dateObservation = parseDateValue(valueAt(values, resolved.dateObservation))
+    const dureeRawV = valueAt(values, resolved.dureeTraitement)
+    const dureeMeta = cellMetaAt(ctx.sheet, ctx.sheetRowNumbers?.[i], resolved.dureeTraitement)
+    const dureeTraitement = normalizeDuration(dureeRawV, dureeMeta)
+    if (DEBUG_DUREE && resolved.dureeTraitement !== -1 && cellToString(dureeRawV) !== '' && dureeTraitement !== null) {
+      console.log('[duree]', JSON.stringify({
+        numero,
+        rawDuration: dureeRawV,
+        rawType: typeof dureeRawV,
+        cellFormat: dureeMeta?.z ?? null,
+        normalizedDuration: dureeTraitement,
+        storedDuration: dureeTraitement,
+      }))
+    }
+    const rawSignataire = cellToString(valueAt(values, resolved.signataire)) || 'Non renseigné'
+    const sig = resolveSignataire(rawSignataire)
 
     const prepared: PreparedRow = {
       ligne,
@@ -437,13 +601,14 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
       dateEnvoi,
       destinataire: cellToString(valueAt(values, resolved.destinataire)) || 'Non renseigné',
       objet: cellToString(valueAt(values, resolved.objet)) || 'Sans objet',
-      signataire: cellToString(valueAt(values, resolved.signataire)) || 'Non renseigné',
-      signataireId: resolveSignataireId(cellToString(valueAt(values, resolved.signataire))) || null,
+      signataire: sig ? sig.code : rawSignataire,
+      signataireId: sig ? sig.id : null,
       numeroEntrant: cellToString(valueAt(values, resolved.numeroEntrant)) || null,
       dateArriveeEntrant,
       nombrePages: pageCountValue(valueAt(values, resolved.nombrePages)),
       expediteur: cellToString(valueAt(values, resolved.expediteur)) || null,
       dateObservation,
+      dureeTraitement,
     }
 
     const baseNumero = ctx.existingByKey.get(key)
@@ -453,6 +618,11 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
       } else {
         ignores++
       }
+      seen.add(key)
+      continue
+    }
+    if (deletedByKey.has(key)) {
+      toRevive.push({ ...prepared, numero: deletedByKey.get(key)! })
       seen.add(key)
       continue
     }
@@ -481,6 +651,7 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
           nombrePages: r.nombrePages,
           expediteur: r.expediteur,
           dateObservation: r.dateObservation,
+          dureeTraitement: r.dureeTraitement,
           situationId,
           modeTransmissionId,
           modeEnvoi: modeCle,
@@ -490,7 +661,7 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
         },
       }),
     )
-    const created = await prisma.$transaction(tx, { timeout: 120_000, maxWait: 30_000 })
+    const created = await prisma.$transaction(tx, { timeout: 300_000, maxWait: 60_000 })
     importes += created.length
     await prisma.historiqueAction.createMany({
       data: created.map((c) => ({
@@ -507,11 +678,20 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
     onProgress?.(processedCount, importes, ignores, maj, erreurs)
   }
 
-  for (let b = 0; b < toUpdate.length; b += batchSize) {
+  for (let b = 0; b < toRevive.length; b += batchSize) {
     if (isCancelled?.()) break
-    const batch = toUpdate.slice(b, b + batchSize)
-    const tx = batch.map((r) =>
-      prisma.courrier.updateMany({
+    const batch = toRevive.slice(b, b + batchSize)
+    const existingDuree = await prisma.courrier.findMany({
+      where: { numero: { in: batch.map((r) => r.numero) } },
+      select: { numero: true, dureeTraitement: true },
+    })
+    const dureeByNumero = new Map(existingDuree.map((c) => [c.numero, normalizeDuration(c.dureeTraitement)]))
+    const tx = batch.map((r) => {
+      const base = dureeByNumero.get(r.numero) ?? null
+      if (!dureeEquals(base, r.dureeTraitement) && r.dureeTraitement !== null) {
+        pushDetail(`Ligne ${r.ligne} (${r.numero}) : durée Excel (${formatDureeJours(r.dureeTraitement)}) ≠ base (${formatDureeJours(base)}) — conserver la base, modification à vérifier`)
+      }
+      return prisma.courrier.updateMany({
         where: { numero: r.numero },
         data: {
           dateEnvoi: r.dateEnvoi,
@@ -524,14 +704,70 @@ export async function executeImport(ctx: ExecuteContext): Promise<ImportOutcome>
           nombrePages: r.nombrePages,
           expediteur: r.expediteur,
           dateObservation: r.dateObservation,
+          // La durée est écrasée uniquement si Excel en fournit une ; une
+          // valeur vide dans Excel ne remplace jamais une durée existante.
+          dureeTraitement: r.dureeTraitement ?? base,
           situationId,
           modeTransmissionId,
           modeEnvoi: modeCle,
+          deletedAt: null,
+          deletedById: null,
           updatedAt: now,
         },
-      }),
-    )
-    await prisma.$transaction(tx, { timeout: 120_000, maxWait: 30_000 })
+      })
+    })
+    await prisma.$transaction(tx, { timeout: 300_000, maxWait: 60_000 })
+    importes += batch.length
+    const revived = await prisma.courrier.findMany({ where: { numero: { in: batch.map((r) => r.numero) } }, select: { id: true } })
+    await prisma.historiqueAction.createMany({
+      data: revived.map((c) => ({
+        courrierId: c.id,
+        action: 'IMPORT',
+        commentaire: `Réimporté via fichier ${fileName} (courrier préalablement supprimé)`,
+        userId,
+        fromSituationId: situationId,
+        toSituationId: situationId,
+        createdAt: now,
+      })),
+    })
+    processedCount += batch.length
+    onProgress?.(processedCount, importes, ignores, maj, erreurs)
+  }
+
+  for (let b = 0; b < toUpdate.length; b += batchSize) {
+    if (isCancelled?.()) break
+    const batch = toUpdate.slice(b, b + batchSize)
+    const existingDuree = await prisma.courrier.findMany({
+      where: { numero: { in: batch.map((r) => r.numero) }, deletedAt: null },
+      select: { numero: true, dureeTraitement: true },
+    })
+    const dureeByNumero = new Map(existingDuree.map((c) => [c.numero, normalizeDuration(c.dureeTraitement)]))
+    const tx = batch.map((r) => {
+      const base = dureeByNumero.get(r.numero) ?? null
+      if (!dureeEquals(base, r.dureeTraitement) && r.dureeTraitement !== null && base !== null) {
+        pushDetail(`Ligne ${r.ligne} (${r.numero}) : durée Excel (${formatDureeJours(r.dureeTraitement)}) ≠ base (${formatDureeJours(base)}) — base conservée, modification à vérifier`)
+      }
+      return prisma.courrier.updateMany({
+        where: { numero: r.numero },
+        data: {
+          dateEnvoi: r.dateEnvoi,
+          destinataire: r.destinataire,
+          objet: r.objet,
+          signataire: r.signataire,
+          signataireId: r.signataireId,
+          numeroEntrant: r.numeroEntrant,
+          dateArriveeEntrant: r.dateArriveeEntrant,
+          nombrePages: r.nombrePages,
+          expediteur: r.expediteur,
+          dateObservation: r.dateObservation,
+          // Une durée Excel vide ne remplace jamais une durée existante ;
+          // une durée Excel différente ne l'écrase pas non plus (à vérifier).
+          ...(base == null && r.dureeTraitement != null ? { dureeTraitement: r.dureeTraitement } : {}),
+          updatedAt: now,
+        },
+      })
+    })
+    await prisma.$transaction(tx, { timeout: 300_000, maxWait: 60_000 })
     maj += batch.length
     processedCount += batch.length
     onProgress?.(processedCount, importes, ignores, maj, erreurs)

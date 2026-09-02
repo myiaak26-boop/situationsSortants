@@ -51,6 +51,7 @@ export interface Courrier {
   nombrePages: number | null
   expediteur: string | null
   dateObservation: string | null
+  dureeTraitement: number | null
   situationId: string
   observation: string | null
   modeTransmissionId: string | null

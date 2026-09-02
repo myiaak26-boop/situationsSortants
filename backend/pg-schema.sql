@@ -55,6 +55,7 @@ CREATE TABLE "Courrier" (
     "nombrePages" INTEGER,
     "expediteur" TEXT,
     "dateObservation" TIMESTAMP(3),
+    "dureeTraitement" DOUBLE PRECISION,
     "situationId" TEXT NOT NULL,
     "observation" TEXT,
     "modeTransmissionId" TEXT,

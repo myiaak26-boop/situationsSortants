@@ -100,7 +100,7 @@ Règle : les segments (donut, barres empilées, barres horizontales) prennent le
 
 - A4 paysage. Section « 1 · Tableau détaillé des courriers » + sous-titre « N courriers — triés par date de signature croissante ».
 - En-tête foncé `ink`, texte blanc, répété sur chaque page (retour à la ligne automatique des intitulés longs).
-- Colonnes : N°, Date de Sign., Signataire, Destinataire, Objet, Situation, Mode de Transm., etc. selon le type de rapport.
+- Colonnes : N°, Date de Sign., Signataire, Destinataire, Objet, Situation, etc. selon le type de rapport.
 - Lignes alternées : impaire `panel`.
 - Badge pilule pour la colonne Situation (fond = couleur de la situation à 15 % + texte = couleur de la situation).
 - Numéro de courrier en Bold.

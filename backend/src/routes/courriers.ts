@@ -155,7 +155,7 @@ export async function courrierRoutes(app: FastifyInstance) {
     const pageSize = q.pageSize ? Math.min(100000, Math.max(1, parseInt(q.pageSize, 10))) : null
     const paged = page !== null && pageSize !== null
 
-    const sortBy = SORT_COLUMNS[q.sortBy || 'dateEnvoi'] || 'dateEnvoi'
+    const sortBy = SORT_COLUMNS[q.sortBy || 'numero'] || 'numero'
     const sortDir = q.sortDir === 'asc' ? 'asc' : 'desc'
     const computedSort = COMPUTED_SORTS.has(q.sortBy || '')
 

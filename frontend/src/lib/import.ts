@@ -9,10 +9,11 @@ export const FIELD_LABELS: Record<string, string> = {
   dateObservation: "Date d'observation",
   numeroEntrant: 'Réponse au courrier (N°)',
   dateArriveeEntrant: "Date d'arrivée (courrier entrant)",
+  dureeTraitement: 'Durée de traitement',
 }
 
 export const REQUIRED_FIELDS = ['numero', 'dateEnvoi', 'destinataire', 'objet'] as const
-export const OPTIONAL_FIELDS = ['signataire', 'nombrePages', 'expediteur', 'dateObservation', 'numeroEntrant', 'dateArriveeEntrant'] as const
+export const OPTIONAL_FIELDS = ['signataire', 'nombrePages', 'expediteur', 'dateObservation', 'numeroEntrant', 'dateArriveeEntrant', 'dureeTraitement'] as const
 export const ALL_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS] as const
 
 export type FieldKey = (typeof ALL_FIELDS)[number]
@@ -51,6 +52,27 @@ export interface RowError {
   message: string
 }
 
+export type LigneStatut = 'NOUVEAU' | 'EXISTANT' | 'A_VERIFIER'
+
+export type DureeDecision = 'importer' | 'conserver' | 'a_verifier'
+
+export interface PreviewLigne {
+  ligne: number
+  numero: string
+  dateEnvoi: string | null
+  signataire: string
+  signataireReconnu: boolean
+  destinataire: string
+  objet: string
+  numeroEntrant: string | null
+  dureeTraitement: string | null
+  dureeExcel: number | null
+  dureeBase: number | null
+  dureeDecision: DureeDecision
+  statut: LigneStatut
+  message: string
+}
+
 export interface ValidationReport {
   valid: boolean
   colonnesManquantes: string[]
@@ -61,6 +83,7 @@ export interface ValidationReport {
   doublonsBase: { numero: string }[]
   erreurs: RowError[]
   erreurCritique: boolean
+  lignes: PreviewLigne[]
 }
 
 export interface ProgressSnapshot {
@@ -86,20 +109,6 @@ export interface FinalReport {
   dureeMs: number
   fileName: string
   sheetName: string
-}
-
-export interface ImportLog {
-  id: string
-  fileName: string
-  userName: string
-  nbLignes: number
-  nbImportes: number
-  nbIgnores: number
-  nbMaj: number
-  nbErreurs: number
-  dureeMs: number
-  resultat: string
-  createdAt: string
 }
 
 async function postJson(url: string, body: unknown): Promise<unknown> {
@@ -166,12 +175,6 @@ export async function fetchResult(jobId: string): Promise<FinalReport> {
   const data = await res.json().catch(() => null)
   if (!res.ok) throw new Error((data && (data as { error?: string }).error) || 'Erreur serveur')
   return data as FinalReport
-}
-
-export async function fetchImportHistory(): Promise<ImportLog[]> {
-  const res = await fetch('/api/import/history')
-  const data = await res.json().catch(() => [])
-  return Array.isArray(data) ? (data as ImportLog[]) : []
 }
 
 export function formatBytes(bytes: number): string {

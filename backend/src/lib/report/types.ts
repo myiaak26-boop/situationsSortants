@@ -17,7 +17,7 @@ export type KpiId =
 
 export type GroupBy = 'signataire' | 'situation' | 'destinataire' | null
 
-export type ChartId = 'signataire' | 'situation' | 'mode' | 'evolution' | 'delais' | 'destinataire'
+export type ChartId = 'signataire' | 'situation' | 'evolution' | 'delais' | 'destinataire'
 
 export type AnnexId = 'historique' | 'reponses' | 'retraits' | 'glossaire'
 
@@ -28,7 +28,6 @@ export type TableColId =
   | 'destinataire'
   | 'objet'
   | 'situation'
-  | 'modeTransmission'
   | 'numeroEntrant'
   | 'dateArriveeEntrant'
   | 'dateRetrait'
@@ -83,7 +82,6 @@ export const TABLE_COL_DEFS: Record<TableColId, TableColDef> = {
   destinataire: { id: 'destinataire', header: 'Destinataire', w: 100 },
   objet: { id: 'objet', header: 'Objet', w: 128 },
   situation: { id: 'situation', header: 'Situation', w: 84 },
-  modeTransmission: { id: 'modeTransmission', header: 'Mode de Transm.', w: 62 },
   numeroEntrant: { id: 'numeroEntrant', header: 'Réponse du courrier N°', w: 72 },
   dateArriveeEntrant: { id: 'dateArriveeEntrant', header: 'Arrivée', w: 64 },
   dateRetrait: { id: 'dateRetrait', header: 'Retrait', w: 46 },
@@ -114,7 +112,6 @@ export interface ReportTypeConfig {
 export const CHART_TITLES: Record<ChartId, string> = {
   signataire: 'Répartition par signataire',
   situation: 'Répartition par statut de suivi',
-  mode: 'Répartition par mode de transmission',
   evolution: 'Évolution des courriers par période',
   delais: 'Répartition des délais de traitement',
   destinataire: 'Répartition par destinataire',
@@ -124,7 +121,6 @@ export const CHART_TITLES: Record<ChartId, string> = {
 export const CHART_NUMBERS: Partial<Record<ChartId, string>> = {
   signataire: '2.1',
   situation: '2.2',
-  mode: '2.3',
   delais: '2.4',
 }
 
@@ -135,8 +131,8 @@ export const PAR_AUTEUR = 'Aboubacar BANGOURA (Chef de Division)'
 export const KPI_NOTE = 'Courriers simples + réponses = total des courriers.'
 
 const DEFAULT_KPIS: KpiId[] = ['total', 'simples', 'reponses', 'retires', 'livres', 'nouveaux', 'injoignables', 'aRappeler', 'rappels']
-const DEFAULT_CHARTS: ChartId[] = ['signataire', 'situation', 'mode', 'delais']
-const DEFAULT_COLS: TableColId[] = ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'situation', 'modeTransmission', 'numeroEntrant', 'delaiReponse']
+const DEFAULT_CHARTS: ChartId[] = ['signataire', 'situation', 'delais']
+const DEFAULT_COLS: TableColId[] = ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'situation', 'numeroEntrant', 'delaiReponse']
 const DEFAULT_ANNEXES: AnnexId[] = ['historique', 'glossaire']
 
 export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
@@ -173,7 +169,7 @@ export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
     label: 'Par situation',
     kpis: ['total', 'retires', 'injoignables'],
     charts: ['situation'],
-    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'modeTransmission'],
+    cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet'],
     groupBy: 'situation',
     annexes: [],
   },
@@ -208,7 +204,7 @@ export const REPORT_TYPES: Record<string, ReportTypeConfig> = {
     id: 'retraits',
     label: 'Courriers retirés',
     kpis: ['total', 'retires', 'simples', 'reponses'],
-    charts: ['mode', 'delais'],
+    charts: ['delais'],
     cols: ['numero', 'dateEnvoi', 'signataire', 'destinataire', 'objet', 'dateRetrait', 'nomRetraitant', 'telephone', 'delaiTraitement'],
     groupBy: null,
     annexes: ['retraits', 'glossaire'],

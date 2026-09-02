@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, FileSpreadsheet, FileText, AlertTriangle, Loader2, HardDrive, CalendarClock, Sheet as SheetIcon } from 'lucide-react'
+import { Upload, FileSpreadsheet, AlertTriangle, Loader2, HardDrive, CalendarClock, Sheet as SheetIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { StepShell } from './stepper'
-import { InspectResponse, REQUIRED_FIELDS, OPTIONAL_FIELDS, FIELD_LABELS, formatBytes } from '@/lib/import'
+import { InspectResponse, formatBytes } from '@/lib/import'
 
 interface StepFileProps {
   file: File | null
@@ -114,31 +114,6 @@ export function StepFile({ file, meta, busy, error, onFile }: StepFileProps) {
           </div>
         </motion.div>
       )}
-
-      <div className="rounded-xl border bg-card p-5">
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Colonnes attendues</h3>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {REQUIRED_FIELDS.map((field) => (
-            <div
-              key={field}
-              className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-medium text-muted-foreground"
-            >
-              <FileText className="h-3.5 w-3.5 shrink-0 text-primary" />
-              <span className="truncate">{FIELD_LABELS[field]}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {OPTIONAL_FIELDS.map((field) => (
-            <span
-              key={field}
-              className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-2xs text-muted-foreground"
-            >
-              Facultatif : {FIELD_LABELS[field]}
-            </span>
-          ))}
-        </div>
-      </div>
     </StepShell>
   )
 }
