@@ -12,7 +12,6 @@ import {
   PhoneCall,
   UserX,
   RotateCcw,
-  History,
   ChevronUp,
   ChevronDown,
   FileText,
@@ -21,8 +20,6 @@ import {
   Sparkles,
   Clock,
   Timer,
-  Download,
-  RefreshCw,
   type LucideIcon,
 } from 'lucide-react'
 import { Card, CardHeader } from '@/components/ui/card'
@@ -103,18 +100,6 @@ interface IndicateurResp {
   stats: SituationStats
 }
 
-interface HistoriqueItem {
-  type: string
-  situationType: string
-  periode: string
-  filtres: string
-  params: string
-  nbCourriers: number
-  taille: number
-  userNom: string
-  createdAt: string
-}
-
 const INDICATEUR_LABELS: Record<string, string> = {
   total: 'Total courriers',
   simples: 'Courriers simples',
@@ -128,25 +113,11 @@ const INDICATEUR_LABELS: Record<string, string> = {
 
 const SORTABLE = ['numero', 'dateEnvoi', 'destinataire', 'objet', 'signataire', 'numeroEntrant', 'dateRetrait', 'observation']
 
-const FORMAT_LABELS: Record<string, { label: string; className: string }> = {
-  'exec-pdf': { label: 'PDF Exécutif', className: 'bg-red-500/10 text-red-500' },
-  'exec-xlsx': { label: 'Excel Exécutif', className: 'bg-emerald-500/10 text-emerald-500' },
-  pdf: { label: 'PDF', className: 'bg-red-500/10 text-red-500' },
-  xlsx: { label: 'Excel', className: 'bg-emerald-500/10 text-emerald-500' },
-  csv: { label: 'CSV', className: 'bg-sky-500/10 text-sky-500' },
-}
-
 function fmtDate(v: string | null | undefined): string {
   if (!v) return '—'
   const d = new Date(v)
   if (isNaN(d.getTime())) return '—'
   return d.toLocaleDateString('fr-FR')
-}
-
-function fmtTaille(bytes: number): string {
-  if (!bytes) return '—'
-  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(1)} Mo`
-  return `${Math.max(1, Math.round(bytes / 1024))} Ko`
 }
 
 function delaiJours(a: string | null | undefined, b: string | null | undefined): number | null {
@@ -252,7 +223,6 @@ function TileCard({
 function SituationsPage() {
   const session = useSession()
   const [meta, setMeta] = useState<{ situations: SituationMeta[]; signataires: string[] } | null>(null)
-  const [historique, setHistorique] = useState<HistoriqueItem[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const [periode, setPeriode] = useState('')
@@ -278,23 +248,13 @@ function SituationsPage() {
 
   const PAGE_SIZE_MAX = 200
 
-  const refreshHistorique = useCallback(() => {
-    fetch('/api/situations/historique?limit=10')
-      .then((r) => (r.ok ? r.json() : []))
-      .then((hist) => {
-        if (Array.isArray(hist)) setHistorique(hist)
-      })
-      .catch(console.error)
-  }, [])
+  const refreshHistorique = useCallback(() => {}, [])
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/situations/meta').then((r) => (r.ok ? r.json() : null)),
-      fetch('/api/situations/historique?limit=10').then((r) => (r.ok ? r.json() : [])),
-    ])
-      .then(([metaData, hist]) => {
+    fetch('/api/situations/meta')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((metaData) => {
         if (metaData) setMeta(metaData)
-        if (Array.isArray(hist)) setHistorique(hist)
       })
       .catch(console.error)
   }, [])
@@ -771,77 +731,6 @@ function SituationsPage() {
               <Pagination page={page} totalPages={Math.max(1, Math.ceil(totalRows / pageSize))} onPageChange={setPage} />
             )}
           </>
-        )}
-      </Card>
-
-      {/* ── Historique des situations générées ── */}
-      <Card className="!p-0 overflow-hidden rounded-2xl border-border/70">
-        <div className="flex items-center justify-between px-5 pt-4">
-          <CardHeader
-            title="Historique des situations générées"
-            icon={<History className="h-4 w-4" />}
-            subtitle={historique.length > 0 ? `${historique.length} dernières générations` : undefined}
-          />
-          <Button variant="ghost" size="sm" onClick={refreshHistorique}>
-            <RefreshCw className="h-3.5 w-3.5" /> Actualiser
-          </Button>
-        </div>
-        {historique.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-muted-foreground">Aucune situation générée pour le moment</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  {(['Date', 'Utilisateur', 'Type', 'Période', 'Format', 'Taille', 'Actions'] as string[]).map((h) => (
-                    <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-2xs font-semibold uppercase tracking-[0.06em] text-muted-foreground/70">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {historique.map((h) => {
-                  const fmt = FORMAT_LABELS[h.type] || { label: h.type, className: 'bg-muted text-muted-foreground' }
-                  const hasParams = Boolean(h.params)
-                  return (
-                    <tr key={h.createdAt + h.type + h.periode} className="transition-colors hover:bg-muted/20">
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{new Date(h.createdAt).toLocaleString('fr-FR')}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm">{h.userNom}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium">{h.situationType}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                        {h.periode}
-                        <span className="ml-2 text-2xs text-muted-foreground/70">({h.nbCourriers} courrier{h.nbCourriers > 1 ? 's' : ''})</span>
-                        {h.filtres && h.filtres !== 'Aucun filtre' && (
-                          <p className="mt-0.5 max-w-[220px] truncate text-2xs text-muted-foreground/60" title={h.filtres}>
-                            {h.filtres}
-                          </p>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <span className={cn('inline-flex h-6 items-center rounded-md px-2 text-2xs font-semibold uppercase', fmt.className)}>{fmt.label}</span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm tabular-nums text-muted-foreground">{fmtTaille(h.taille)}</td>
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={!hasParams}
-                            title={hasParams ? 'Télécharger à nouveau (régénère avec les mêmes critères)' : 'Paramètres indisponibles'}
-                            data-testid={`hist-download-${h.createdAt}`}
-                            onClick={() => download(h.type as 'pdf' | 'xlsx' | 'csv' | 'exec-pdf' | 'exec-xlsx', new URLSearchParams(h.params)).then(refreshHistorique)}
-                          >
-                            <Download className="h-3.5 w-3.5" /> Télécharger
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
         )}
       </Card>
 
