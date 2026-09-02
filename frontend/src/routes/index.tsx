@@ -16,7 +16,6 @@ import {
   History,
   Upload,
   Plus,
-  CheckCircle2,
   type LucideIcon,
 } from 'lucide-react'
 import { Card, CardHeader } from '@/components/ui/card'
@@ -72,27 +71,6 @@ function tempsDepuis(dateStr: string): string {
   const j = Math.floor(h / 24)
   return `Il y a ${j}j`
 }
-
-/* ── Séquence du flux — ordre + couleurs connus, repli alphabétique ── */
-const FLUX_ORDRE = [
-  'Nouveau',
-  'Appel effectué',
-  'Injoignable',
-  'Destinataire joint',
-  'Retiré',
-  'Auprès du coursier',
-  'Livré',
-]
-const FLUX_COULEURS: Record<string, string> = {
-  Nouveau: '#6B7280',
-  'Appel effectué': '#3B82F6',
-  Injoignable: '#F59E0B',
-  'Destinataire joint': '#10B981',
-  Retiré: '#059669',
-  'Auprès du coursier': '#E11D48',
-  Livré: '#059669',
-}
-const FLUX_FINALS = new Set(['Retiré', 'Livré'])
 
 function AnimatedNumber({ value, className }: { value: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -210,74 +188,6 @@ function KpiTile({
     <div key={kpi.label} className="h-full">
       {inner}
     </div>
-  )
-}
-
-function PipelineFlux({ distribution, total }: { distribution: Record<string, number>; total: number }) {
-  const connues = FLUX_ORDRE.map((nom) => ({ nom, count: distribution[nom] ?? 0 }))
-  const inconnues = Object.entries(distribution)
-    .filter(([nom]) => !FLUX_ORDRE.includes(nom))
-    .sort((a, b) => b[1] - a[1])
-    .map(([nom, count]) => ({ nom, count }))
-  const nodes = [...connues, ...inconnues]
-
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader
-        title="Flux des courriers"
-        subtitle="Répartition le long du circuit"
-        icon={<ArrowRightLeft className="h-4 w-4" />}
-      />
-      <div className="overflow-x-auto p-5 scrollbar-thin">
-        <div className="flex min-w-[760px] items-start">
-          {nodes.map((node, i) => (
-            <div key={node.nom} className="flex items-start">
-              {i > 0 && (
-                <div className="relative mt-5 h-0.5 w-8 shrink-0 overflow-hidden rounded-full bg-muted sm:w-12">
-                  <motion.div
-                    initial={{ x: '-100%' }}
-                    animate={{ x: '100%' }}
-                    transition={{ duration: 1.6, repeat: Infinity, ease: 'linear', delay: i * 0.1 }}
-                    className="h-full w-1/2 rounded-full bg-gradient-to-r from-transparent via-primary to-transparent motion-reduce:hidden"
-                  />
-                </div>
-              )}
-              <div className="flex w-[104px] flex-col items-center text-center">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.7 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.25 + i * 0.05, type: 'spring', stiffness: 300, damping: 20 }}
-                  className="relative flex h-10 w-10 items-center justify-center rounded-2xl border-2 bg-card shadow-card"
-                  style={{ borderColor: FLUX_COULEURS[node.nom] ?? 'hsl(var(--border))' }}
-                >
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: FLUX_COULEURS[node.nom] ?? 'hsl(var(--muted-foreground))' }}
-                  />
-                  {FLUX_FINALS.has(node.nom) && (
-                    <span
-                      className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full text-white"
-                      style={{ backgroundColor: FLUX_COULEURS[node.nom] ?? 'hsl(var(--primary))' }}
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                    </span>
-                  )}
-                </motion.div>
-                <p className="mt-2 font-mono text-base font-bold tabular-nums text-foreground">
-                  <AnimatedNumber value={node.count} />
-                </p>
-                <p className="mt-0.5 line-clamp-2 text-2xs leading-tight text-muted-foreground/70" title={node.nom}>
-                  {node.nom}
-                </p>
-                <p className="mt-1 text-3xs font-medium tabular-nums text-muted-foreground/40">
-                  {total > 0 ? ((node.count / total) * 100).toFixed(1) : '0.0'}%
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Card>
   )
 }
 
@@ -424,9 +334,6 @@ function Dashboard() {
           <KpiTile key={k.label} kpi={k} index={i} featured={i === 0} share={total > 0 ? (k.value / total) * 100 : 0} />
         ))}
       </div>
-
-      {/* ── Flux ── */}
-      <PipelineFlux distribution={stats?.distribution ?? {}} total={total} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Distribution par statut */}

@@ -10,6 +10,7 @@ import { authRoutes } from './routes/auth.js'
 import { importRoutes } from './routes/import.js'
 import { courrierRoutes } from './routes/courriers.js'
 import { historiqueRoutes } from './routes/historique.js'
+import { situationRoutes } from './routes/situations.js'
 import { statistiquesRoutes } from './routes/statistiques.js'
 import { utilisateurRoutes } from './routes/utilisateurs.js'
 import { roleRoutes } from './routes/roles.js'
@@ -63,6 +64,7 @@ await authRoutes(app)
 await importRoutes(app)
 await courrierRoutes(app)
 await historiqueRoutes(app)
+await situationRoutes(app)
 await statistiquesRoutes(app)
 await utilisateurRoutes(app)
 await roleRoutes(app)
