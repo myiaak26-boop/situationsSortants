@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Upload,
   FileText,
+  FileBarChart,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -32,6 +33,7 @@ const navSections: NavSection[] = [
     title: 'Principal',
     items: [
       { icon: LayoutDashboard, label: 'Tableau de bord', href: '/' },
+      { icon: FileBarChart, label: 'Situations', href: '/situations', permission: 'situation:read' },
       { icon: FileText, label: 'Courriers sortants', href: '/courriers', permission: 'courrier:read' },
     ],
   },
