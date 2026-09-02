@@ -28,6 +28,7 @@ export async function seedDatabase(db: PrismaClient) {
     'courrier:read',
     'courrier:write',
     'courrier:history',
+    'courrier:update-situation',
     'courrier:print',
     'import',
     'situation:read',
@@ -69,6 +70,135 @@ export async function seedDatabase(db: PrismaClient) {
 
   console.log(`🔑 Mot de passe par défaut du compte admin@dex.local : ${defaultPassword}`)
   console.log(`🔑 Mot de passe par défaut des nouveaux utilisateurs : ${userDefaultPassword}`)
+
+  const situations = [
+    { nom: 'Nouveau', ordre: 0, couleur: '#6B7280', icone: 'FileText', estInitial: true, estFinal: false },
+    { nom: 'Appel effectué', ordre: 10, couleur: '#3B82F6', icone: 'Phone', estInitial: false, estFinal: false },
+    { nom: 'Injoignable', ordre: 20, couleur: '#F59E0B', icone: 'PhoneOff', estInitial: false, estFinal: false },
+    { nom: 'Destinataire joint', ordre: 30, couleur: '#10B981', icone: 'PhoneCall', estInitial: false, estFinal: false },
+    { nom: 'Retiré', ordre: 50, couleur: '#059669', icone: 'PackageCheck', estInitial: false, estFinal: true },
+    { nom: 'Auprès du coursier', ordre: 80, couleur: '#F59E0B', icone: 'Truck', estInitial: false, estFinal: false },
+    { nom: 'Livré', ordre: 90, couleur: '#059669', icone: 'PackageCheck', estInitial: false, estFinal: true },
+  ]
+
+  const createdSituations: Record<string, string> = {}
+  for (const s of situations) {
+    const created = await db.situation.upsert({
+      where: { nom: s.nom },
+      update: { ordre: s.ordre, couleur: s.couleur, icone: s.icone ?? null, estInitial: s.estInitial, estFinal: s.estFinal },
+      create: s,
+    })
+    createdSituations[s.nom] = created.id
+  }
+
+  const modes = [
+    {
+      nom: 'Retrait au Secrétariat',
+      description: 'Le destinataire est appelé, puis le courrier est retiré au secrétariat.',
+      couleur: '#3B82F6',
+      icone: 'Phone',
+      cle: 'RETRAIT',
+      ordre: 0,
+    },
+    {
+      nom: 'Envoi par E-mail',
+      description: 'Le courrier est envoyé par e-mail, ce qui clôt son suivi.',
+      couleur: '#8B5CF6',
+      icone: 'Mail',
+      cle: 'MAIL',
+      ordre: 1,
+    },
+    {
+      nom: 'Remise au Coursier',
+      description: 'Le courrier est transmis à un coursier puis livré.',
+      couleur: '#F59E0B',
+      icone: 'Truck',
+      cle: 'COURSIER',
+      ordre: 2,
+    },
+  ]
+
+  const createdModes: Record<string, string> = {}
+  for (const m of modes) {
+    const created = await db.modeTransmission.upsert({
+      where: { nom: m.nom },
+      update: { description: m.description, couleur: m.couleur, icone: m.icone, cle: m.cle, ordre: m.ordre, actif: true },
+      create: { ...m, actif: true },
+    })
+    createdModes[m.nom] = created.id
+  }
+
+  type TransitionSeed = {
+    mode: string
+    from: string
+    to: string
+    nom: string
+    type?: 'MANUAL'
+    demandeRetrait?: boolean
+    estRappel?: boolean
+    ordre?: number
+  }
+
+  const transitions: TransitionSeed[] = [
+    // ── Retrait au Secrétariat
+    { mode: 'Retrait au Secrétariat', from: 'Nouveau', to: 'Appel effectué', nom: 'Appeler', ordre: 0 },
+    { mode: 'Retrait au Secrétariat', from: 'Appel effectué', to: 'Destinataire joint', nom: 'Destinataire joint', ordre: 0 },
+    { mode: 'Retrait au Secrétariat', from: 'Appel effectué', to: 'Injoignable', nom: 'Injoignable', ordre: 1 },
+    { mode: 'Retrait au Secrétariat', from: 'Injoignable', to: 'Appel effectué', nom: 'Rappeler', estRappel: true, ordre: 0 },
+    { mode: 'Retrait au Secrétariat', from: 'Destinataire joint', to: 'Retiré', nom: 'Retiré', demandeRetrait: true, ordre: 0 },
+
+    // ── Envoi par E-mail — le statut de suivi est « Livré » (fix #2 :
+    //    « E-mail envoyé » n'est pas un statut mais un mode de transmission)
+    { mode: 'Envoi par E-mail', from: 'Nouveau', to: 'Livré', nom: 'Envoyer par e-mail', ordre: 0 },
+
+    // ── Remise au Coursier
+    { mode: 'Remise au Coursier', from: 'Nouveau', to: 'Auprès du coursier', nom: 'Transmettre au coursier', ordre: 0 },
+    { mode: 'Remise au Coursier', from: 'Auprès du coursier', to: 'Livré', nom: 'Livré', ordre: 0 },
+  ]
+
+  for (const t of transitions) {
+    const modeId = createdModes[t.mode]
+    const fromId = createdSituations[t.from]
+    const toId = createdSituations[t.to]
+    if (modeId && fromId && toId) {
+      await db.transition.upsert({
+        where: {
+          modeTransmissionId_fromSituationId_toSituationId: {
+            modeTransmissionId: modeId,
+            fromSituationId: fromId,
+            toSituationId: toId,
+          },
+        },
+        update: {
+          nom: t.nom,
+          type: t.type ?? 'MANUAL',
+          demandeRetrait: t.demandeRetrait ?? false,
+          estRappel: t.estRappel ?? false,
+          ordre: t.ordre ?? 0,
+        },
+        create: {
+          modeTransmissionId: modeId,
+          fromSituationId: fromId,
+          toSituationId: toId,
+          nom: t.nom,
+          type: t.type ?? 'MANUAL',
+          demandeRetrait: t.demandeRetrait ?? false,
+          estRappel: t.estRappel ?? false,
+          ordre: t.ordre ?? 0,
+        },
+      })
+    }
+  }
+
+  // Synchronise le champ hérité « modeEnvoi » sur les courriers existants
+  const syncModes = await db.modeTransmission.findMany({ select: { id: true, cle: true } })
+  for (const m of syncModes) {
+    if (!m.cle) continue
+    await db.courrier.updateMany({
+      where: { modeTransmissionId: m.id, modeEnvoi: null },
+      data: { modeEnvoi: m.cle },
+    })
+  }
 
   // ── Signataires officiels
   const signataires = [

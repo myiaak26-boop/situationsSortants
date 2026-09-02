@@ -164,6 +164,8 @@ const KPI_NUM: Record<KpiId, (s: SituationExecStats) => number> = {
   nouveaux: (s) => s.nouveaux,
   mail: (s) => s.envoyesMail,
   coursier: (s) => s.envoyesCoursier,
+  retraitSecretariat: (s) => s.enRetraitSecretariat,
+  injoignables: (s) => s.injoignables,
   aRappeler: (s) => s.aRappeler,
   rappels: (s) => s.rappelsEffectues,
 }
@@ -207,7 +209,16 @@ export function buildSynthese(
       }
       case 'retires': {
         const rDate = rangeCol('dateRetrait')
-        return rDate ? `=COUNTIF(${rDate},"<>")` : null
+        const rSit = rangeCol('situation')
+        if (!rDate && !rSit) return null
+        if (rDate && rSit) {
+          return `=COUNTIF(${rSit},"*Retiré*")+COUNTIF(${rDate},"<>")-COUNTIFS(${rSit},"*Retiré*",${rDate},"<>")`
+        }
+        return rDate ? `=COUNTIF(${rDate},"<>")` : `=COUNTIF(${rSit},"*Retiré*")`
+      }
+      case 'injoignables': {
+        const r = rangeCol('situation')
+        return r ? `=COUNTIF(${r},"*njoignable*")` : null
       }
       default:
         return null
@@ -267,6 +278,8 @@ function tableValue(r: TableRow, colId: TableColId): string {
       return r.dateArriveeEntrant ? fmtDate(new Date(r.dateArriveeEntrant)) : ''
     case 'dateRetrait':
       return r.retrait ? fmtDate(new Date(r.retrait.dateRetrait)) : ''
+    case 'situation':
+      return r.situation.nom
     case 'nomRetraitant':
       return r.retrait?.nomRetraitant || ''
     case 'telephone':
@@ -299,7 +312,11 @@ export function buildComplet(rows: TableRow[], config: ReportTypeConfig): XLSX.W
     cols.forEach((id, ci) => {
       const v = tableValue(r, id)
       const style: CellStyle = ri % 2 === 1 ? STYLE.zebra : {}
-      cell(ws, ri + 1, ci, v, style)
+      if (id === 'situation' && r.situation.couleur) {
+        cell(ws, ri + 1, ci, v, { ...style, ...badgeStyle(r.situation.couleur) })
+      } else {
+        cell(ws, ri + 1, ci, v, style)
+      }
     })
   })
   const lastRow = rows.length
@@ -341,6 +358,10 @@ export function buildStatsSheets(stats: SituationExecStats): { name: string; ws:
       ws: buildEntriesSheet('Par signataire', null, ['Signataire', 'Courriers'], Object.entries(stats.parSignataire).sort((a, b) => b[1] - a[1])),
     },
     {
+      name: 'Stats situation',
+      ws: buildEntriesSheet('Par situation', null, ['Situation', 'Courriers'], Object.entries(stats.parSituation).sort((a, b) => b[1] - a[1])),
+    },
+    {
       name: 'Délais',
       ws: buildEntriesSheet('Répartition des délais de traitement', null, ['Tranche', 'Courriers'], stats.repartitionDelais.map((d) => [d.libelle, d.count] as [string, number])),
     },
@@ -352,12 +373,12 @@ export function buildStatsSheets(stats: SituationExecStats): { name: string; ws:
 // ---------------------------------------------------------------------------
 export function buildReponses(rows: TableRow[]): XLSX.WorkSheet {
   const filtered = rows.filter((r) => r.numeroEntrant)
-  const ws = baseSheet([16, 40, 26, 12, 16, 12])
-  sheetTitleBand(ws, 0, 5, 'Courriers réponses', `${filtered.length} courriers en réponse à un courrier entrant`)
-  const headers = ['N°', 'Objet', 'Destinataire', "Date de signature", 'Réponse (N° entrant)', "Date d'arrivée"]
+  const ws = baseSheet([16, 40, 26, 12, 16, 12, 16])
+  sheetTitleBand(ws, 0, 6, 'Courriers réponses', `${filtered.length} courriers en réponse à un courrier entrant`)
+  const headers = ['N°', 'Objet', 'Destinataire', "Date de signature", 'Réponse (N° entrant)', "Date d'arrivée", 'Situation']
   headers.forEach((h, i) => cell(ws, 2, i, h, STYLE.th))
   filtered.forEach((r, ri) => {
-    const vals = [r.numero, r.objet, r.destinataire, fmtDate(r.dateEnvoi), r.numeroEntrant || '', r.dateArriveeEntrant ? fmtDate(r.dateArriveeEntrant) : '']
+    const vals = [r.numero, r.objet, r.destinataire, fmtDate(r.dateEnvoi), r.numeroEntrant || '', r.dateArriveeEntrant ? fmtDate(r.dateArriveeEntrant) : '', r.situation.nom]
     vals.forEach((v, ci) => cell(ws, ri + 3, ci, v, ri % 2 === 1 ? STYLE.zebra : {}))
   })
   return finalize(ws)

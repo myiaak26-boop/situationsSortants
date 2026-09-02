@@ -145,6 +145,8 @@ function tableValue(r: TableRow, colId: TableColId): string {
       return r.dateArriveeEntrant ? fmtDateShort(new Date(r.dateArriveeEntrant)) : '—'
     case 'dateRetrait':
       return r.retrait ? fmtDateShort(new Date(r.retrait.dateRetrait)) : '—'
+    case 'situation':
+      return r.situation.nom
     case 'nomRetraitant':
       return r.retrait?.nomRetraitant || '—'
     case 'telephone':
@@ -175,6 +177,8 @@ function groupKeyOf(r: TableRow, groupBy: string | null): { key?: string; label?
   switch (groupBy) {
     case 'signataire':
       return { key: r.signataire || 'Inconnu', label: r.signataire || 'Inconnu' }
+    case 'situation':
+      return { key: r.situation.nom, label: r.situation.nom }
     case 'destinataire':
       return { key: r.destinataire || 'Inconnu', label: r.destinataire || 'Inconnu' }
     default:
@@ -201,7 +205,7 @@ export function drawDetailedTablePage(c: Ctx, rows: TableRow[], config: ReportTy
         header: def.header,
         w: def.w,
         bold: id === 'numero',
-        badge: false,
+        badge: id === 'situation',
       }
     })
 
@@ -209,6 +213,7 @@ export function drawDetailedTablePage(c: Ctx, rows: TableRow[], config: ReportTy
     const cells: Record<string, string> = {}
     for (const col of cols) cells[col.id] = tableValue(r, col.id as TableColId)
     const badgeColors: Record<string, string> = {}
+    if (cols.some((col) => col.id === 'situation')) badgeColors['situation'] = r.situation.couleur || COLORS.teal
     const g = groupKeyOf(r, config.groupBy)
     return {
       cells,
@@ -228,6 +233,10 @@ function chartData(stats: SituationExecStats, chart: string): { label: string; v
   switch (chart) {
     case 'signataire': {
       const e = Object.entries(stats.parSignataire)
+      return e.length ? e.map(([label, value]) => ({ label, value })) : null
+    }
+    case 'situation': {
+      const e = Object.entries(stats.parSituation)
       return e.length ? e.map(([label, value]) => ({ label, value })) : null
     }
     case 'destinataire': {
@@ -272,6 +281,9 @@ export function drawCharts(c: Ctx, stats: SituationExecStats, config: ReportType
         break
       case 'destinataire':
         inlineBars(c, item.data, { title, color: COLORS.teal })
+        break
+      case 'situation':
+        donutChart(c, item.data, { title, colors: colorMap })
         break
       case 'evolution':
         if (evoData) {

@@ -8,13 +8,19 @@ export interface SituationFiltres {
   dateFin?: string
   signataire?: string
   destinataire?: string
+  situationId?: string
   retires?: boolean
   parMail?: boolean
   parCoursier?: boolean
   reponseEntrant?: boolean
+  injoignables?: boolean
   rappels?: boolean
 }
 
+// Numéros portant une trace de suppression de l'ancien système (ex. :
+// « 1278-26_del_OXPwS »). Ces courriers ont été supprimés dans la source
+// historique : ils sont exclus des rapports et des statistiques, et listés
+// dans la section de diagnostic interne des exports.
 const NUMERO_EXCLUS_PATTERN = '_del_'
 export const EXCLUSION_LEGACY: Prisma.CourrierWhereInput = { numero: { not: { contains: NUMERO_EXCLUS_PATTERN } } }
 
@@ -50,10 +56,12 @@ export function parseFilters(q: Record<string, unknown>): SituationFiltres {
     dateFin: str(q.dateFin),
     signataire: str(q.signataire),
     destinataire: str(q.destinataire),
+    situationId: str(q.situationId),
     retires: bool(q.retires),
     parMail: bool(q.parMail),
     parCoursier: bool(q.parCoursier),
     reponseEntrant: bool(q.reponseEntrant),
+    injoignables: bool(q.injoignables),
     rappels: bool(q.rappels),
   }
 }
@@ -126,12 +134,16 @@ export async function buildWhere(f: SituationFiltres): Promise<Prisma.CourrierWh
     }
   }
   if (f.destinataire) and.push({ destinataire: { contains: f.destinataire } })
+  if (f.situationId) and.push({ situationId: f.situationId })
   if (f.retires) {
-    and.push({ retrait: { isNot: null } })
+    and.push({
+      OR: [{ retrait: { isNot: null } }, { situation: { nom: { contains: 'Retiré' } } }],
+    })
   }
   if (f.parMail && !f.parCoursier) and.push({ modeEnvoi: 'MAIL' })
   if (f.parCoursier && !f.parMail) and.push({ modeEnvoi: 'COURSIER' })
   if (f.reponseEntrant) and.push({ numeroEntrant: { not: null } })
+  if (f.injoignables) and.push({ situation: { nom: { contains: 'njoignable' } } })
   if (f.rappels) and.push({ nbrRappels: { gt: 0 } })
 
   and.push({ deletedAt: null })
@@ -147,6 +159,8 @@ export interface SituationStats {
   retires: number
   envoyesMail: number
   envoyesCoursier: number
+  enRetraitSecretariat: number
+  injoignables: number
   reponsesEntrant: number
   rappelsEffectues: number
   tempsMoyenRetraitJours: number | null
@@ -172,6 +186,8 @@ export interface SituationExecStats extends SituationStats {
   reponsesConcernes: number
   retraitsConcernes: number
   tauxRetrait: number | null
+  parSituation: Record<string, number>
+  parModeTransmission: Record<string, number>
   parDestinataire: Record<string, number>
   evolution: EvolutionPoint[]
   repartitionDelais: TrancheDelai[]
@@ -252,10 +268,51 @@ export async function computeExecStats(
       modeEnvoi: true,
       nbrRappels: true,
       signataire: true,
+      situationId: true,
+      modeTransmissionId: true,
+      modeTransmission: { select: { nom: true, cle: true } },
+      situation: { select: { nom: true } },
       retrait: { select: { dateRetrait: true } },
     },
     orderBy: { dateEnvoi: 'asc' },
   })
+
+  // « À rappeler » = courrier où l'action Rappeler est disponible dans le
+  // workflow configuré (transition estRappel depuis sa situation, avec son
+  // mode de transmission), et dont le dernier événement de suivi n'est pas
+  // daté du jour (pas de relance le jour même d'une action).
+  const rappelTransitions = await prisma.transition.findMany({
+    where: { estRappel: true },
+    select: { fromSituationId: true, modeTransmissionId: true },
+  })
+  const rappelParSituation = new Map<string, Set<string | null>>()
+  for (const t of rappelTransitions) {
+    let modes = rappelParSituation.get(t.fromSituationId)
+    if (!modes) {
+      modes = new Set()
+      rappelParSituation.set(t.fromSituationId, modes)
+    }
+    modes.add(t.modeTransmissionId)
+  }
+  const aujDebut = startOfDay(new Date())
+  const derniersEvenements = await prisma.historiqueAction.findMany({
+    where: { courrierId: { in: courriers.map((c) => c.id) } },
+    select: { courrierId: true, createdAt: true },
+    orderBy: { createdAt: 'desc' },
+  })
+  const dernierEvenement = new Map<string, Date>()
+  for (const h of derniersEvenements) {
+    if (!dernierEvenement.has(h.courrierId)) dernierEvenement.set(h.courrierId, h.createdAt)
+  }
+  const peutRappeler = (c: (typeof courriers)[number]): boolean => {
+    const modes = rappelParSituation.get(c.situationId)
+    if (!modes) return false
+    return modes.has(null) || (c.modeTransmissionId !== null && modes.has(c.modeTransmissionId))
+  }
+  const relancePasAujourdhui = (c: (typeof courriers)[number]): boolean => {
+    const dernier = dernierEvenement.get(c.id)
+    return dernier === undefined || dernier < aujDebut
+  }
 
   const stats: SituationExecStats = {
     total: courriers.length,
@@ -264,6 +321,8 @@ export async function computeExecStats(
     retires: 0,
     envoyesMail: 0,
     envoyesCoursier: 0,
+    enRetraitSecretariat: 0,
+    injoignables: 0,
     reponsesEntrant: 0,
     rappelsEffectues: 0,
     tempsMoyenRetraitJours: null,
@@ -275,6 +334,8 @@ export async function computeExecStats(
     reponsesConcernes: 0,
     retraitsConcernes: 0,
     tauxRetrait: null,
+    parSituation: {},
+    parModeTransmission: {},
     parDestinataire: {},
     evolution: [],
     repartitionDelais: [],
@@ -304,6 +365,8 @@ export async function computeExecStats(
     if (c.numeroEntrant) {
       stats.courriersReponses++
       stats.reponsesEntrant++
+      // Durée de traitement : la valeur importée depuis Excel est la source ;
+      // à défaut, calcul date de signature − date d'arrivée du courrier entrant.
       let jours: number | null = c.dureeTraitement
       if (jours === null && c.dateArriveeEntrant) {
         jours = (new Date(c.dateEnvoi).getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
@@ -320,28 +383,46 @@ export async function computeExecStats(
       stats.courriersSimples++
     }
 
-    const estRetire = c.retrait !== null
+    const joursEcoutes = c.retrait
+      ? (new Date(c.retrait.dateRetrait).getTime() - new Date(c.dateEnvoi).getTime()) / 86400000
+      : (now.getTime() - new Date(c.dateEnvoi).getTime()) / 86400000
+    const joursArrondis = Math.floor(joursEcoutes)
+
+    // Retrait — un courrier est considéré retiré s'il a un enregistrement de
+    // retrait OU si sa situation de suivi est « Retiré » (cas CRUD sans Retrait).
+    const nomSit = c.situation.nom.toLowerCase()
+    const estRetire = c.retrait !== null || nomSit.includes('retir')
 
     if (estRetire) {
       stats.retires++
       if (c.retrait) {
-        const jours = Math.floor((new Date(c.retrait.dateRetrait).getTime() - new Date(c.dateEnvoi).getTime()) / 86400000)
+        const jours = joursArrondis
         if (jours >= 0) {
           sommeJoursRetrait += jours
           retraitsComptes++
           stats.retraitsConcernes++
         }
       }
+    } else if (peutRappeler(c) && relancePasAujourdhui(c)) {
+      stats.aRappeler++
     }
 
-    const cle = c.modeEnvoi || ''
+    const cle = c.modeTransmission?.cle || c.modeEnvoi || ''
     if (cle === 'MAIL') stats.envoyesMail++
     else if (cle === 'COURSIER') stats.envoyesCoursier++
+    else if (cle === 'RETRAIT') stats.enRetraitSecretariat++
+
+    if (nomSit.includes('injoignable')) stats.injoignables++
+    if (nomSit.includes('livr')) stats.livres++
+    if (nomSit.includes('nouveau')) stats.nouveaux++
 
     stats.rappelsEffectues += c.nbrRappels
 
     const sig = c.signataire || 'Inconnu'
     stats.parSignataire[sig] = (stats.parSignataire[sig] || 0) + 1
+    stats.parSituation[c.situation.nom] = (stats.parSituation[c.situation.nom] || 0) + 1
+    const modeNom = c.modeTransmission?.nom || 'Non renseigné'
+    stats.parModeTransmission[modeNom] = (stats.parModeTransmission[modeNom] || 0) + 1
 
     const dest = c.destinataire || 'Non renseigné'
     stats.parDestinataire[dest] = (stats.parDestinataire[dest] || 0) + 1
@@ -367,6 +448,8 @@ export async function computeExecStats(
 
   const delaiMap = new Map<string, number>()
   for (const c of courriers) {
+    // Une durée importée depuis Excel est comptabilisée dans la répartition,
+    // même sans courrier entrant associé. À défaut : calcul par les dates.
     let jours: number | null = c.dureeTraitement
     if (jours === null && c.numeroEntrant && c.dateArriveeEntrant) {
       jours = (new Date(c.dateEnvoi).getTime() - new Date(c.dateArriveeEntrant).getTime()) / 86400000
@@ -392,6 +475,7 @@ export const TABLE_COLUMNS = [
   'objet',
   'signataire',
   'numeroEntrant',
+  'situation',
   'dateRetrait',
   'nomRetraitant',
   'telephone',
@@ -407,6 +491,7 @@ const SORTABLE: Record<string, Prisma.CourrierOrderByWithRelationInput> = {
   objet: { objet: 'asc' },
   signataire: { signataire: 'asc' },
   numeroEntrant: { numeroEntrant: 'asc' },
+  situation: { situation: { nom: 'asc' } },
   dateRetrait: { retrait: { dateRetrait: 'asc' } },
   nomRetraitant: { retrait: { nomRetraitant: 'asc' } },
   telephone: { retrait: { telephone: 'asc' } },
@@ -416,6 +501,7 @@ const SORTABLE: Record<string, Prisma.CourrierOrderByWithRelationInput> = {
 export function orderFor(col: TableColumn, dir: 'asc' | 'desc'): Prisma.CourrierOrderByWithRelationInput {
   const base = SORTABLE[col] ?? { dateEnvoi: 'desc' as const }
   const invert = (v: Prisma.SortOrder) => (v === 'asc' ? 'desc' : 'asc')
+  if ('situation' in base) return { situation: { nom: dir } }
   if ('retrait' in base) {
     const key = Object.keys(base.retrait!)[0] as keyof Prisma.RetraitOrderByWithRelationInput
     return { retrait: { [key]: dir } } as Prisma.CourrierOrderByWithRelationInput
@@ -434,6 +520,8 @@ export interface TableRow {
   numeroEntrant: string | null
   dateArriveeEntrant: Date | null
   dureeTraitement: number | null
+  modeTransmission: { nom: string; couleur: string; cle: string | null } | null
+  situation: { nom: string; couleur: string }
   retrait: { dateRetrait: Date; nomRetraitant: string; telephone: string | null } | null
   observation: string | null
 }
@@ -449,6 +537,8 @@ const ROW_SELECT = {
   dateArriveeEntrant: true,
   dureeTraitement: true,
   observation: true,
+  modeTransmission: { select: { nom: true, couleur: true, cle: true } },
+  situation: { select: { nom: true, couleur: true } },
   retrait: { select: { dateRetrait: true, nomRetraitant: true, telephone: true } },
 } satisfies Prisma.CourrierSelect
 
