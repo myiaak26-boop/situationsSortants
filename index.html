@@ -1034,7 +1034,7 @@ function handleFile(e) {
       const colMode = findColumn(headers, ['Mode de transmission', 'mode transmission', 'modetransmission', 'mode']);
       const colStatut = findColumn(headers, ['Statut', 'Statut de suivi', 'statut de suivi', 'statut', 'suivi']);
 
-      rawData = json.map((row, idx) => {
+      const newRows = json.map((row, idx) => {
         const numRaw = row[colNum] || (idx + 1);
         const numStr = String(numRaw).trim();
         let displayNum = numStr;
@@ -1070,12 +1070,17 @@ function handleFile(e) {
         });
       });
 
+      const beforeCount = rawData.length;
+      rawData = mergeRows(rawData, newRows);
       rawData = sortByOfficialNum(rawData);
+      const addedCount = rawData.length - beforeCount;
 
       loading.classList.remove('show');
       document.getElementById('emptyState').style.display = 'none';
       document.getElementById('headerActions').style.display = '';
-      document.getElementById('dataCount') && (document.getElementById('dataCount').textContent = `${rawData.length} courrier(s) importé(s)`);
+      const totalCount = rawData.length;
+      document.getElementById('dataCount') && (document.getElementById('dataCount').textContent =
+        `${totalCount} courrier(s) au total (${addedCount} ajouté(s) à cet import)`);
       document.body.classList.remove('no-data');
       populateFilterSelects();
       filteredData = [...rawData];
@@ -1142,10 +1147,12 @@ function handleIncomingFile(e) {
         alert('Colonne "Numéro" introuvable dans le fichier de courriers entrants.');
         return;
       }
-      incomingData = json;
+      const beforeIncCount = incomingData.length;
+      incomingData = mergeIncomingRows(incomingData, json);
       buildIncomingMap(incomingData);
       const count = Object.keys(incomingMap).length;
-      status.textContent = `${count} courrier(s) entrant(s) chargé(s)`;
+      const addedIncCount = incomingData.length - beforeIncCount;
+      status.textContent = `${count} courrier(s) entrant(s) (${addedIncCount} ajouté(s) à cet import)`;
       status.style.color = 'var(--success)';
       saveState();
       syncState();
@@ -1618,6 +1625,30 @@ function sortByOfficialNum(rows) {
     if (kb.n !== ka.n) return kb.n - ka.n;
     return kb.sub - ka.sub;
   });
+}
+
+function rowMergeKey(r) {
+  return [r.num, r.dateStr, r.signataire, r.destinataire, r.objet]
+    .map(v => String(v ?? '')).join('||');
+}
+
+function mergeRows(existing, news) {
+  const map = new Map();
+  existing.forEach(r => map.set(rowMergeKey(r), r));
+  news.forEach(r => map.set(rowMergeKey(r), r));
+  return Array.from(map.values());
+}
+
+function mergeIncomingRows(existing, news) {
+  const colNumero = news.length ? findColumn(Object.keys(news[0]), ['Numéro', 'Numero', 'N°', 'num']) : null;
+  const key = row => {
+    const v = colNumero ? String(row[colNumero] ?? '').trim() : '';
+    return v ? normalizeNumero(v) : JSON.stringify(row);
+  };
+  const map = new Map();
+  existing.forEach(r => map.set(key(r), r));
+  news.forEach(r => map.set(key(r), r));
+  return Array.from(map.values());
 }
 
 function getAppliedPeriodRange() {
