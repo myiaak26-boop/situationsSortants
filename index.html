@@ -21,7 +21,7 @@
   --text:#0F172A;--text-muted:#5B6472;
   --success:#1B7A4D;--danger:#B3261E;--warning:#B8860B;
   --shadow:0 1px 3px rgba(15,23,42,.06);--shadow-lg:0 10px 20px -8px rgba(11,18,32,.14);
-  --sb-w:260px;--hd-h:68px;
+  --hd-h:68px;
   --primary:var(--ink);--primary-dark:var(--ink);--primary-light:var(--steel);--bg:var(--paper);
 }
 html{font-size:16px}
@@ -30,69 +30,88 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
 
 /* ============================ Layout global ============================ */
-.app-layout{display:flex;min-height:100vh}
-.main-content{flex:1;min-width:0;display:flex;flex-direction:column}
+.main-content{min-width:0;display:flex;flex-direction:column}
 .page{display:none}
 .page.active{display:block;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
-/* ============================ Sidebar ============================ */
-.sidebar{
-  width:var(--sb-w);flex-shrink:0;background:var(--ink);
-  color:#fff;height:calc(100vh - var(--hd-h));position:sticky;top:var(--hd-h);overflow-y:auto;display:flex;flex-direction:column;
-  z-index:200;
+/* ============================ Barre d'onglets ============================ */
+.tabs-bar{
+  background:var(--card);border-bottom:1px solid var(--border);
+  position:sticky;top:var(--hd-h);z-index:90;box-shadow:var(--shadow);
 }
-.sb-inner{padding:1.5rem 1rem 1.5rem;display:flex;flex-direction:column;gap:1.5rem;flex:1}
-.sb-nav{display:flex;flex-direction:column}
-.sb-nav-label{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;opacity:.55;font-weight:600;padding:0 .5rem .45rem;color:#fff}
-.sb-item{
-  display:flex;align-items:center;position:relative;gap:.65rem;padding:.6rem .7rem .6rem .55rem;
-  border:none;background:none;color:rgba(255,255,255,.65);
-  font-family:'Inter',sans-serif;font-size:.84rem;font-weight:500;cursor:pointer;text-align:left;
-  width:100%;transition:color .18s;
+.tabs-inner{max-width:1400px;margin:0 auto;display:flex;gap:.25rem;padding:0 1.5rem;overflow-x:auto;scrollbar-width:none}
+.tabs-inner::-webkit-scrollbar{display:none}
+.tab{
+  display:flex;align-items:center;gap:.5rem;padding:.8rem 1rem .7rem;border:none;background:none;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;color:var(--text-muted);
+  border-bottom:3px solid transparent;transition:color .18s,border-color .18s;white-space:nowrap;flex-shrink:0;
 }
-.sb-item svg{width:18px;height:18px;flex-shrink:0;opacity:.85}
-.sb-item:hover{color:#fff;background:rgba(255,255,255,.05)}
-.sb-item.active{color:#fff}
-.sb-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold)}
-.sb-item.active svg{opacity:1}
+.tab svg{width:16px;height:16px;flex-shrink:0}
+.tab:hover{color:var(--primary)}
+.tab.active{color:var(--primary);border-bottom-color:var(--gold)}
 
-.sb-filters-title{display:flex;align-items:center;gap:.5rem;font-size:.8rem;font-weight:600;color:#fff;letter-spacing:.2px;padding:.5rem .5rem .3rem;margin-top:.5rem;border-top:1px solid rgba(255,255,255,.1);padding-top:1rem}
-.sb-filters{display:flex;flex-direction:column;gap:.85rem}
-.sb-field label{display:block;font-size:.68rem;font-weight:600;letter-spacing:.4px;opacity:.7;margin-bottom:.3rem;color:#fff}
+/* ============================ Barre de filtres pliable ============================ */
+.filter-bar{max-width:1400px;margin:1rem auto 0;padding:0 1.5rem;width:100%}
+.filter-toggle{
+  display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;min-height:38px;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;color:var(--primary);
+  transition:border-color .2s,box-shadow .2s;box-shadow:var(--shadow);
+}
+.filter-toggle:hover{border-color:var(--accent);box-shadow:var(--shadow-lg)}
+.filter-toggle svg{width:15px;height:15px;color:var(--accent)}
+.filter-count{
+  display:none;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;
+  background:var(--accent);color:#fff;border-radius:10px;font-size:.68rem;font-weight:700;
+}
+.filter-count.show{display:inline-flex}
+.filter-panel{
+  display:none;background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:1.1rem;margin-top:.65rem;box-shadow:var(--shadow);animation:fadeIn .2s ease;
+}
+.filter-panel.show{display:block}
+.f-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.9rem}
+.sb-field label{display:block;font-size:.7rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text-muted);margin-bottom:.3rem}
 .sb-input{
-  width:100%;padding:.5rem .65rem;border:1px solid rgba(255,255,255,.18);border-radius:6px;background:rgba(255,255,255,.06);
-  color:#fff;font-family:'Inter',sans-serif;font-size:.8rem;outline:none;transition:border-color .2s,background .2s;
+  width:100%;padding:.5rem .65rem;border:1px solid var(--border);border-radius:6px;background:#fff;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:.8rem;outline:none;transition:border-color .2s;box-sizing:border-box;
 }
-.sb-input::placeholder{color:rgba(255,255,255,.4)}
-.sb-input:focus{border-color:var(--accent-light);background:rgba(255,255,255,.1)}
-select.sb-input option{color:#020617;background:#fff}
-
-/* Période : grille compacte 2 colonnes */
-.sb-periods{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.sb-input::placeholder{color:#9aa3b0}
+.sb-input:focus{border-color:var(--accent)}
+select.sb-input{height:36px}
+select.sb-input option{color:var(--text);background:#fff}
+.f-period{grid-column:1 / -1}
+.sb-periods{display:flex;flex-wrap:wrap;gap:.4rem}
 .sb-period-btn{
-  padding:.4rem .45rem;min-height:32px;border:1px solid rgba(255,255,255,.16);border-radius:6px;background:transparent;
-  color:rgba(255,255,255,.72);font-size:.72rem;font-weight:500;cursor:pointer;transition:border-color .2s,color .2s,background .2s;font-family:'Inter',sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  padding:.42rem .7rem;min-height:32px;border:1px solid var(--border);border-radius:6px;background:#fff;
+  color:var(--text-muted);font-size:.74rem;font-weight:500;cursor:pointer;transition:border-color .2s,color .2s,background .2s;
+  font-family:'Inter',sans-serif;text-align:center;white-space:nowrap;
 }
-.sb-period-btn[data-period="all"]{grid-column:1 / -1}
-.sb-period-btn:hover{border-color:var(--accent-light);color:#fff}
-.sb-period-btn.active{border-color:var(--accent);color:var(--accent-light);background:transparent}
-.sb-custom-dates{display:none;flex-direction:column;gap:.5rem}
+.sb-period-btn:hover{border-color:var(--accent);color:var(--accent)}
+.sb-period-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.sb-custom-dates{display:none;flex-direction:column;gap:.5rem;grid-column:1 / -1}
 .sb-custom-dates.show{display:flex}
 .sb-custom-dates .sb-dates-row{display:flex;gap:.5rem}
 .sb-custom-dates input[type="date"]{flex:1;min-width:0}
-.sb-custom-dates .sb-date-label{font-size:.66rem;opacity:.8;margin-bottom:.15rem;color:#fff}
+.sb-custom-dates .sb-date-label{font-size:.66rem;color:var(--text-muted);margin-bottom:.15rem}
+.f-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--border)}
+.f-action-btn{
+  display:inline-flex;align-items:center;gap:.4rem;padding:.45rem .9rem;border-radius:6px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:.76rem;font-weight:600;transition:background .2s,color .2s,border-color .2s;
+}
+.f-action-btn svg{width:14px;height:14px}
+.f-reset{background:none;border:1px solid var(--border);color:var(--text-muted)}
+.f-reset:hover{border-color:var(--primary);color:var(--primary)}
+.f-delete{background:none;border:1px solid rgba(179,38,30,.35);color:var(--danger)}
+.f-delete:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
+.f-import{background:none;border:1px solid var(--border);color:var(--accent)}
+.f-import:hover{border-color:var(--accent);background:var(--accent-soft)}
 
-.sb-reset-btn{margin-top:.15rem;padding:.4rem .2rem;background:none;border:none;color:rgba(255,255,255,.6);font-family:'Inter',sans-serif;font-size:.75rem;font-weight:500;cursor:pointer;transition:color .2s;display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%}
-.sb-reset-btn svg{width:14px;height:14px}
-.sb-reset-btn:hover{color:#fff;text-decoration:underline}
-.sb-import-new{border-top:1px solid rgba(255,255,255,.1);margin-top:1rem;padding-top:.75rem}
-
-.sb-backdrop{display:none}
-body.no-data .sidebar,body.no-data .sb-backdrop,body.no-data .sb-toggle-btn,body.no-data .header{display:none}
+body.no-data .header,body.no-data .tabs-bar,body.no-data .filter-bar{display:none}
 body.no-data .container{max-width:680px}
 body.no-data .main-content{align-items:center;justify-content:center}
-.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* ============================ Header (topbar pleine largeur) ============================ */
 .header{background:var(--ink);color:#fff;height:var(--hd-h);display:flex;align-items:center;position:sticky;top:0;z-index:100}
@@ -115,12 +134,6 @@ body.no-data .main-content{align-items:center;justify-content:center}
 .header .btn:hover{background:rgba(255,255,255,.08);transform:none;box-shadow:none;border-color:rgba(255,255,255,.32)}
 .header .btn:active{transform:none}
 .header .btn svg{width:16px;height:16px}
-.sb-toggle-btn{
-  display:none;width:42px;height:42px;flex-shrink:0;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.22);
-  border-radius:8px;background:rgba(255,255,255,.06);color:#fff;cursor:pointer;transition:background .2s;
-}
-.sb-toggle-btn:hover{background:rgba(255,255,255,.16)}
-.sb-toggle-btn svg{width:22px;height:22px}
 .header-title-wrap{display:flex;align-items:center;gap:.8rem;min-width:0}
 
 .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.2rem;min-height:44px;border:none;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:background-color .2s,box-shadow .2s,transform .15s,color .2s;font-family:'Inter',sans-serif}
@@ -272,17 +285,14 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 .empty-state p{font-size:.9rem}
 
 /* Print */
-@media print{.header,.no-print{display:none!important}.container{padding:0}.card{box-shadow:none;border:none}}
+@media print{.header,.tabs-bar,.filter-bar,.no-print{display:none!important}.container{padding:0}.card{box-shadow:none;border:none}}
 
 /* ============================ Responsive ============================ */
 @media(max-width:900px){
-  .sidebar{
-    position:fixed;left:0;top:0;height:100vh;transform:translateX(-100%);transition:transform .3s ease;box-shadow:8px 0 24px rgba(0,0,0,.28);
-  }
-  .sidebar.open{transform:translateX(0)}
-  .sb-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s;z-index:150}
-  .sb-backdrop.show{opacity:1;pointer-events:auto}
-  .sb-toggle-btn{display:inline-flex}
+  .tabs-bar{position:static}
+  .tabs-inner{padding:0 .75rem}
+  .tab{padding:.7rem .8rem .6rem;font-size:.78rem}
+  .filter-bar{padding:0 .75rem}
 }
 @media(max-width:768px){
   .header{height:auto;min-height:var(--hd-h)}
@@ -310,9 +320,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 <header class="header">
   <div class="header-inner">
     <div class="header-title-wrap">
-      <button class="sb-toggle-btn" id="sbToggle" onclick="toggleSidebar()" aria-label="Menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
       <div class="hd-brand">
         <div class="hd-monogram">SCD</div>
         <div class="hd-text">
@@ -347,57 +354,58 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
   </div>
 </header>
 
-<div class="app-layout">
+<nav class="tabs-bar" aria-label="Navigation">
+  <div class="tabs-inner">
+    <button class="tab active" data-page="dashboard" onclick="switchPage('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Tableau de bord
+    </button>
+    <button class="tab" data-page="table" onclick="switchPage('table')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+      Tableau détaillé
+    </button>
+    <button class="tab" data-page="stats" onclick="switchPage('stats')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Statistiques
+    </button>
+    <button class="tab" data-page="charts" onclick="switchPage('charts')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Graphiques
+    </button>
+    <button class="tab" data-page="import" onclick="switchPage('import')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 8 12 3 17 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import
+    </button>
+  </div>
+</nav>
 
-  <!-- ============ Sidebar ============ -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sb-inner">
-      <nav class="sb-nav" aria-label="Navigation">
-        <div class="sb-nav-label">Navigation</div>
-        <button class="sb-item active" data-page="dashboard" onclick="switchPage('dashboard',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          Tableau de bord
-        </button>
-        <button class="sb-item" data-page="table" onclick="switchPage('table',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-          Tableau détaillé
-        </button>
-        <button class="sb-item" data-page="stats" onclick="switchPage('stats',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          Statistiques
-        </button>
-        <button class="sb-item" data-page="charts" onclick="switchPage('charts',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Graphiques
-        </button>
-        <button class="sb-item" data-page="import" onclick="switchPage('import',this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 8 12 3 17 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Import
-        </button>
-      </nav>
-
-      <div class="sb-filters">
-        <div class="sb-filters-title">Filtres</div>
-
-        <div class="sb-field">
-          <label for="filterSearch">Rechercher</label>
-          <input type="text" class="sb-input" id="filterSearch" placeholder="Destinataire, objet, signataire..." oninput="applyFilters()">
+<div class="filter-bar">
+  <button class="filter-toggle" id="filterToggle" onclick="toggleFilters()" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3"/></svg>
+    Filtres &amp; Période
+    <span class="filter-count" id="filterCount">0</span>
+  </button>
+  <div class="filter-panel" id="filterPanel">
+    <div class="f-grid">
+      <div class="sb-field">
+        <label for="filterSearch">Rechercher</label>
+        <input type="text" class="sb-input" id="filterSearch" placeholder="Destinataire, objet, signataire..." oninput="applyFilters()">
+      </div>
+      <div class="sb-field f-period">
+        <label>Période</label>
+        <div class="sb-periods" id="sbPeriodBar">
+          <button class="sb-period-btn active" data-period="all" onclick="setPeriod('all',this)">Toute la période</button>
+          <button class="sb-period-btn" data-period="today" onclick="setPeriod('today',this)">Aujourd'hui</button>
+          <button class="sb-period-btn" data-period="yesterday" onclick="setPeriod('yesterday',this)">Hier</button>
+          <button class="sb-period-btn" data-period="week" onclick="setPeriod('week',this)">Cette semaine</button>
+          <button class="sb-period-btn" data-period="prevWeek" onclick="setPeriod('prevWeek',this)">Semaine préc.</button>
+          <button class="sb-period-btn" data-period="month" onclick="setPeriod('month',this)">Ce mois</button>
+          <button class="sb-period-btn" data-period="prevMonth" onclick="setPeriod('prevMonth',this)">Mois préc.</button>
+          <button class="sb-period-btn" data-period="year" onclick="setPeriod('year',this)">Cette année</button>
+          <button class="sb-period-btn" data-period="custom" onclick="setPeriod('custom',this)">Personnalisée</button>
         </div>
-
-        <div class="sb-field">
-          <label>Période</label>
-          <div class="sb-periods" id="sbPeriodBar">
-            <button class="sb-period-btn active" data-period="all" onclick="setPeriod('all',this)">Toute la période</button>
-            <button class="sb-period-btn" data-period="today" onclick="setPeriod('today',this)">Aujourd'hui</button>
-            <button class="sb-period-btn" data-period="yesterday" onclick="setPeriod('yesterday',this)">Hier</button>
-            <button class="sb-period-btn" data-period="week" onclick="setPeriod('week',this)">Cette semaine</button>
-            <button class="sb-period-btn" data-period="prevWeek" onclick="setPeriod('prevWeek',this)">Semaine préc.</button>
-            <button class="sb-period-btn" data-period="month" onclick="setPeriod('month',this)">Ce mois</button>
-            <button class="sb-period-btn" data-period="prevMonth" onclick="setPeriod('prevMonth',this)">Mois préc.</button>
-            <button class="sb-period-btn" data-period="year" onclick="setPeriod('year',this)">Cette année</button>
-            <button class="sb-period-btn" data-period="custom" onclick="setPeriod('custom',this)">Personnalisée</button>
-          </div>
-          <div class="sb-custom-dates" id="sbCustomDates">
+        <div class="sb-custom-dates" id="sbCustomDates">
+          <div class="sb-dates-row">
             <div>
               <div class="sb-date-label">Du</div>
               <input type="date" class="sb-input" id="dateStart" onchange="applyCustomPeriod()">
@@ -406,53 +414,47 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
               <div class="sb-date-label">Au</div>
               <input type="date" class="sb-input" id="dateEnd" onchange="applyCustomPeriod()">
             </div>
-            <button class="sb-period-btn" onclick="applyCustomPeriod()">Appliquer</button>
           </div>
-        </div>
-
-        <div class="sb-field">
-          <label for="filterSignataire">Signataire</label>
-          <select class="sb-input" id="filterSignataire" onchange="applyFilters()">
-            <option value="">Tous</option>
-          </select>
-        </div>
-
-        <div class="sb-field">
-          <label for="filterStatut">Statut</label>
-          <select class="sb-input" id="filterStatut" onchange="applyFilters()">
-            <option value="">Tous</option>
-          </select>
-        </div>
-
-        <div class="sb-field">
-          <label for="filterType">Type</label>
-          <select class="sb-input" id="filterType" onchange="applyFilters()">
-            <option value="">Tous</option>
-            <option value="simple">Initié</option>
-            <option value="reponse">Réponse</option>
-          </select>
-        </div>
-
-        <button class="sb-reset-btn" onclick="resetFilters()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          Réinitialiser les filtres
-        </button>
-
-        <button class="sb-reset-btn" onclick="deleteByPeriod()" style="color:rgba(255,100,100,.85);margin-top:.25rem">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          Supprimer la période affichée
-        </button>
-
-        <div class="sb-import-new">
-          <button class="sb-reset-btn" onclick="resetToImport()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Nouvel import
-          </button>
+          <button class="sb-period-btn" onclick="applyCustomPeriod()">Appliquer</button>
         </div>
       </div>
+      <div class="sb-field">
+        <label for="filterSignataire">Signataire</label>
+        <select class="sb-input" id="filterSignataire" onchange="applyFilters()">
+          <option value="">Tous</option>
+        </select>
+      </div>
+      <div class="sb-field">
+        <label for="filterStatut">Statut</label>
+        <select class="sb-input" id="filterStatut" onchange="applyFilters()">
+          <option value="">Tous</option>
+        </select>
+      </div>
+      <div class="sb-field">
+        <label for="filterType">Type</label>
+        <select class="sb-input" id="filterType" onchange="applyFilters()">
+          <option value="">Tous</option>
+          <option value="simple">Initié</option>
+          <option value="reponse">Réponse</option>
+        </select>
+      </div>
     </div>
-  </aside>
-  <div class="sb-backdrop" id="sbBackdrop" onclick="toggleSidebar(false)"></div>
+    <div class="f-actions">
+      <button class="f-action-btn f-reset" onclick="resetFilters()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Réinitialiser les filtres
+      </button>
+      <button class="f-action-btn f-delete" onclick="deleteByPeriod()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Supprimer la période
+      </button>
+      <button class="f-action-btn f-import" onclick="resetToImport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Nouvel import
+      </button>
+    </div>
+  </div>
+</div>
 
   <!-- ============ Contenu principal ============ -->
   <div class="main-content">
@@ -615,7 +617,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 
     </main>
   </div>
-</div>
 
 <!-- Preview Modal -->
 <div class="modal-overlay" id="previewModal">
@@ -974,6 +975,7 @@ function resetToImport() {
     b.classList.toggle('active', b.dataset.period === 'all');
   });
   populateFilterSelects();
+  updateFilterCount();
   switchPage('import');
   syncState();
 }
@@ -1210,7 +1212,7 @@ function setPeriod(period, btn) {
   btn.classList.add('active');
   document.getElementById('sbCustomDates').classList.toggle('show', period === 'custom');
   if (period !== 'custom') applyFilters();
-  else saveState();
+  else { updateFilterCount(); saveState(); }
 }
 
 function applyCustomPeriod() {
@@ -1222,6 +1224,7 @@ function applyCustomPeriod() {
 
 function applyFilters() {
   filteredData = rawData.filter(r => filterByPeriod(r) && filterByText(r) && filterBySelects(r));
+  updateFilterCount();
   updateAll();
   saveState();
 }
@@ -1619,8 +1622,8 @@ function switchPage(page) {
   if (!target) return;
   target.classList.add('active');
 
-  document.querySelectorAll('.sb-item').forEach(b => b.classList.toggle('active', b.dataset.page === page));
-  const el = document.querySelector('.sb-item[data-page="' + page + '"]');
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  const el = document.querySelector('.tab[data-page="' + page + '"]');
   if (el) el.classList.add('active');
 
   document.getElementById('pageTitle').textContent = (PAGE_TITLES[page] || 'Tableau de bord');
@@ -1631,15 +1634,30 @@ function switchPage(page) {
       else updateCharts();
     });
   }
-  toggleSidebar(false);
 }
 
-function toggleSidebar(force) {
-  const sb = document.getElementById('sidebar');
-  const backdrop = document.getElementById('sbBackdrop');
-  const willOpen = (typeof force === 'boolean') ? force : !sb.classList.contains('open');
-  sb.classList.toggle('open', willOpen);
-  backdrop.classList.toggle('show', willOpen);
+function toggleFilters() {
+  const panel = document.getElementById('filterPanel');
+  const btn = document.getElementById('filterToggle');
+  const open = panel.classList.toggle('show');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function updateFilterCount() {
+  const el = document.getElementById('filterCount');
+  if (!el) return;
+  const search = (document.getElementById('filterSearch').value || '').trim();
+  const sig = document.getElementById('filterSignataire').value;
+  const statut = document.getElementById('filterStatut').value;
+  const type = document.getElementById('filterType').value;
+  let n = 0;
+  if (search) n++;
+  if (sig) n++;
+  if (statut) n++;
+  if (type) n++;
+  if (currentPeriod !== 'all') n++;
+  el.textContent = n;
+  el.classList.toggle('show', n > 0);
 }
 
 function sortByOfficialNum(rows) {
