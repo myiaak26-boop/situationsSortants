@@ -267,11 +267,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 .pdf-preview .pv-bigbox .pv-box .p{font-size:.7rem;color:#333;margin-top:2px}
 
 /* Stats Section */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
-.stat-item{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;background:var(--bg);border-radius:8px;border:1px solid var(--border)}
-.stat-item .label{font-size:.85rem;color:var(--text-muted)}
-.stat-item .value{font-size:1.1rem;font-weight:700;color:var(--primary)}
-
 /* Loading */
 .loading{display:none;text-align:center;padding:3rem}
 .loading.show{display:block}
@@ -363,14 +358,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
     <button class="tab" data-page="table" onclick="switchPage('table')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
       Tableau détaillé
-    </button>
-    <button class="tab" data-page="stats" onclick="switchPage('stats')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Statistiques
-    </button>
-    <button class="tab" data-page="charts" onclick="switchPage('charts')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      Graphiques
     </button>
     <button class="tab" data-page="import" onclick="switchPage('import')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 8 12 3 17 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -534,39 +521,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
         </div>
       </div>
 
-      <!-- ============ Page : Statistiques ============ -->
-      <div class="page" id="page-stats">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              Statistiques
-            </div>
-          </div>
-          <div class="stats-grid" id="statsGrid"></div>
-        </div>
-      </div>
-
-      <!-- ============ Page : Graphiques ============ -->
-      <div class="page" id="page-charts">
-        <div class="charts-grid">
-          <div class="chart-box">
-            <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Répartition par Signataire
-            </h3>
-            <div class="chart-container"><canvas id="chartSignataire"></canvas></div>
-          </div>
-          <div class="chart-box">
-            <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Répartition des Délais de Traitement
-            </h3>
-            <div class="chart-container"><canvas id="chartDelais"></canvas></div>
-          </div>
-        </div>
-      </div>
-
       <!-- ============ Page : Import ============ -->
       <div class="page active" id="page-import">
 
@@ -637,7 +591,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 let rawData = [];
 let filteredData = [];
 let currentPeriod = 'all';
-let charts = {};
 let dashboardCharts = {};
 let currentPage = 'dashboard';
 let incomingData = [];
@@ -1364,8 +1317,6 @@ function updateAll() {
   if (hp) hp.textContent = getPeriodLabel();
   updateKPI();
   updateTable();
-  updateStats();
-  updateCharts();
   updateDashboardCharts();
   document.getElementById('kpiSection').style.display = '';
 }
@@ -1436,83 +1387,7 @@ document.getElementById('tableBody').addEventListener('change', function(e) {
   syncState();
 });
 
-function updateStats() {
-  const total = filteredData.length;
-  const simples = filteredData.filter(r => !r.isResponse).length;
-  const reponses = filteredData.filter(r => r.isResponse).length;
-
-  const signCount = {};
-  filteredData.forEach(r => { signCount[r.signataire||'Non renseigné'] = (signCount[r.signataire||'Non renseigné']||0)+1; });
-
-  const modeCount = {};
-  filteredData.forEach(r => { const m = getTransmissionMode(r); modeCount[m] = (modeCount[m]||0)+1; });
-
-  const statutCount = {};
-  filteredData.forEach(r => { const s = String(r.statut||'').trim(); statutCount[s || 'Non renseigné'] = (statutCount[s || 'Non renseigné']||0)+1; });
-
-  const durations = filteredData.filter(r => r.duree !== null).map(r => r.duree);
-  const avgDelay = durations.length ? (durations.reduce((a,b)=>a+b,0)/durations.length).toFixed(1) : '—';
-  const maxDelay = durations.length ? Math.max(...durations) : '—';
-  const minDelay = durations.length ? Math.min(...durations) : '—';
-
-  let html = `
-    <div class="stat-item"><span class="label">Total courriers</span><span class="value">${total}</span></div>
-    <div class="stat-item"><span class="label">Initiés</span><span class="value">${simples} (${total?((simples/total)*100).toFixed(1):0}%)</span></div>
-    <div class="stat-item"><span class="label">Réponses</span><span class="value">${reponses} (${total?((reponses/total)*100).toFixed(1):0}%)</span></div>
-    <div class="stat-item"><span class="label">Délai moyen</span><span class="value">${avgDelay} j</span></div>
-    <div class="stat-item"><span class="label">Délai max</span><span class="value">${maxDelay !== '—' ? maxDelay+' j' : '—'}</span></div>
-    <div class="stat-item"><span class="label">Délai min</span><span class="value">${minDelay !== '—' ? minDelay+' j' : '—'}</span></div>
-  `;
-
-  Object.entries(signCount).sort((a,b)=>b[1]-a[1]).forEach(([k,v]) => {
-    html += `<div class="stat-item"><span class="label">${k}</span><span class="value">${v} (${((v/total)*100).toFixed(1)}%)</span></div>`;
-  });
-
-  Object.entries(modeCount).forEach(([k,v]) => {
-    html += `<div class="stat-item"><span class="label">Mode: ${k}</span><span class="value">${v}</span></div>`;
-  });
-
-  Object.entries(statutCount).sort((a,b)=>b[1]-a[1]).forEach(([k,v]) => {
-    html += `<div class="stat-item"><span class="label">Statut: ${k}</span><span class="value">${v}</span></div>`;
-  });
-
-  document.getElementById('statsGrid').innerHTML = html;
-}
-
 const CHART_PALETTE = ['#0B1220','#1D6FA5','#4A93C4','#1B7A4D','#B3261E','#B8860B'];
-
-function updateCharts() {
-  Object.values(charts).forEach(c => c.destroy());
-  charts = {};
-
-  const signCount = {};
-  filteredData.forEach(r => { const s = r.signataire||'Non renseigné'; signCount[s] = (signCount[s]||0)+1; });
-  const signLabels = Object.keys(signCount).sort((a,b)=>signCount[b]-signCount[a]);
-  const signValues = signLabels.map(l=>signCount[l]);
-
-  charts.signataire = new Chart(document.getElementById('chartSignataire'), {
-    type: 'doughnut',
-    data: {
-      labels: signLabels,
-      datasets: [{data: signValues, backgroundColor: CHART_PALETTE}]
-    },
-    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right',labels:{font:{size:11,family:'Inter'}}}}}
-  });
-
-  const delayCats = {};
-  filteredData.forEach(r => { const c = getDelayCategory(r.duree); delayCats[c] = (delayCats[c]||0)+1; });
-  const delayOrder = ['0-3 jours','4-7 jours','8-14 jours','15-21 jours','22-30 jours','31 jours et plus','Non renseigné'];
-  const dLabels = delayOrder.filter(l=>delayCats[l]);
-  const dValues = dLabels.map(l=>delayCats[l]);
-  charts.delais = new Chart(document.getElementById('chartDelais'), {
-    type: 'bar',
-    data: {
-      labels: dLabels,
-      datasets: [{label:'Nombre', data: dValues, backgroundColor:['#1B7A4D','#1D6FA5','#4A93C4','#B8860B','#B3261E','#0B1220','#E2E6EC'], borderRadius:6}]
-    },
-    options: {responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true,ticks:{stepSize:1}}}}
-  });
-}
 
 function updateDashboardCharts() {
   Object.values(dashboardCharts).forEach(c => c.destroy());
@@ -1610,8 +1485,6 @@ function updateDashboardCharts() {
 const PAGE_TITLES = {
   dashboard: 'Tableau de bord',
   table: 'Tableau détaillé',
-  stats: 'Statistiques',
-  charts: 'Graphiques',
   import: 'Import'
 };
 
@@ -1628,11 +1501,8 @@ function switchPage(page) {
 
   document.getElementById('pageTitle').textContent = (PAGE_TITLES[page] || 'Tableau de bord');
 
-  if (page === 'dashboard' || page === 'charts') {
-    requestAnimationFrame(() => {
-      if (page === 'dashboard') updateDashboardCharts();
-      else updateCharts();
-    });
+  if (page === 'dashboard') {
+    requestAnimationFrame(() => updateDashboardCharts());
   }
 }
 
