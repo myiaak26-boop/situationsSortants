@@ -213,6 +213,20 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 .modal-close:hover{background:var(--danger);color:#fff}
 .modal-body{padding:1.5rem}
 
+/* Alert / Confirm Modal */
+.msg-overlay{display:flex;position:fixed;inset:0;background:rgba(11,18,32,.55);z-index:2000;justify-content:center;align-items:center;padding:1.5rem;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s;backdrop-filter:blur(2px)}
+.msg-overlay.show{opacity:1;visibility:visible}
+.msg-box{background:#fff;border-radius:14px;max-width:440px;width:100%;box-shadow:0 25px 60px -12px rgba(0,0,0,.35);transform:translateY(8px) scale(.98);transition:transform .2s;overflow:hidden}
+.msg-overlay.show .msg-box{transform:none}
+.msg-body{padding:1.75rem 1.75rem 1.25rem;text-align:center}
+.msg-icon{width:52px;height:52px;border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center}
+.msg-icon.info{background:rgba(29,111,165,.12);color:var(--accent)}
+.msg-icon.warn{background:rgba(179,38,30,.12);color:var(--danger)}
+.msg-title{font-size:1.05rem;font-weight:700;color:var(--primary);margin-bottom:.35rem}
+.msg-text{font-size:.9rem;color:var(--text-muted);line-height:1.55;white-space:pre-line}
+.msg-actions{display:flex;gap:.75rem;padding:0 1.75rem 1.5rem}
+.msg-actions button{flex:1;justify-content:center}
+
 /* PDF Preview Styles */
 .pdf-preview{font-family:'Times New Roman',serif;color:#000;background:#fff;padding:2rem}
 .pdf-preview .cover{text-align:center;padding:2rem 0;border-bottom:3px double #000;margin-bottom:2rem}
@@ -587,7 +601,68 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
   </div>
 </div>
 
+<!-- Alert / Confirm Dialog -->
+<div class="msg-overlay" id="msgOverlay" aria-hidden="true">
+  <div class="msg-box" role="alertdialog" aria-modal="true" aria-labelledby="msgTitle" aria-describedby="msgText">
+    <div class="msg-body">
+      <div class="msg-icon info" id="msgIcon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </div>
+      <div class="msg-title" id="msgTitle">Info</div>
+      <div class="msg-text" id="msgText"></div>
+    </div>
+    <div class="msg-actions">
+      <button class="btn" id="msgCancel" style="display:none">Annuler</button>
+      <button class="btn" id="msgOk">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
+function showAlert(message) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('msgOverlay');
+    document.getElementById('msgTitle').textContent = 'Opps !';
+    document.getElementById('msgText').textContent = message;
+    document.getElementById('msgIcon').className = 'msg-icon warn';
+    document.getElementById('msgIcon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    document.getElementById('msgCancel').style.display = 'none';
+    document.getElementById('msgOk').textContent = 'OK';
+    document.getElementById('msgOk').style.background = '';
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.getElementById('msgOk').onclick = () => { hideMsgOverlay(); resolve(); };
+    document.getElementById('msgOk').focus();
+  });
+}
+
+function showConfirm(message, title) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('msgOverlay');
+    document.getElementById('msgTitle').textContent = title || 'Confirmation';
+    document.getElementById('msgText').textContent = message;
+    document.getElementById('msgIcon').className = 'msg-icon warn';
+    document.getElementById('msgIcon').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:26px;height:26px"><path d="M12 9v2m0 4h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>';
+    const cancel = document.getElementById('msgCancel');
+    const ok = document.getElementById('msgOk');
+    cancel.style.display = '';
+    cancel.textContent = 'Annuler';
+    ok.textContent = 'Confirmer';
+    ok.style.background = 'var(--danger)';
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+    ok.onclick = () => { hideMsgOverlay(); ok.style.background = ''; resolve(true); };
+    cancel.onclick = () => { hideMsgOverlay(); ok.style.background = ''; resolve(false); };
+    cancel.focus();
+  });
+}
+
+function hideMsgOverlay() {
+  const overlay = document.getElementById('msgOverlay');
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
 let rawData = [];
 let filteredData = [];
 let currentPeriod = 'all';
@@ -910,27 +985,29 @@ async function loadState() {
 }
 
 function resetToImport() {
-  if (!confirm('Toutes les données importées seront effacées. Continuer ?')) return;
-  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
-  rawData = [];
-  filteredData = [];
-  incomingData = [];
-  incomingMap = {};
-  currentPeriod = 'all';
-  document.getElementById('emptyState').style.display = '';
-  document.getElementById('headerActions').style.display = 'none';
-  document.body.classList.add('no-data');
-  document.getElementById('filterSearch').value = '';
-  document.getElementById('dateStart').value = '';
-  document.getElementById('dateEnd').value = '';
-  document.getElementById('sbCustomDates').classList.remove('show');
-  document.querySelectorAll('.sb-period-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.period === 'all');
+  showConfirm('Toutes les données importées seront effacées.\n\nCette action est irréversible. Continuer ?').then(ok => {
+    if (!ok) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    rawData = [];
+    filteredData = [];
+    incomingData = [];
+    incomingMap = {};
+    currentPeriod = 'all';
+    document.getElementById('emptyState').style.display = '';
+    document.getElementById('headerActions').style.display = 'none';
+    document.body.classList.add('no-data');
+    document.getElementById('filterSearch').value = '';
+    document.getElementById('dateStart').value = '';
+    document.getElementById('dateEnd').value = '';
+    document.getElementById('sbCustomDates').classList.remove('show');
+    document.querySelectorAll('.sb-period-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.period === 'all');
+    });
+    populateFilterSelects();
+    updateFilterCount();
+    switchPage('import');
+    syncState();
   });
-  populateFilterSelects();
-  updateFilterCount();
-  switchPage('import');
-  syncState();
 }
 
 function handleFile(e) {
@@ -964,7 +1041,7 @@ function handleFile(e) {
         if (s > headerScore) { headerScore = s; headerIdx = i; }
       }
       if (headerScore < 3) {
-        alert('Impossible d\'identifier les colonnes. Vérifiez que le fichier contient bien les en-têtes (N° , Date de signature, Signataire, Destinataire, Objet...).');
+        showAlert('Impossible d\'identifier les colonnes. Vérifiez que le fichier contient bien les en-têtes (N° , Date de signature, Signataire, Destinataire, Objet...).');
         loading.classList.remove('show');
         zone.style.display = '';
         return;
@@ -980,7 +1057,7 @@ function handleFile(e) {
         json.push(obj);
       }
       if (json.length === 0) {
-        alert('Le fichier est vide ou ne contient pas de données.');
+        showAlert('Le fichier est vide ou ne contient pas de données.');
         loading.classList.remove('show');
         zone.style.display = '';
         return;
@@ -1054,7 +1131,7 @@ function handleFile(e) {
       syncState();
     } catch(err) {
       console.error(err);
-      alert('Erreur lors de la lecture du fichier: ' + err.message);
+      showAlert('Erreur lors de la lecture du fichier: ' + err.message);
       loading.classList.remove('show');
       zone.style.display = '';
     }
@@ -1089,7 +1166,7 @@ function handleIncomingFile(e) {
         if (s > headerScore) { headerScore = s; headerIdx = i; }
       }
       if (headerScore < 2) {
-        alert('Impossible d\'identifier les colonnes du fichier de courriers entrants. Vérifiez la présence des en-têtes (Numéro, Date d\'arrivée...).');
+        showAlert('Impossible d\'identifier les colonnes du fichier de courriers entrants. Vérifiez la présence des en-têtes (Numéro, Date d\'arrivée...).');
         return;
       }
       const headers = aoa[headerIdx].map(cell);
@@ -1102,13 +1179,13 @@ function handleIncomingFile(e) {
         json.push(obj);
       }
       if (json.length === 0) {
-        alert('Le fichier de courriers entrants est vide ou ne contient pas de données.');
+        showAlert('Le fichier de courriers entrants est vide ou ne contient pas de données.');
         return;
       }
       const colNumero = findColumn(headers, ['Numéro', 'Numero', 'N°', 'num']);
       const colDateArrivee = findColumn(headers, ["Date d' Arrivée", "Date d'Arrivée", "Date d' Arrivee", "Date d'Arrivee", 'date arrivee']);
       if (!colNumero) {
-        alert('Colonne "Numéro" introuvable dans le fichier de courriers entrants.');
+        showAlert('Colonne "Numéro" introuvable dans le fichier de courriers entrants.');
         return;
       }
       const beforeIncCount = incomingData.length;
@@ -1122,7 +1199,7 @@ function handleIncomingFile(e) {
       syncState();
     } catch(err) {
       console.error(err);
-      alert('Erreur lors de la lecture du fichier de courriers entrants: ' + err.message);
+      showAlert('Erreur lors de la lecture du fichier de courriers entrants: ' + err.message);
     }
   };
   reader.readAsArrayBuffer(file);
@@ -1281,22 +1358,23 @@ function populateFilterSelects() {
 function deleteByPeriod() {
   const toRemove = new Set(filteredData);
   if (!toRemove.size) {
-    alert('Aucun courrier à supprimer pour cette période.');
+    showAlert('Aucun courrier à supprimer pour cette période.');
     return;
   }
-  if (!confirm(`Supprimer ${toRemove.size} courrier(s) ?\n\nCette action est irréversible.`)) return;
+  showConfirm(`Supprimer ${toRemove.size} courrier(s) ?\n\nCette action est irréversible.`).then(ok => {
+    if (!ok) return;
+    rawData = rawData.filter(r => !toRemove.has(r));
+    applyFilters();
+    saveState();
+    syncState();
 
-  rawData = rawData.filter(r => !toRemove.has(r));
-  applyFilters();
-  saveState();
-  syncState();
-
-  if (!rawData.length) {
-    document.getElementById('emptyState').style.display = '';
-    document.getElementById('headerActions').style.display = 'none';
-    document.body.classList.add('no-data');
-    switchPage('import');
-  }
+    if (!rawData.length) {
+      document.getElementById('emptyState').style.display = '';
+      document.getElementById('headerActions').style.display = 'none';
+      document.body.classList.add('no-data');
+      switchPage('import');
+    }
+  });
 }
 
 function resetFilters() {
