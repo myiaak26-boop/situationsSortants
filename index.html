@@ -434,6 +434,11 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
           Réinitialiser les filtres
         </button>
 
+        <button class="sb-reset-btn" onclick="deleteByPeriod()" style="color:rgba(255,100,100,.85);margin-top:.25rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Supprimer la période affichée
+        </button>
+
         <div class="sb-import-new">
           <button class="sb-reset-btn" onclick="resetToImport()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1311,6 +1316,30 @@ function populateFilterSelects() {
   statutSel.innerHTML = '<option value="">Tous</option>' + statuts.map(s => `<option value="${s}">${s}</option>`).join('');
   const statutIdx = [...statutSel.options].findIndex(o => o.value === curStatut);
   if (statutIdx > 0) statutSel.selectedIndex = statutIdx;
+}
+
+function deleteByPeriod() {
+  if (!filteredData.length) {
+    alert('Aucun courrier à supprimer pour cette période.');
+    return;
+  }
+  const count = filteredData.length;
+  const label = getPeriodLabel();
+  if (!confirm(`Voulez-vous supprimer ${count} courrier(s) de la période "${label}" ?\n\nCette action est irréversible.`)) return;
+
+  const keysToDelete = new Set(filteredData.map(r => rowMergeKey(r)));
+  rawData = rawData.filter(r => !keysToDelete.has(rowMergeKey(r)));
+  filteredData = rawData.filter(r => filterByPeriod(r) && filterByText(r) && filterBySelects(r));
+  updateAll();
+  saveState();
+  syncState();
+
+  if (!rawData.length) {
+    document.getElementById('emptyState').style.display = '';
+    document.getElementById('headerActions').style.display = 'none';
+    document.body.classList.add('no-data');
+    switchPage('import');
+  }
 }
 
 function resetFilters() {
