@@ -144,6 +144,60 @@ body.no-data .main-content{align-items:center;justify-content:center}
 .card-title{font-size:1.1rem;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:.5rem}
 .card-title svg{width:22px;height:22px;color:var(--accent)}
 
+/* ============================ Tableau de bord (db) ============================ */
+.db-header{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.db-title{font-size:1.45rem;font-weight:800;color:var(--ink);letter-spacing:.2px;margin:0}
+.db-subtitle{font-size:.88rem;color:var(--text-muted);margin-top:.2rem}
+.db-period{font-size:.78rem;font-weight:600;color:var(--steel);background:var(--accent-soft);border:1px solid rgba(29,111,165,.25);border-radius:20px;padding:.45rem .95rem;max-width:100%}
+.db-filters{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:1.5rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:1rem}
+.db-filters-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem;align-items:end}
+.db-field label{display:block;font-size:.7rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text-muted);margin-bottom:.3rem}
+.db-field .sb-input{height:38px}
+.db-seg{display:flex;flex-wrap:wrap;gap:.35rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.25rem}
+.db-seg-btn{border:none;background:none;padding:.42rem .7rem;border-radius:6px;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;color:var(--text-muted);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.db-seg-btn:hover{color:var(--accent)}
+.db-seg-btn.active{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.db-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:1rem;margin-bottom:1.5rem}
+.db-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.1rem 1.1rem 1rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.15rem}
+.db-kpi.gold-border{border-top:3px solid var(--gold)}
+.db-kpi-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted)}
+.db-kpi-value{font-size:1.85rem;font-weight:800;color:var(--ink);line-height:1.1;font-family:'Playfair Display',serif}
+.db-kpi-sub{font-size:.72rem;color:var(--text-muted);line-height:1.4}
+.db-kpi-delta{font-size:.7rem;font-weight:600;margin-top:.35rem;padding:.28rem .55rem;border-radius:6px;display:inline-flex;align-items:center;gap:.35rem;align-self:flex-start;white-space:nowrap}
+.db-kpi-delta.up{color:var(--success);background:rgba(27,122,77,.1)}
+.db-kpi-delta.down{color:var(--danger);background:rgba(179,38,30,.08)}
+.db-kpi-delta.flat{color:var(--text-muted);background:rgba(91,100,114,.1)}
+.db-chart{margin-bottom:1.5rem}
+.db-subnote{font-size:.74rem;color:var(--text-muted);margin:-.5rem 0 .75rem}
+.check-mark{color:var(--success)}
+.db-empty{font-size:.82rem;font-style:italic;color:var(--text-muted);padding:.75rem .25rem}
+.db-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+.db-section:last-child{margin-bottom:0}
+.db-section-title{font-size:.95rem;font-weight:700;color:var(--primary);margin:0 0 1rem;display:flex;align-items:center;gap:.5rem}
+.db-link-btn{border:1px solid var(--border);background:none;color:var(--accent);font-family:'Inter',sans-serif;font-size:.74rem;font-weight:600;padding:.42rem .75rem;border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s;margin-top:.75rem}
+.db-link-btn:hover{border-color:var(--accent);background:var(--accent-soft)}
+.db-delai-buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.9rem}
+.db-delai-bucket{border:1px solid var(--border);border-radius:10px;padding:.9rem;background:var(--bg)}
+.db-delai-bucket .bd-name{font-size:.78rem;font-weight:700;color:var(--ink)}
+.db-delai-bucket .bd-range{font-size:.68rem;color:var(--text-muted);margin-bottom:.5rem}
+.db-delai-bucket .bd-val{font-size:1.4rem;font-weight:800;color:var(--primary);font-family:'Playfair Display',serif;line-height:1}
+.db-delai-bucket .bd-pct{font-size:.74rem;color:var(--text-muted)}
+.db-delai-bucket .bd-track{height:6px;background:var(--border);border-radius:3px;margin-top:.55rem;overflow:hidden}
+.db-delai-bucket .bd-fill{display:block;height:100%;border-radius:3px}
+.db-attention{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.55rem}
+.db-attention li{display:flex;gap:.6rem;align-items:flex-start;font-size:.84rem;color:var(--text);padding:.6rem .8rem;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;background:var(--bg)}
+.db-attention li .a-ico{color:var(--accent);flex-shrink:0;margin-top:2px}
+.db-synth{font-size:.9rem;line-height:1.75;color:var(--text);background:var(--accent-soft);border:1px solid rgba(29,111,165,.2);border-radius:10px;padding:1.1rem 1.25rem}
+.db-rep-legend{display:flex;flex-direction:column;gap:.35rem;margin-top:.85rem;font-size:.78rem}
+.db-rep-legend .rl-row{display:flex;align-items:center;gap:.5rem;min-width:0}
+.db-rep-legend .rl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.db-rep-legend .rl-val{margin-left:auto;font-weight:700;white-space:nowrap}
+.db-detail-table{width:100%;font-size:.82rem}
+.db-detail-table th{text-align:left;background:var(--primary);color:#fff;padding:.55rem .6rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
+.db-detail-table td{padding:.5rem .6rem;border-bottom:1px solid var(--border)}
+.db-detail-table td.num{text-align:right;font-weight:700;font-family:'Inter',monospace}
+.db-detail-hint{font-size:.78rem;color:var(--text-muted);margin-bottom:.75rem}
+
 /* Import Section */
 .import-zone{border:2px dashed var(--border);border-radius:12px;padding:3rem 2rem;text-align:center;transition:all .3s ease;cursor:pointer;position:relative}
 .import-zone:hover,.import-zone.dragover{border-color:var(--accent);background:var(--accent-soft)}
@@ -445,44 +499,173 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
       <!-- ============ Page : Tableau de bord ============ -->
       <div class="page" id="page-dashboard">
 
-        <!-- KPI Section -->
-        <div id="kpiSection">
-          <div class="kpi-band">
-            <div class="kpi-grid" id="kpiGrid"></div>
+        <!-- En-tête (Section A) -->
+        <div class="db-header no-print">
+          <div>
+            <h2 class="db-title">Tableau de bord</h2>
+            <p class="db-subtitle">Situation et évolution des courriers sortants</p>
+          </div>
+          <div class="db-period" id="dbPeriodLabel">Toute la période</div>
+        </div>
+
+        <!-- Filtres du tableau de bord (Section 5) -->
+        <div class="db-filters no-print">
+          <div class="db-filters-row">
+            <div class="db-field">
+              <label>Type de courrier</label>
+              <div class="db-seg" id="dbTypeSeg">
+                <button class="db-seg-btn active" data-type="all" onclick="setDbType('all',this)">Tous les courriers</button>
+                <button class="db-seg-btn" data-type="reponse" onclick="setDbType('reponse',this)">Courriers-réponses</button>
+                <button class="db-seg-btn" data-type="simple" onclick="setDbType('simple',this)">Autres courriers</button>
+              </div>
+            </div>
+            <div class="db-field">
+              <label for="dbSignataire">Signataire</label>
+              <select class="sb-input" id="dbSignataire" onchange="applyDbFilters()">
+                <option value="">Tous</option>
+              </select>
+            </div>
+            <div class="db-field">
+              <label for="dbDestinataire">Destinataire</label>
+              <select class="sb-input" id="dbDestinataire" onchange="applyDbFilters()">
+                <option value="">Tous</option>
+              </select>
+            </div>
+            <div class="db-field">
+              <label>&nbsp;</label>
+              <button class="f-action-btn f-reset" onclick="resetDbFilters()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Réinitialiser
+              </button>
+            </div>
+          </div>
+          <div class="db-field">
+            <label>Période analysée</label>
+            <div class="sb-periods" id="dbPeriodBar">
+              <button class="sb-period-btn active" data-period="all" onclick="setDbPeriod('all',this)">Toute la période</button>
+              <button class="sb-period-btn" data-period="today" onclick="setDbPeriod('today',this)">Aujourd'hui</button>
+              <button class="sb-period-btn" data-period="week" onclick="setDbPeriod('week',this)">Cette semaine</button>
+              <button class="sb-period-btn" data-period="month" onclick="setDbPeriod('month',this)">Ce mois</button>
+              <button class="sb-period-btn" data-period="quarter" onclick="setDbPeriod('quarter',this)">Trimestre</button>
+              <button class="sb-period-btn" data-period="semester" onclick="setDbPeriod('semester',this)">Semestre</button>
+              <button class="sb-period-btn" data-period="year" onclick="setDbPeriod('year',this)">Année</button>
+              <button class="sb-period-btn" data-period="custom" onclick="setDbPeriod('custom',this)">Personnalisée</button>
+            </div>
+            <div class="sb-custom-dates" id="dbCustomDates">
+              <div class="sb-dates-row">
+                <div>
+                  <div class="sb-date-label">Du</div>
+                  <input type="date" class="sb-input" id="dbDateStart" onchange="applyDbFilters()">
+                </div>
+                <div>
+                  <div class="sb-date-label">Au</div>
+                  <input type="date" class="sb-input" id="dbDateEnd" onchange="applyDbFilters()">
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Charts du tableau de bord -->
+        <!-- Indicateurs clés -->
+        <div id="dbKpiGrid" class="db-kpi-grid"></div>
+
+        <!-- Évolution du volume des courriers -->
+        <div class="chart-box db-chart">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Évolution des courriers sortants
+          </h3>
+          <div class="db-subnote" id="dbVolumeNote"></div>
+          <div class="chart-container" style="height:300px"><canvas id="dbChartVolume"></canvas></div>
+          <div class="db-empty" id="dbEmptyVolume" style="display:none">Aucune donnée disponible pour cette période.</div>
+        </div>
+
+        <!-- Évolution du délai + répartition par type -->
         <div class="charts-grid">
           <div class="chart-box">
             <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-              Répartition Initié / Réponse
-            </h3>
-            <div class="chart-container"><canvas id="chartType"></canvas></div>
-          </div>
-          <div class="chart-box">
-            <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              Évolution du volume de courriers
-            </h3>
-            <div class="chart-container"><canvas id="chartVolume"></canvas></div>
-          </div>
-          <div class="chart-box">
-            <h3>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Répartition par Statut
+              Évolution du délai de traitement
             </h3>
-            <div class="chart-container"><canvas id="chartStatut"></canvas></div>
+            <div class="db-subnote" id="dbDureeNote"></div>
+            <div class="chart-container"><canvas id="dbChartDuree"></canvas></div>
+            <div class="db-empty" id="dbEmptyDuree" style="display:none">Aucune donnée de délai renseignée pour cette période.</div>
           </div>
           <div class="chart-box">
             <h3>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              Répartition par Mode de Transmission
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+              Répartition des courriers
             </h3>
-            <div class="chart-container"><canvas id="chartMode"></canvas></div>
+            <div class="chart-container"><canvas id="dbChartRepartition"></canvas></div>
+            <div class="db-rep-legend" id="dbRepartitionLegend"></div>
+            <div class="db-empty" id="dbEmptyRepartition" style="display:none">Aucune donnée disponible pour cette période.</div>
           </div>
         </div>
+
+        <!-- Croisement volume + délai -->
+        <div class="chart-box db-chart">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+            Volume et délai moyen de traitement
+          </h3>
+          <div class="db-subnote">Évolution conjointe du nombre de courriers et du délai moyen de traitement.</div>
+          <div class="chart-container" style="height:300px"><canvas id="dbChartMix"></canvas></div>
+          <div class="db-empty" id="dbEmptyMix" style="display:none">Aucune donnée disponible pour cette période.</div>
+        </div>
+
+        <!-- Signataires + destinataires -->
+        <div class="charts-grid">
+          <div class="chart-box">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Répartition des courriers par signataire
+            </h3>
+            <div class="chart-container"><canvas id="dbChartSignataire"></canvas></div>
+            <div class="db-empty" id="dbEmptySignataire" style="display:none">Aucun signataire renseigné pour cette période.</div>
+          </div>
+          <div class="chart-box">
+            <h3>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Principaux destinataires
+            </h3>
+            <div class="db-subnote">Top 10 par volume de courriers</div>
+            <div class="chart-container"><canvas id="dbChartDestinataire"></canvas></div>
+            <button class="db-link-btn" id="dbDestDetailBtn" onclick="openDestDetail()">Voir le détail</button>
+            <div class="db-empty" id="dbEmptyDestinataire" style="display:none">Aucun destinataire renseigné pour cette période.</div>
+          </div>
+        </div>
+
+        <!-- Analyse des délais -->
+        <div class="db-section">
+          <h3 class="db-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Analyse des délais de traitement
+          </h3>
+          <div class="db-subnote" id="dbDelaiAnalyseNote"></div>
+          <div class="db-delai-buckets" id="dbDelaiBuckets"></div>
+          <div class="db-empty" id="dbEmptyDelais" style="display:none">Aucune donnée de délai renseignée pour cette période.</div>
+        </div>
+
+        <!-- Points d'attention -->
+        <div class="db-section">
+          <h3 class="db-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Points d'attention
+          </h3>
+          <ul class="db-attention" id="dbAttention"></ul>
+          <div class="db-empty" id="dbEmptyAttention" style="display:none">Aucun point d'attention particulier détecté sur cette période.</div>
+        </div>
+
+        <!-- Synthèse -->
+        <div class="db-section">
+          <h3 class="db-section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Synthèse de la situation
+          </h3>
+          <p class="db-synth" id="dbSynthesis"></p>
+          <div class="db-empty" id="dbEmptySynth" style="display:none">Aucune donnée disponible pour cette période.</div>
+        </div>
+
       </div>
 
       <!-- ============ Page : Tableau détaillé ============ -->
@@ -565,6 +748,34 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 
     </main>
   </div>
+
+<!-- Détail destinataires -->
+<div class="modal-overlay" id="dbDetailModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h2 id="dbDetailTitle">Détail des destinataires</h2>
+      <button class="modal-close" onclick="closeDbDetail()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="db-detail-hint" id="dbDetailHint"></p>
+      <div class="table-wrapper" style="max-height:55vh;overflow-y:auto">
+        <table class="db-detail-table">
+          <thead>
+            <tr>
+              <th style="text-align:center;width:60px">Rang</th>
+              <th>Destinataire</th>
+              <th style="text-align:right">Courriers</th>
+              <th style="text-align:right">Part</th>
+            </tr>
+          </thead>
+          <tbody id="dbDetailBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Preview Modal -->
 <div class="modal-overlay" id="previewModal">
@@ -954,6 +1165,7 @@ async function loadState() {
   });
   if (currentPeriod === 'custom') document.getElementById('sbCustomDates').classList.add('show');
   populateFilterSelects();
+  populateDbSelects();
   if (state.filterSignataire) document.getElementById('filterSignataire').value = state.filterSignataire;
   if (state.filterStatut) document.getElementById('filterStatut').value = state.filterStatut;
   document.getElementById('emptyState').style.display = 'none';
@@ -984,6 +1196,7 @@ function resetToImport() {
       b.classList.toggle('active', b.dataset.period === 'all');
     });
     populateFilterSelects();
+    populateDbSelects();
     updateFilterCount();
     switchPage('import');
     syncState();
@@ -1104,6 +1317,7 @@ function handleFile(e) {
         `${totalCount} courrier(s) au total (${addedCount} ajouté(s) à cet import)`);
       document.body.classList.remove('no-data');
       populateFilterSelects();
+      populateDbSelects();
       filteredData = [...rawData];
       updateAll();
       switchPage('dashboard');
@@ -1373,28 +1587,302 @@ function resetFilters() {
 function updateAll() {
   const hp = document.getElementById('headerPeriod');
   if (hp) hp.textContent = getPeriodLabel();
-  updateKPI();
   updateTable();
-  updateDashboardCharts();
-  document.getElementById('kpiSection').style.display = '';
+  if (currentPage === 'dashboard' && rawData.length) requestAnimationFrame(renderDashboard);
 }
 
-function updateKPI() {
-  const total = filteredData.length;
-  const simples = filteredData.filter(r => !r.isResponse).length;
-  const reponses = filteredData.filter(r => r.isResponse).length;
-  const signataires = new Set(filteredData.map(r => r.signataire).filter(Boolean)).size;
+// ============================================================
+// TABLEAU DE BORD — Couche de calcul statistique
+// ============================================================
+const MONTHS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 
-  const kpis = [
-    {label: 'Total Courriers', value: total, cls: 'gold'},
-    {label: 'Courriers Initiés', value: simples, cls: ''},
-    {label: 'Courriers Réponses', value: reponses, cls: ''},
-    {label: 'Signataires', value: signataires, cls: ''}
+// Seuils de catégorisation des délais (modifiable ici).
+const DELAI_BUCKETS = [
+  { id: 'tresRapide', label: 'Très rapide', min: 0,  max: 2,  range: '0 à 2 jours' },
+  { id: 'rapide',     label: 'Rapide',      min: 3,  max: 7,  range: '3 à 7 jours' },
+  { id: 'normal',     label: 'Normal',      min: 8,  max: 15, range: '8 à 15 jours' },
+  { id: 'long',       label: 'Long',        min: 16, max: 30, range: '16 à 30 jours' },
+  { id: 'tresLong',   label: 'Très long',   min: 31, max: Infinity, range: 'Plus de 30 jours' }
+];
+
+// Seuils des points d'attention (modifiable ici).
+const ATTENTION_CONFIG = {
+  volumeVariationPct: 20,
+  dureeVariationPct: 15,
+  dureeQuinzeJoursPct: 20,
+  dureeTrenteJoursPct: 5,
+  concentrationDestinatairePct: 30,
+  dureeEchantillonMin: 3
+};
+
+const DB_PALETTE = ['#1D6FA5','#4A93C4','#1B7A4D','#B8860B','#B3261E','#6B5B95','#334155','#8A9BAE'];
+const DB_DUREE_COLORS = { tresRapide:'var(--success)', rapide:'var(--accent)', normal:'var(--gold)', long:'var(--warning)', tresLong:'var(--danger)' };
+
+// État des filtres propres au tableau de bord (indépendant des filtres du tableau).
+const dbState = { period: 'all', type: 'all', signataire: '', destinataire: '', customStart: '', customEnd: '' };
+
+function escHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+const fmtInt = n => (n === null || n === undefined || isNaN(n)) ? '0' : Number(n).toLocaleString('fr-FR');
+const fmt1 = n => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toFixed(1).replace('.', ',');
+const fmtJours = v => (v === null || v === undefined || isNaN(v)) ? '—' : `${Number(v).toFixed(1).replace('.', ',')} ${Number(v) === 1 ? 'jour' : 'jours'}`;
+const fmtPct = (n, base) => (base > 0 ? (Number(n) / base) * 100 : 0).toFixed(1).replace('.', ',') + ' %';
+
+// Plage de dates correspondant à la période sélectionnée (null = toutes les données).
+function dbPeriodRange(mode, ref) {
+  const now = ref || new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  let start = null;
+  let end = new Date(y, m, d, 23, 59, 59, 999);
+  switch (mode) {
+    case 'all': return null;
+    case 'today': start = new Date(y, m, d); break;
+    case 'week': { const day = now.getDay() || 7; start = new Date(y, m, d - day + 1); break; }
+    case 'month': start = new Date(y, m, 1); break;
+    case 'quarter': start = new Date(y, Math.floor(m / 3) * 3, 1); break;
+    case 'semester': start = new Date(y, m < 6 ? 0 : 6, 1); break;
+    case 'year': start = new Date(y, 0, 1); break;
+    case 'custom': {
+      const s = dbState.customStart, e = dbState.customEnd;
+      if (!s || !e) return null;
+      const e2 = new Date(e); e2.setHours(23, 59, 59, 999);
+      return { start: new Date(s), end: e2 };
+    }
+    default: return null;
+  }
+  return { start, end };
+}
+
+// Période précédente équivalente : même durée, découpée sur le calendrier (p. ex. 1er au 11 sept → 1er au 11 août).
+function dbPrevRange(range, mode) {
+  if (!range || mode === 'all') return null;
+  const dur = range.end.getTime() - range.start.getTime() + 1;
+  let prevStart;
+  switch (mode) {
+    case 'year': { const p = new Date(range.start); p.setFullYear(p.getFullYear() - 1); prevStart = p; break; }
+    case 'semester': { const p = new Date(range.start); p.setMonth(p.getMonth() - 6); prevStart = p; break; }
+    case 'quarter': { const p = new Date(range.start); p.setMonth(p.getMonth() - 3); prevStart = p; break; }
+    case 'month': { const p = new Date(range.start); p.setMonth(p.getMonth() - 1); prevStart = p; break; }
+    default: prevStart = new Date(range.start.getTime() - dur); break;
+  }
+  return { start: prevStart, end: new Date(prevStart.getTime() + dur - 1) };
+}
+
+function dbDataRange() {
+  let minT = null, maxT = null;
+  for (const r of rawData) {
+    if (!r.date) continue;
+    const t = r.date.getTime();
+    if (minT === null || t < minT) minT = t;
+    if (maxT === null || t > maxT) maxT = t;
+  }
+  if (minT === null) return null;
+  return { start: new Date(minT), end: new Date(maxT) };
+}
+
+function dbLongDate(d) {
+  const day = d.getDate() === 1 ? '1er' : String(d.getDate());
+  return `${day} ${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function dbRangeLongLabel(range) {
+  if (!range) return 'Ensemble des données';
+  const same = range.start.getFullYear() === range.end.getFullYear()
+    && range.start.getMonth() === range.end.getMonth()
+    && range.start.getDate() === range.end.getDate();
+  return same ? `Le ${dbLongDate(range.start)}` : `Du ${dbLongDate(range.start)} au ${dbLongDate(range.end)}`;
+}
+
+// Extraction des courriers selon les filtres du tableau de bord.
+function dbRows(range) {
+  const out = [];
+  const { type, signataire, destinataire } = dbState;
+  for (const r of rawData) {
+    if (type === 'reponse' && !r.isResponse) continue;
+    if (type === 'simple' && r.isResponse) continue;
+    if (signataire && (r.signataire || 'Non renseigné') !== signataire) continue;
+    if (destinataire && (r.destinataire || 'Non renseigné') !== destinataire) continue;
+    if (range && r.date) {
+      const t = r.date.getTime();
+      if (t < range.start.getTime() || t > range.end.getTime()) continue;
+    }
+    out.push(r);
+  }
+  return out;
+}
+
+// Agrégation des statistiques (mono-parcours, adapté à de grands volumes).
+function dbComputeStats(rows) {
+  const st = { total: rows.length, reponses: 0, autres: 0, durees: [], dureeSum: 0, dureeCount: 0, long15: 0, long30: 0, signataires: {}, destinataires: {}, dureeMean: null, dureeMedian: null, bucketCounts: [] };
+  for (const r of rows) {
+    r.isResponse ? st.reponses++ : st.autres++;
+    const sg = (r.signataire || '').trim() || 'Non renseigné';
+    st.signataires[sg] = (st.signataires[sg] || 0) + 1;
+    const dt = (r.destinataire || '').trim() || 'Non renseigné';
+    st.destinataires[dt] = (st.destinataires[dt] || 0) + 1;
+    if (r.duree !== null && r.duree !== undefined && isFinite(Number(r.duree))) {
+      const v = Number(r.duree);
+      st.dureeSum += v;
+      st.durees.push(v);
+      st.dureeCount++;
+      if (v > 15) st.long15++;
+      if (v > 30) st.long30++;
+    }
+  }
+  st.dureeMean = st.dureeCount ? st.dureeSum / st.dureeCount : null;
+  if (st.dureeCount) {
+    const sorted = [...st.durees].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    st.dureeMedian = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+  st.bucketCounts = DELAI_BUCKETS.map(b => ({ ...b, count: 0 }));
+  for (const v of st.durees) {
+    const b = DELAI_BUCKETS.find(x => v >= x.min && v <= x.max);
+    if (b) st.bucketCounts.find(x => x.id === b.id).count++;
+  }
+  st.signataireSorted = Object.entries(st.signataires).sort((a, b) => b[1] - a[1]);
+  st.destinataireSorted = Object.entries(st.destinataires).sort((a, b) => b[1] - a[1]);
+  return st;
+}
+
+// Série temporelle (par jour / semaine / mois selon l'étendue).
+function dbTimeSeries(rows, periodRange) {
+  let minT = null, maxT = null;
+  for (const r of rows) {
+    if (!r.date) continue;
+    const t = r.date.getTime();
+    if (minT === null || t < minT) minT = t;
+    if (maxT === null || t > maxT) maxT = t;
+  }
+  if (minT === null) return { series: [], granularity: 'day' };
+  let s0 = new Date(minT), s1 = new Date(maxT);
+  if (periodRange) {
+    s0 = new Date(Math.max(periodRange.start.getTime(), s0.getTime()));
+    s1 = new Date(Math.min(periodRange.end.getTime(), s1.getTime()));
+  }
+  if (s1 < s0) return { series: [], granularity: 'day' };
+  const spanDays = Math.round((s1 - s0) / 86400000) + 1;
+  let g = 'day';
+  if (spanDays > 365) g = 'month';
+  else if (spanDays > 75) g = 'week';
+
+  const buckets = [];
+  const monthN = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const weekN = d => { const x = new Date(d); const day = x.getDay() || 7; x.setDate(x.getDate() - day + 1); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  const dayN = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  let key;
+  if (g === 'month') {
+    let cur = new Date(s0.getFullYear(), s0.getMonth(), 1);
+    const last = new Date(s1.getFullYear(), s1.getMonth(), 1);
+    while (cur <= last) {
+      const bStart = new Date(cur.getFullYear(), cur.getMonth(), 1);
+      const bEnd = new Date(cur.getFullYear(), cur.getMonth() + 1, 0, 23, 59, 59, 999);
+      buckets.push({ key: monthN(bStart), label: `${MONTHS_FR[bStart.getMonth()]} ${bStart.getFullYear()}`, start: bStart, end: bEnd });
+      cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    }
+    key = k => monthN(new Date(k));
+  } else if (g === 'week') {
+    let cur = new Date(s0);
+    const day = cur.getDay() || 7;
+    cur.setDate(cur.getDate() - day + 1);
+    while (cur <= s1) {
+      const bStart = new Date(cur);
+      const bEnd = new Date(cur); bEnd.setDate(bEnd.getDate() + 6); bEnd.setHours(23, 59, 59, 999);
+      buckets.push({ key: weekN(bStart), label: `${String(bStart.getDate()).padStart(2, '0')}/${String(bStart.getMonth() + 1).padStart(2, '0')} → ${String(bEnd.getDate()).padStart(2, '0')}/${String(bEnd.getMonth() + 1).padStart(2, '0')}`, start: bStart, end: bEnd });
+      cur.setDate(cur.getDate() + 7);
+    }
+    key = k => weekN(new Date(k));
+  } else {
+    let cur = new Date(s0);
+    while (cur <= s1) {
+      const bStart = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate());
+      const bEnd = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 23, 59, 59, 999);
+      buckets.push({ key: dayN(bStart), label: `${String(bStart.getDate()).padStart(2, '0')}/${String(bStart.getMonth() + 1).padStart(2, '0')}`, start: bStart, end: bEnd });
+      cur.setDate(cur.getDate() + 1);
+    }
+    key = k => dayN(new Date(k));
+  }
+
+  const index = new Map(buckets.map((b, i) => [b.key, i]));
+  const counts = new Array(buckets.length).fill(0);
+  const dsums = new Array(buckets.length).fill(0);
+  const dcnt = new Array(buckets.length).fill(0);
+  for (const r of rows) {
+    if (!r.date) continue;
+    const t = r.date.getTime();
+    if (t < s0.getTime() || t > s1.getTime()) continue;
+    const i = index.get(key(r.date.getTime()));
+    if (i === undefined) continue;
+    counts[i]++;
+    if (r.duree !== null && r.duree !== undefined && isFinite(Number(r.duree))) { const v = Number(r.duree); dsums[i] += v; dcnt[i]++; }
+  }
+  const series = buckets.map((b, i) => ({ label: b.label, count: counts[i], dureeMean: dcnt[i] ? +(dsums[i] / dcnt[i]).toFixed(2) : null }));
+  return { series, granularity: g };
+}
+
+// Variation relative entre deux valeurs (null si non comparable).
+function dbVariationPct(cur, prev) {
+  if (cur === null || cur === undefined || prev === null || prev === undefined || prev === 0) return null;
+  return (Number(cur) - Number(prev)) / Math.abs(Number(prev)) * 100;
+}
+
+// Indicateur de variation pour les cartes KPI.
+function dbDelta(cur, prev) {
+  const p = dbVariationPct(cur, prev);
+  if (p === null) return null;
+  if (Math.abs(p) < 0.05) return { label: 'stable', cls: 'flat' };
+  const pc = `${Math.abs(p).toFixed(1).replace('.', ',')} %`;
+  return p > 0 ? { label: `en hausse de ${pc}`, cls: 'up' } : { label: `en baisse de ${pc}`, cls: 'down' };
+}
+
+function renderDbHeader(dataRange) {
+  const el = document.getElementById('dbPeriodLabel');
+  if (!el) return;
+  el.textContent = dataRange ? dbRangeLongLabel(dataRange) : 'Aucune donnée datée';
+}
+
+function renderDbKpis(stats, prevStats) {
+  const total = stats.total;
+  const delta = v => {
+    const prev = v === 'total' ? prevStats && prevStats.total
+      : v === 'reponses' ? prevStats && prevStats.reponses
+      : v === 'autres' ? prevStats && prevStats.autres
+      : v === 'duree' ? prevStats && prevStats.dureeMean
+      : v === 'long' ? prevStats && prevStats.long15 : undefined;
+    const cur = v === 'total' ? stats.total
+      : v === 'reponses' ? stats.reponses
+      : v === 'autres' ? stats.autres
+      : v === 'duree' ? stats.dureeMean
+      : stats.long15;
+    return dbDelta(cur, prev);
+  };
+  const ttl = 'Par rapport à la période précédente équivalente';
+  const arrowSvg = cls => cls === 'up'
+    ? '<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>'
+    : '<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+
+  const cards = [
+    { label: 'Courriers sortants', value: fmtInt(stats.total), d: delta('total'), sub: stats.total ? 'sur la période analysée' : '', cls: 'gold-border' },
+    { label: 'Courriers-réponses', value: fmtInt(stats.reponses), d: delta('reponses'), sub: total ? `soit ${fmtPct(stats.reponses, total)} de l'activité` : '' },
+    { label: 'Autres courriers', value: fmtInt(stats.autres), d: delta('autres'), sub: total ? `soit ${fmtPct(stats.autres, total)} de l'activité` : '' },
+    { label: 'Délai moyen', value: stats.dureeCount ? fmt1(stats.dureeMean) + ' j' : '—', d: delta('duree'), sub: stats.dureeCount ? `calculé sur ${fmtInt(stats.dureeCount)} courrier(s) renseigné(s)` : 'aucun délai renseigné' },
+    { label: 'Délai médian', value: stats.dureeCount ? fmt1(stats.dureeMedian) + ' j' : '—', d: null, sub: stats.dureeCount ? `médiane des ${fmtInt(stats.dureeCount)} délai(s)` : '' },
+    { label: 'Traitements longs', value: fmtInt(stats.long15), d: delta('long'), sub: `seuil de 15 jours — dont ${fmtInt(stats.long30)} dépassent 30 jours` }
   ];
 
-  document.getElementById('kpiGrid').innerHTML = kpis.map(k =>
-    `<div class="kpi-card ${k.cls}"><div class="kpi-value">${k.value}</div><div class="kpi-label">${k.label}</div></div>`
-  ).join('');
+  document.getElementById('dbKpiGrid').innerHTML = cards.map(k => {
+    const pill = k.d && k.d.label
+      ? `<div class="db-kpi-delta ${k.d.cls}" title="${ttl}">${arrowSvg(k.d.cls)}${k.d.label}</div>`
+      : '';
+    return `<div class="db-kpi ${k.cls || ''}">
+      <div class="db-kpi-label">${k.label}</div>
+      <div class="db-kpi-value">${k.value}</div>
+      ${pill}
+      ${k.sub ? `<div class="db-kpi-sub">${k.sub}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
 function updateTable() {
@@ -1445,99 +1933,469 @@ document.getElementById('tableBody').addEventListener('change', function(e) {
   syncState();
 });
 
-const CHART_PALETTE = ['#0B1220','#1D6FA5','#4A93C4','#1B7A4D','#B3261E','#B8860B'];
+function dbChartDestroy(key) {
+  if (dashboardCharts[key]) { dashboardCharts[key].destroy(); delete dashboardCharts[key]; }
+}
 
-function updateDashboardCharts() {
-  Object.values(dashboardCharts).forEach(c => c.destroy());
-  dashboardCharts = {};
+function dbShow(id, visible) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = visible ? '' : 'none';
+}
 
-  const total = filteredData.length;
-  if (!total) return;
+function dbRank(data, topN) {
+  const entries = data.slice(0, topN);
+  const counts = entries.map(e => e[1]);
+  const labels = entries.map(e => e[0]);
+  if (data.length > topN) {
+    labels.push('Autres');
+    counts.push(data.slice(topN).reduce((s, e) => s + e[1], 0));
+  }
+  return { labels, counts, entries };
+}
 
-  const simples = filteredData.filter(r => !r.isResponse).length;
-  const reponses = total - simples;
+function dbTooltip(titleCb, labelCb) {
+  return { callbacks: { title: titleCb, label: labelCb } };
+}
 
-  dashboardCharts.type = new Chart(document.getElementById('chartType'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Initiés', 'Réponses'],
-      datasets: [{data: [simples, reponses], backgroundColor: ['#1D6FA5', '#B8860B']}]
-    },
-    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11,family:'Inter'}}}}}
+function renderDbVolumeChart(series) {
+  const cv = document.getElementById('dbChartVolume');
+  const ctr = cv.parentElement;
+  dbChartDestroy('volume');
+  if (!series.length) { ctr.style.display = 'none'; dbShow('dbEmptyVolume', true); return; }
+  ctr.style.display = ''; dbShow('dbEmptyVolume', false);
+  const counts = series.map(s => s.count);
+  const trend = dbTrend(counts);
+  const datasets = [{
+    label: 'Courriers sortants',
+    data: counts,
+    borderColor: '#1D6FA5',
+    backgroundColor: 'rgba(29,111,165,.14)',
+    fill: true,
+    tension: .35,
+    pointBackgroundColor: '#0B1220',
+    pointRadius: 3
+  }];
+  if (trend) {
+    datasets.push({
+      label: 'Tendance',
+      data: trend,
+      borderColor: '#B8860B',
+      borderDash: [6, 4],
+      borderWidth: 2,
+      fill: false,
+      pointRadius: 0,
+      tension: 0
+    });
+  }
+  dashboardCharts.volume = new Chart(cv, {
+    type: 'line',
+    data: { labels: series.map(s => s.label), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 10.5, family: 'Inter' } } }, tooltip: dbTooltip(c => c[0].label, ctx => `Courriers : ${fmtInt(ctx.parsed.y)}`) },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 0, autoSkip: true, maxTicksLimit: 14, font: { size: 10.5 } } },
+        y: { beginAtZero: true, ticks: { precision: 0, callback: v => fmtInt(v) } }
+      }
+    }
   });
+}
 
-  const withDate = filteredData.filter(r => r.date);
-  const dates = withDate.map(r => r.date.getTime());
-  const spanDays = dates.length ? Math.max((Math.max(...dates) - Math.min(...dates)) / 86400000, 1) : 0;
-  let grouping = 'day';
-  if (spanDays > 365) grouping = 'month';
-  else if (spanDays > 60) grouping = 'week';
+function dbTrend(counts) {
+  const n = counts.length;
+  if (n < 3) return null;
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  counts.forEach((y, i) => { sumX += i; sumY += y; sumXY += i * y; sumX2 += i * i; });
+  const denom = n * sumX2 - sumX * sumX;
+  if (!denom) return null;
+  const slope = (n * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / n;
+  return counts.map((_, i) => +(intercept + slope * i).toFixed(2));
+}
 
-  const bucket = {};
-  const fmt = {
-    day: d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`,
-    week: d => {
-      const iso = new Date(d);
-      const day = iso.getDay() || 7;
-      iso.setDate(iso.getDate() - day + 1);
-      return `${String(iso.getDate()).padStart(2,'0')}/${String(iso.getMonth()+1).padStart(2,'0')}/${iso.getFullYear()}`;
-    },
-    month: d => `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
-  };
-  withDate.forEach(r => {
-    const key = fmt[grouping](r.date);
-    bucket[key] = (bucket[key]||0)+1;
-  });
-  const keys = Object.keys(bucket).sort((a,b) => {
-    const ka = a.split('/').reverse().join('-'), kb = b.split('/').reverse().join('-');
-    return ka < kb ? -1 : ka > kb ? 1 : 0;
-  });
-
-  dashboardCharts.volume = new Chart(document.getElementById('chartVolume'), {
+function renderDbDureeChart(series) {
+  const cv = document.getElementById('dbChartDuree');
+  const ctr = cv.parentElement;
+  const note = document.getElementById('dbDureeNote');
+  dbChartDestroy('duree');
+  const known = series.filter(s => s.dureeMean !== null && isFinite(s.dureeMean));
+  if (!known.length) { ctr.style.display = 'none'; if (note) note.textContent = ''; dbShow('dbEmptyDuree', true); return; }
+  ctr.style.display = ''; dbShow('dbEmptyDuree', false);
+  if (note) note.textContent = `Délai moyen calculé sur ${fmtInt(known.reduce((s, b) => s + Math.max(b.count, 0), 0))} courrier(s)${known.length < series.length ? ' renseigné(s) sur les périodes présentées' : ''}.`;
+  dashboardCharts.duree = new Chart(cv, {
     type: 'line',
     data: {
-      labels: keys,
+      labels: series.map(s => s.label),
       datasets: [{
-        label: 'Courriers',
-        data: keys.map(k => bucket[k]),
-        borderColor: '#1D6FA5',
-        backgroundColor: 'rgba(29,111,165,.12)',
+        label: 'Délai moyen (jours)',
+        data: series.map(s => s.dureeMean),
+        borderColor: '#1B7A4D',
+        backgroundColor: 'rgba(27,122,77,.12)',
         fill: true,
         tension: .35,
-        pointBackgroundColor: '#0B1220',
+        pointBackgroundColor: '#1B7A4D',
         pointRadius: 3
       }]
     },
     options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{precision:0}}}
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 10.5, family: 'Inter' } } }, tooltip: dbTooltip(c => c[0].label, ctx => ctx.parsed.y === null ? 'Délai non renseigné' : `Délai moyen : ${fmt1(ctx.parsed.y)} jours`) },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 0, autoSkip: true, maxTicksLimit: 14, font: { size: 10.5 } } },
+        y: { beginAtZero: true, ticks: { callback: v => fmt1(v) } }
+      }
     }
   });
+}
 
-  const statutCount = {};
-  filteredData.forEach(r => { const s = String(r.statut||'').trim(); statutCount[s || 'Non renseigné'] = (statutCount[s || 'Non renseigné']||0)+1; });
-  const stLabels = Object.keys(statutCount).sort((a,b)=>statutCount[b]-statutCount[a]);
-  dashboardCharts.statut = new Chart(document.getElementById('chartStatut'), {
-    type: 'pie',
+function renderDbMixChart(series) {
+  const cv = document.getElementById('dbChartMix');
+  const ctr = cv.parentElement;
+  dbChartDestroy('mix');
+  if (!series.length) { ctr.style.display = 'none'; dbShow('dbEmptyMix', true); return; }
+  ctr.style.display = ''; dbShow('dbEmptyMix', false);
+  const labels = series.map(s => s.label);
+  const counts = series.map(s => s.count);
+  const delais = series.map(s => s.dureeMean);
+  dashboardCharts.mix = new Chart(cv, {
+    type: 'bar',
     data: {
-      labels: stLabels,
-      datasets: [{data: stLabels.map(l=>statutCount[l]), backgroundColor: CHART_PALETTE.slice(0, stLabels.length)}]
+      labels,
+      datasets: [
+        { type: 'bar', label: 'Courriers sortants', data: counts, backgroundColor: 'rgba(29,111,165,.75)', borderRadius: 3 },
+        { type: 'line', label: 'Délai moyen (jours)', data: delais, borderColor: '#B3261E', borderWidth: 2.5, pointBackgroundColor: '#B3261E', pointRadius: 3, tension: .3, yAxisID: 'y2' }
+      ]
     },
-    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right',labels:{font:{size:10,family:'Inter'}}}}}
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { font: { size: 10.5, family: 'Inter' } } }, tooltip: dbTooltip(c => c[0].label, ctx => {
+        const ds = ctx.dataset.label;
+        return ds === 'Délai moyen (jours)'
+          ? (ctx.parsed.y === null || ctx.parsed.y === undefined ? 'Délai non renseigné' : `Délai moyen : ${fmt1(ctx.parsed.y)} jours`)
+          : `Courriers : ${fmtInt(ctx.parsed.y)}`;
+      }) },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 0, autoSkip: true, maxTicksLimit: 14, font: { size: 10.5 } } },
+        y: { beginAtZero: true, position: 'left', ticks: { precision: 0, callback: v => fmtInt(v) } },
+        y2: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v => fmt1(v) } }
+      }
+    }
   });
+}
 
-  const modeCount = {};
-  filteredData.forEach(r => { const m = getTransmissionMode(r); modeCount[m] = (modeCount[m]||0)+1; });
-  const mLabels = Object.keys(modeCount).sort((a,b)=>modeCount[b]-modeCount[a]);
-  dashboardCharts.mode = new Chart(document.getElementById('chartMode'), {
-    type: 'pie',
+function renderDbRepartitionChart(stats) {
+  const cv = document.getElementById('dbChartRepartition');
+  const ctr = cv.parentElement;
+  dbChartDestroy('repartition');
+  if (!stats.total) { ctr.style.display = 'none'; document.getElementById('dbRepartitionLegend').innerHTML = ''; dbShow('dbEmptyRepartition', true); return; }
+  ctr.style.display = ''; dbShow('dbEmptyRepartition', false);
+  dashboardCharts.repartition = new Chart(cv, {
+    type: 'doughnut',
     data: {
-      labels: mLabels,
-      datasets: [{data: mLabels.map(l=>modeCount[l]), backgroundColor: CHART_PALETTE}]
+      labels: ['Courriers-réponses', 'Autres courriers'],
+      datasets: [{ data: [stats.reponses, stats.autres], backgroundColor: ['#1D6FA5', '#B8860B'], borderWidth: 2, borderColor: '#fff' }]
     },
-    options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right',labels:{font:{size:10,family:'Inter'}}}}}
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: dbTooltip(() => '', ctx => {
+          const names = ['Courriers-réponses', 'Autres courriers'];
+          return `${names[ctx.dataIndex]} : ${fmtInt(ctx.parsed)} (${fmtPct(ctx.parsed, stats.total)})`;
+        })
+      }
+    }
   });
+  document.getElementById('dbRepartitionLegend').innerHTML = `
+    <div class="rl-row"><span class="rl-dot" style="background:#1D6FA5"></span>Courriers-réponses<span class="rl-val">${fmtInt(stats.reponses)} · ${fmtPct(stats.reponses, stats.total)}</span></div>
+    <div class="rl-row"><span class="rl-dot" style="background:#B8860B"></span>Autres courriers<span class="rl-val">${fmtInt(stats.autres)} · ${fmtPct(stats.autres, stats.total)}</span></div>
+    <div class="rl-row" style="border-top:1px solid var(--border);padding-top:.4rem"><span class="rl-dot" style="background:#0B1220"></span>Total<span class="rl-val">${fmtInt(stats.total)}</span></div>`;
+}
+
+function renderDbSignataireChart(stats) {
+  const cv = document.getElementById('dbChartSignataire');
+  const ctr = cv.parentElement;
+  dbChartDestroy('signataire');
+  const known = stats.signataireSorted.filter(([k]) => k !== 'Non renseigné');
+  if (!known.length) { ctr.style.display = 'none'; dbShow('dbEmptySignataire', true); return; }
+  ctr.style.display = ''; dbShow('dbEmptySignataire', false);
+  const { labels, counts } = dbRank(stats.signataireSorted, 8);
+  const total = stats.total;
+  dashboardCharts.signataire = new Chart(cv, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Courriers', data: counts, backgroundColor: '#4A93C4', borderRadius: 3 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: dbTooltip(c => c[0].label, ctx => `Courriers : ${fmtInt(ctx.parsed.x)} (${fmtPct(ctx.parsed.x, total)})`) },
+      scales: { x: { beginAtZero: true, ticks: { precision: 0, callback: v => fmtInt(v) } }, y: { ticks: { font: { size: 10.5 } } } }
+    }
+  });
+}
+
+function renderDbDestinataireChart(stats) {
+  const cv = document.getElementById('dbChartDestinataire');
+  const ctr = cv.parentElement;
+  dbChartDestroy('destinataire');
+  const known = stats.destinataireSorted.filter(([k]) => k !== 'Non renseigné');
+  if (!known.length) { ctr.style.display = 'none'; document.getElementById('dbDestDetailBtn').style.display = 'none'; dbShow('dbEmptyDestinataire', true); return; }
+  ctr.style.display = ''; dbShow('dbEmptyDestinataire', false);
+  document.getElementById('dbDestDetailBtn').style.display = '';
+  const top10 = known.slice(0, 10);
+  const labels = top10.map(e => e[0]);
+  const counts = top10.map(e => e[1]);
+  const total = stats.total;
+  dashboardCharts.destinataire = new Chart(cv, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Courriers', data: counts, backgroundColor: 'rgba(29,111,165,.72)', borderRadius: 3 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: dbTooltip(c => c[0].label, ctx => `Courriers : ${fmtInt(ctx.parsed.x)} (${fmtPct(ctx.parsed.x, total)})`) },
+      scales: { x: { beginAtZero: true, ticks: { precision: 0, callback: v => fmtInt(v) } }, y: { ticks: { font: { size: 10.5 } } } }
+    }
+  });
+  dbLastDestList = known;
+}
+
+function renderDbDelais(stats) {
+  const grid = document.getElementById('dbDelaiBuckets');
+  const note = document.getElementById('dbDelaiAnalyseNote');
+  const delaisMax = stats.bucketCounts.reduce((m, b) => Math.max(m, b.count), 0);
+  if (!stats.dureeCount) {
+    grid.innerHTML = '';
+    if (note) note.textContent = '';
+    dbShow('dbEmptyDelais', true);
+    return;
+  }
+  dbShow('dbEmptyDelais', false);
+  if (note) note.textContent = `Délai moyen : ${fmtJours(stats.dureeMean)} · médiane : ${fmtJours(stats.dureeMedian)} — sur ${fmtInt(stats.dureeCount)} courrier(s) renseigné(s)${stats.dureeCount < stats.total ? ` (${fmtInt(stats.total)} au total)` : ''}.`;
+  grid.innerHTML = stats.bucketCounts.map(b => {
+    const w = delaisMax > 0 ? Math.max((b.count / delaisMax) * 100, b.count ? 3 : 0) : 0;
+    return `<div class="db-delai-bucket">
+      <div class="bd-name">${b.label}</div>
+      <div class="bd-range">${b.range}</div>
+      <div class="bd-val">${fmtInt(b.count)}</div>
+      <div class="bd-pct">${fmtPct(b.count, stats.dureeCount)}</div>
+      <div class="bd-track"><span class="bd-fill" style="width:${w}%;background:${DB_DUREE_COLORS[b.id]}"></span></div>
+    </div>`;
+  }).join('');
+}
+
+const ATTENTION_ICONS = {
+  volume: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  delai: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  alerte: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  cible: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+};
+
+function renderDbAttention(stats, prevStats) {
+  const items = [];
+  const total = stats.total;
+  if (prevStats) {
+    const vp = dbVariationPct(stats.total, prevStats.total);
+    if (vp !== null && Math.abs(vp) >= ATTENTION_CONFIG.volumeVariationPct) {
+      items.push({ ico: 'volume', text: `Le volume de courriers sortants ${vp > 0 ? 'a augmenté' : 'a diminué'} de ${Math.abs(vp).toFixed(1).replace('.', ',')} % par rapport à la période précédente équivalente (${fmtInt(stats.total)} contre ${fmtInt(prevStats.total)}).` });
+    }
+    if (stats.dureeCount >= ATTENTION_CONFIG.dureeEchantillonMin && prevStats.dureeCount >= ATTENTION_CONFIG.dureeEchantillonMin) {
+      const dp = dbVariationPct(stats.dureeMean, prevStats.dureeMean);
+      if (dp !== null && Math.abs(dp) >= ATTENTION_CONFIG.dureeVariationPct) {
+        items.push({ ico: 'delai', text: `Le délai moyen de traitement ${dp > 0 ? 'a augmenté' : 'a diminué'} de ${Math.abs(dp).toFixed(1).replace('.', ',')} % (${fmtJours(stats.dureeMean)} contre ${fmtJours(prevStats.dureeMean)}) par rapport à la période précédente équivalente.` });
+      }
+    }
+  }
+  if (stats.dureeCount && total) {
+    if (stats.long30 / total * 100 >= ATTENTION_CONFIG.dureeTrenteJoursPct) {
+      items.push({ ico: 'alerte', text: `${fmtPct(stats.long30, total)} des courriers présentent un délai supérieur à 30 jours (${fmtInt(stats.long30)} courrier(s)).` });
+    }
+    if (stats.long15 / total * 100 >= ATTENTION_CONFIG.dureeQuinzeJoursPct) {
+      items.push({ ico: 'alerte', text: `${fmtPct(stats.long15, total)} des courriers présentent un délai supérieur à 15 jours (${fmtInt(stats.long15)} courrier(s)).` });
+    }
+  }
+  if (stats.destinataireSorted.length > 1 && total) {
+    const [top, topCount] = stats.destinataireSorted[0];
+    if (topCount / total * 100 >= ATTENTION_CONFIG.concentrationDestinatairePct) {
+      items.push({ ico: 'cible', text: `Le destinataire « ${top} » concentre ${fmtPct(topCount, total)} des courriers (${fmtInt(topCount)} courrier(s)).` });
+    }
+  }
+  const list = document.getElementById('dbAttention');
+  if (items.length) {
+    list.innerHTML = items.map(it => `<li><span class="a-ico">${ATTENTION_ICONS[it.ico] || ATTENTION_ICONS.alerte}</span><span>${escHtml(it.text)}</span></li>`).join('');
+    list.style.display = '';
+    dbShow('dbEmptyAttention', false);
+  } else {
+    list.innerHTML = '';
+    list.style.display = 'none';
+    dbShow('dbEmptyAttention', true);
+  }
+}
+
+function renderDbSynthesis(stats, prevStats) {
+  if (!stats.total) { dbShow('dbEmptySynth', true); return; }
+  dbShow('dbEmptySynth', false);
+  const parts = [];
+  parts.push(`Sur la période analysée, ${fmtInt(stats.total)} courrier(s) sortant(s) ont été enregistrés.`);
+  parts.push(`Les courriers-réponses représentent ${fmtPct(stats.reponses, stats.total)} de l'activité et les autres courriers ${fmtPct(stats.autres, stats.total)}.`);
+  if (stats.dureeCount) {
+    parts.push(`Le délai moyen de traitement est de ${fmtJours(stats.dureeMean)} (calculé sur ${fmtInt(stats.dureeCount)} courrier(s) renseigné(s)).`);
+  } else {
+    parts.push('Aucun délai de traitement n\'a pu être calculé pour cette période.');
+  }
+  if (prevStats) {
+    const vp = dbVariationPct(stats.total, prevStats.total);
+    const dp = prevStats.dureeCount ? dbVariationPct(stats.dureeMean, prevStats.dureeMean) : null;
+    let sent = 'Par rapport à la période précédente équivalente, ';
+    if (vp === null) {
+      sent += 'le volume est comparable à une période précédente sans courrier.';
+    } else {
+      sent += `le volume a ${vp < 0 ? 'diminué' : 'augmenté'} de ${Math.abs(vp).toFixed(1).replace('.', ',')} %`;
+      sent += dp === null ? '.' : ` tandis que le délai moyen a ${dp < 0 ? 'diminué' : 'augmenté'} de ${Math.abs(dp).toFixed(1).replace('.', ',')} %.`;
+    }
+    parts.push(sent);
+  }
+  const top3 = stats.destinataireSorted.filter(([k]) => k !== 'Non renseigné').slice(0, 3).map(e => e[0]);
+  if (top3.length) {
+    parts.push(`Les principaux destinataires sont ${top3.join(', ')}.`);
+  } else {
+    parts.push('Le destinataire n\'est pas renseigné pour les courriers de cette période.');
+  }
+  document.getElementById('dbSynthesis').textContent = parts.join(' ');
+}
+
+function dbStateFromInputs() {
+  const ss = document.getElementById('dbDateStart');
+  const se = document.getElementById('dbDateEnd');
+  if (ss && se) {
+    dbState.customStart = ss.value || '';
+    dbState.customEnd = se.value || '';
+  }
+}
+
+function renderDashboard() {
+  if (!rawData.length) return;
+  const range = dbState.period === 'custom' ? dbPeriodRange('custom') : dbPeriodRange(dbState.period);
+  const dataRange = range || dbDataRange();
+  const rows = dbRows(range);
+  const stats = dbComputeStats(rows);
+  const prevRange = dbPrevRange(range, dbState.period);
+  const prevStats = prevRange ? dbComputeStats(dbRows(prevRange)) : null;
+
+  renderDbHeader(dataRange);
+  renderDbKpis(stats, prevStats);
+
+  const ts = dbTimeSeries(rows, range);
+  renderDbVolumeChart(ts.series);
+  renderDbDureeChart(ts.series);
+  renderDbMixChart(ts.series);
+
+  const volNote = document.getElementById('dbVolumeNote');
+  const granLabel = ts.granularity === 'month' ? 'mensuelle' : ts.granularity === 'week' ? 'hebdomadaire' : 'quotidienne';
+  if (volNote) volNote.textContent = ts.series.length ? `Évolution ${granLabel}, avec ligne de tendance.` : '';
+  renderDbRepartitionChart(stats);
+  renderDbSignataireChart(stats);
+  renderDbDestinataireChart(stats);
+  renderDbDelais(stats);
+  renderDbAttention(stats, prevStats);
+  renderDbSynthesis(stats, prevStats);
+}
+
+function setDbPeriod(period, btn) {
+  dbState.period = period;
+  document.querySelectorAll('#dbPeriodBar .sb-period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === period));
+  document.getElementById('dbCustomDates').classList.toggle('show', period === 'custom');
+  if (period === 'custom') {
+    const range = dbPeriodRange('custom');
+    if (!dbState.customStart && range) {
+      document.getElementById('dbDateStart').value = toDateInput(range.start);
+      document.getElementById('dbDateEnd').value = toDateInput(range.end);
+      dbStateFromInputs();
+    }
+  }
+  requestAnimationFrame(renderDashboard);
+}
+
+function setDbType(type, btn) {
+  dbState.type = type;
+  document.querySelectorAll('#dbTypeSeg .db-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  requestAnimationFrame(renderDashboard);
+}
+
+function applyDbFilters() {
+  const ss = document.getElementById('dbSignataire');
+  const sd = document.getElementById('dbDestinataire');
+  if (ss) dbState.signataire = ss.value;
+  if (sd) dbState.destinataire = sd.value;
+  dbStateFromInputs();
+  requestAnimationFrame(renderDashboard);
+}
+
+function resetDbFilters() {
+  dbState.type = 'all';
+  dbState.signataire = '';
+  dbState.destinataire = '';
+  if (dbState.period !== 'all') {
+    dbState.period = 'all';
+    document.querySelectorAll('#dbPeriodBar .sb-period-btn').forEach(b => b.classList.toggle('active', b.dataset.period === 'all'));
+  }
+  document.getElementById('dbCustomDates').classList.remove('show');
+  document.getElementById('dbDateStart').value = '';
+  document.getElementById('dbDateEnd').value = '';
+  dbState.customStart = '';
+  dbState.customEnd = '';
+  document.getElementById('dbSignataire').value = '';
+  document.getElementById('dbDestinataire').value = '';
+  document.querySelectorAll('#dbTypeSeg .db-seg-btn').forEach(b => b.classList.toggle('active', b.dataset.type === 'all'));
+  requestAnimationFrame(renderDashboard);
+}
+
+function populateDbSelects() {
+  const sigSel = document.getElementById('dbSignataire');
+  const destSel = document.getElementById('dbDestinataire');
+  if (!sigSel || !destSel) return;
+  const curSig = dbState.signataire, curDest = dbState.destinataire;
+  sigSel.innerHTML = '<option value="">Tous</option>' + [...new Set(rawData.map(r => r.signataire || 'Non renseigné'))].sort().map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+  if (curSig) sigSel.value = curSig;
+  destSel.innerHTML = '<option value="">Tous</option>' + [...new Set(rawData.map(r => r.destinataire || 'Non renseigné'))].sort().map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+  if (curDest) destSel.value = curDest;
+}
+
+let dbLastDestList = [];
+
+function openDestDetail() {
+  const body = document.getElementById('dbDetailBody');
+  const hint = document.getElementById('dbDetailHint');
+  if (!dbLastDestList.length) return;
+  const total = dbLastDestList.reduce((s, e) => s + e[1], 0);
+  hint.textContent = `${fmtInt(total)} courrier(s) — ${fmtInt(dbLastDestList.length)} destinataire(s) distinct(s).`;
+  body.innerHTML = dbLastDestList.map((e, i) => `
+    <tr>
+      <td class="num" style="text-align:center">${i + 1}</td>
+      <td>${escHtml(e[0])}</td>
+      <td class="num">${fmtInt(e[1])}</td>
+      <td class="num">${fmtPct(e[1], total)}</td>
+    </tr>`).join('');
+  document.getElementById('dbDetailModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('dbDetailModal').querySelector('.modal-close').focus();
+}
+
+function closeDbDetail() {
+  document.getElementById('dbDetailModal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('dbDetailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDbDetail();
+});
+
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.font.family = 'Inter';
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = '#5B6472';
 }
 
 const PAGE_TITLES = {
@@ -1560,7 +2418,8 @@ function switchPage(page) {
   document.getElementById('pageTitle').textContent = (PAGE_TITLES[page] || 'Tableau de bord');
 
   if (page === 'dashboard') {
-    requestAnimationFrame(() => updateDashboardCharts());
+    if (!rawData.length) return;
+    requestAnimationFrame(renderDashboard);
   }
 }
 
@@ -2423,7 +3282,7 @@ async function generateExcel() {
 
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closePreview();
+  if (e.key === 'Escape') { closePreview(); closeDbDetail(); }
 });
 
 // Restaure l'état depuis le serveur (ou cache local), sinon écran d'import
