@@ -1090,9 +1090,14 @@ function deserializeRows(rows) {
     const out = {};
     for (const k in r) {
       const v = r[k];
-      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-        const d = new Date(v);
-        if (!isNaN(d.getTime())) { out[k] = d; continue; }
+      if (typeof v === 'string') {
+        const vc = fixMojibake(v);
+        if (/^\d{4}-\d{2}-\d{2}T/.test(vc)) {
+          const d = new Date(vc);
+          if (!isNaN(d.getTime())) { out[k] = d; continue; }
+        }
+        out[k] = vc;
+        continue;
       }
       out[k] = v;
     }
@@ -1217,7 +1222,7 @@ function handleFile(e) {
       const wb = XLSX.read(ev.target.result, {type: 'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
       const aoa = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ''});
-      const cell = v => (v === null || v === undefined) ? '' : String(v).trim();
+      const cell = v => (v === null || v === undefined) ? '' : fixMojibake(String(v).trim());
       const normCell = v => cell(v).toLowerCase().replace(/[^a-z0-9]/g, '');
 
       // Localiser la ligne d'en-têtes (peut être précédée d'un bloc de titre)
@@ -1345,7 +1350,7 @@ function handleIncomingFile(e) {
       const wb = XLSX.read(ev.target.result, {type: 'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
       const aoa = XLSX.utils.sheet_to_json(ws, {header: 1, defval: ''});
-      const cell = v => (v === null || v === undefined) ? '' : String(v).trim();
+      const cell = v => (v === null || v === undefined) ? '' : fixMojibake(String(v).trim());
       const normCell = v => cell(v).toLowerCase().replace(/[^a-z0-9]/g, '');
 
       let headerIdx = 0, headerScore = -1;
@@ -1623,6 +1628,23 @@ const dbState = { period: 'all', type: 'all', signataire: '', destinataire: '', 
 
 function escHtml(v) {
   return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Corrige un double-encodage UTF-8/Latin-1 (ex. « MinistÃ¨re » → « Ministère »).
+// Idempotent : ne modifie jamais un texte déjà correctement encodé.
+function fixMojibake(str) {
+  if (typeof str !== 'string' || !str) return str;
+  let hasHigh = false;
+  for (let i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) > 0x7F) { hasHigh = true; break; }
+  }
+  if (!hasHigh) return str;
+  const runes = [...str];
+  const bytes = new Uint8Array(runes.length);
+  for (let i = 0; i < runes.length; i++) bytes[i] = runes[i].charCodeAt(0) & 0xFF;
+  let out;
+  try { out = new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch (e) { return str; }
+  return [...out].length < runes.length ? out : str;
 }
 const fmtInt = n => (n === null || n === undefined || isNaN(n)) ? '0' : Number(n).toLocaleString('fr-FR');
 const fmt1 = n => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toFixed(1).replace('.', ',');
