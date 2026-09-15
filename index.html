@@ -116,16 +116,6 @@ body.no-data .main-content{align-items:center;justify-content:center}
 /* ============================ Header (topbar pleine largeur) ============================ */
 .header{background:var(--ink);color:#fff;height:var(--hd-h);display:flex;align-items:center;position:sticky;top:0;z-index:100}
 .header-inner{width:100%;max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0 1.5rem;flex-wrap:wrap}
-.hd-brand{display:flex;align-items:center;gap:.8rem;min-width:0}
-.hd-monogram{
-  width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  background:var(--steel);border:1px solid var(--gold);border-radius:4px;color:#fff;
-  font-family:'Playfair Display',serif;font-weight:700;font-size:1rem;
-}
-.hd-text{line-height:1.25;min-width:0}
-.hd-text strong{display:block;font-size:.85rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hd-text span{font-size:.7rem;font-weight:400;opacity:.6;color:#fff}
-.hd-divider{width:1px;height:32px;flex-shrink:0;background:rgba(255,255,255,.14)}
 .hd-page{display:flex;flex-direction:column;justify-content:center;gap:.1rem;min-width:0}
 .hd-page-title{margin:0;font-size:.92rem;font-weight:600;letter-spacing:.2px;color:#fff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hd-period{font-size:.72rem;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -306,7 +296,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 @media(max-width:768px){
   .header{height:auto;min-height:var(--hd-h)}
   .header-inner{gap:.5rem .75rem}
-  .hd-text strong{white-space:normal}
   .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr)}
   .kpi-card + .kpi-card{border-left:none}
   .kpi-card:nth-child(even){border-left:1px solid var(--border)}
@@ -319,7 +308,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
   .kpi-card:nth-child(even){border-left:none}
   .kpi-card:nth-child(n+2){border-top:1px solid var(--border)}
   .hd-period{display:none}
-  .hd-text,.hd-divider{display:none}
   .header-inner{gap:.5rem}
 }
 </style>
@@ -329,14 +317,6 @@ tbody tr:hover .cell-input{border-color:var(--accent-soft)}
 <header class="header">
   <div class="header-inner">
     <div class="header-title-wrap">
-      <div class="hd-brand">
-        <div class="hd-monogram">SCD</div>
-        <div class="hd-text">
-          <strong>Secrétariat Central et Documentation</strong>
-          <span>Primature</span>
-        </div>
-      </div>
-      <div class="hd-divider" aria-hidden="true"></div>
       <div class="hd-page">
         <h1 id="pageTitle" class="hd-page-title">Import</h1>
         <div class="hd-period" id="headerPeriod">Toute la période</div>
