@@ -1327,10 +1327,11 @@ function deleteByPeriod() {
   const label = getPeriodLabel();
   if (!confirm(`Voulez-vous supprimer ${count} courrier(s) de la période "${label}" ?\n\nCette action est irréversible.`)) return;
 
-  const keysToDelete = new Set(filteredData.map(r => rowMergeKey(r)));
-  rawData = rawData.filter(r => !keysToDelete.has(rowMergeKey(r)));
-  filteredData = rawData.filter(r => filterByPeriod(r) && filterByText(r) && filterBySelects(r));
+  const toDelete = new Set(filteredData);
+  rawData = rawData.filter(r => !toDelete.has(r));
+  filteredData = [];
   updateAll();
+  applyFilters();
   saveState();
   syncState();
 
