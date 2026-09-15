@@ -1635,7 +1635,10 @@ function rowMergeKey(r) {
 function mergeRows(existing, news) {
   const map = new Map();
   existing.forEach(r => map.set(rowMergeKey(r), r));
-  news.forEach(r => map.set(rowMergeKey(r), r));
+  news.forEach((r, i) => {
+    const k = rowMergeKey(r);
+    if (!map.has(k)) map.set(k, r);
+  });
   return Array.from(map.values());
 }
 
@@ -1647,7 +1650,10 @@ function mergeIncomingRows(existing, news) {
   };
   const map = new Map();
   existing.forEach(r => map.set(key(r), r));
-  news.forEach(r => map.set(key(r), r));
+  news.forEach((r, i) => {
+    const k = key(r);
+    if (!map.has(k)) map.set(k, r);
+  });
   return Array.from(map.values());
 }
 
